@@ -1,4 +1,4 @@
-# komcon
+# komcon.
 
 ### Connect through music
 

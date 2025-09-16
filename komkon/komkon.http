@@ -1,6 +1,0 @@
-@komkon_HostAddress = http://localhost:5007
-
-GET {{komkon_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/stalker/Documents/Vu/2kur/PSI/psi1/komkon/komkon.csproj": {}
+    "/home/stalker/Documents/Vu/2kur/PSI/psi1/komcon/komcon.csproj": {}
   },
   "projects": {
-    "/home/stalker/Documents/Vu/2kur/PSI/psi1/komkon/komkon.csproj": {
+    "/home/stalker/Documents/Vu/2kur/PSI/psi1/komcon/komcon.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/stalker/Documents/Vu/2kur/PSI/psi1/komkon/komkon.csproj",
-        "projectName": "komkon",
-        "projectPath": "/home/stalker/Documents/Vu/2kur/PSI/psi1/komkon/komkon.csproj",
+        "projectUniqueName": "/home/stalker/Documents/Vu/2kur/PSI/psi1/komcon/komcon.csproj",
+        "projectName": "komcon",
+        "projectPath": "/home/stalker/Documents/Vu/2kur/PSI/psi1/komcon/komcon.csproj",
         "packagesPath": "/home/stalker/.nuget/packages/",
-        "outputPath": "/home/stalker/Documents/Vu/2kur/PSI/psi1/komkon/obj/",
+        "outputPath": "/home/stalker/Documents/Vu/2kur/PSI/psi1/komcon/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/stalker/.nuget/NuGet/NuGet.Config"

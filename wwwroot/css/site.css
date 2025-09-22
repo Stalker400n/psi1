@@ -29,3 +29,54 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+.option-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 200px;
+    height: 200px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.option-box:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.option-colour1 {
+    background-color: #5D688A;
+    color: white;
+}
+
+.option-colour2 {
+    background-color: #4b5471;
+    color: white;
+}
+
+.option-colour3 {
+    background-color: #6f7ba0;
+    color: white;
+}
+
+.option-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 500px;
+    height: 500px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.option-box:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}

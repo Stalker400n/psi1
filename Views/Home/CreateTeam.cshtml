@@ -2,4 +2,19 @@
     ViewData["Title"] = "Create Team";
 }
 <h2>Create a Team</h2>
-<p>This is where the create team form will go.</p>
+
+<form asp-action="CreateTeam" method="post">
+    <div class="form-group">
+        <label for="TeamName">Team Name</label>
+        <input type="text" class="form-control" id="TeamName" name="TeamName" required />
+    </div>
+    <div class="form-group">
+        <label for="Privacy">Privacy</label>
+        <select class="form-control" id="Privacy" name="Privacy" required>
+            <option value="">-- Select Privacy --</option>
+            <option value="Public">Public</option>
+            <option value="Private">Private</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Create Team</button>
+</form>

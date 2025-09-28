@@ -1,8 +1,5 @@
 using Microsoft.OpenApi.Models;
 
-const string url = "http://localhost:5220";
-const string separator = "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -";
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
@@ -23,8 +20,11 @@ app.MapControllers();
 
 app.Start();
 
-Console.WriteLine(separator);
-Console.WriteLine($"YOYOYO: Swagger is available at: {url}/swagger");
-Console.WriteLine(separator);
+const string separator = "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -";
+
+foreach (var url in app.Urls)
+{
+  Console.WriteLine($"{separator}\nYOYOYO: Swagger is available at: {url}/swagger\n{separator}");
+}
 
 app.WaitForShutdown();

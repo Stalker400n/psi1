@@ -1,0 +1,6 @@
+@back_HostAddress = http://localhost:5220
+
+GET {{back_HostAddress}}/komcon/
+Accept: application/json
+
+###

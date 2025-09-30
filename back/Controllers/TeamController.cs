@@ -18,11 +18,18 @@ public class TeamController : ControllerBase
   [HttpPost]
   public ActionResult<Team> CreateTeam([FromBody] Team team)
   {
-    team.Id = Teams.Count + 1;
+    int newId;
+    do
+    {
+      newId = RandomNumberGenerator.GetInt32(100000, 1000000);
+    }
+    while (Teams.Any(t => t.Id == newId));
+
+    team.Id = newId;
     Teams.Add(team);
+
     return CreatedAtAction(nameof(GetTeams), new { id = team.Id }, team);
   }
-
   [HttpGet("{id}")]
   public ActionResult<Team> GetTeamById(int id)
   {

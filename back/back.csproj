@@ -4,23 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <EnableDefaultContentItems>false</EnableDefaultContentItems>
   </PropertyGroup>
-
-  <PropertyGroup>
-    <!-- Set the root namespace -->
-    <RootNamespace>back</RootNamespace>
-    <!-- Set the source directory -->
-    <SourceDir>src</SourceDir>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Include="$(SourceDir)/**/*.cs" />
-    <Content Include="$(SourceDir)/**/*.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Remove="$(SourceDir)/obj/**" />
-    <Content Remove="$(SourceDir)/bin/**" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />

@@ -27,16 +27,16 @@ namespace back
         var teamId = await CreateTeam();
         Console.WriteLine($"Created team with ID: {teamId}");
 
-        var user1Id = await AddUser(teamId, "John Doe");
-        var user2Id = await AddUser(teamId, "Jane Smith");
+        var user1Id = await AddUser(teamId, "killeris");
+        var user2Id = await AddUser(teamId, "eigintas");
         Console.WriteLine($"Added users with IDs: {user1Id}, {user2Id}");
 
-        var song1Id = await AddSong(teamId, "https://example.com/song1", "Song One", "Artist One", user1Id, "John Doe");
-        var song2Id = await AddSong(teamId, "https://example.com/song2", "Song Two", "Artist Two", user2Id, "Jane Smith");
+        var song1Id = await AddSong(teamId, "https://example.com/song1", "despacito", "Artist One", user1Id, "killeris");
+        var song2Id = await AddSong(teamId, "https://example.com/song2", "Apkabink Mane", "Jessica Shy", user2Id, "eigintas");
         Console.WriteLine($"Added songs with IDs: {song1Id}, {song2Id}");
 
-        var message1Id = await AddChatMessage(teamId, "John Doe", "Hello everyone!");
-        var message2Id = await AddChatMessage(teamId, "Jane Smith", "Hi John, how are you?");
+        var message1Id = await AddChatMessage(teamId, "eigintas", "swx");
+        var message2Id = await AddChatMessage(teamId, "killeris", "eik ginti");
         Console.WriteLine($"Added chat messages with IDs: {message1Id}, {message2Id}");
 
         var team = await GetTeam(teamId);

@@ -12,7 +12,7 @@ namespace back
   public class TestApi
   {
     private static readonly HttpClient client = new HttpClient();
-    private static readonly string baseUrl = "http://localhost:5220/";
+    private static readonly string baseUrl = "http://localhost:5220";
     private static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions
     {
       PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -24,26 +24,21 @@ namespace back
 
       try
       {
-        // Create a team
         var teamId = await CreateTeam();
         Console.WriteLine($"Created team with ID: {teamId}");
 
-        // Add users to the team
-        var user1Id = await AddUser(teamId, "John Doe", "john@example.com");
-        var user2Id = await AddUser(teamId, "Jane Smith", "jane@example.com");
+        var user1Id = await AddUser(teamId, "John Doe");
+        var user2Id = await AddUser(teamId, "Jane Smith");
         Console.WriteLine($"Added users with IDs: {user1Id}, {user2Id}");
 
-        // Add songs to the team
         var song1Id = await AddSong(teamId, "https://example.com/song1", "Song One", "Artist One", user1Id, "John Doe");
         var song2Id = await AddSong(teamId, "https://example.com/song2", "Song Two", "Artist Two", user2Id, "Jane Smith");
         Console.WriteLine($"Added songs with IDs: {song1Id}, {song2Id}");
 
-        // Add chat messages to the team
         var message1Id = await AddChatMessage(teamId, "John Doe", "Hello everyone!");
         var message2Id = await AddChatMessage(teamId, "Jane Smith", "Hi John, how are you?");
         Console.WriteLine($"Added chat messages with IDs: {message1Id}, {message2Id}");
 
-        // Get team details
         var team = await GetTeam(teamId);
         Console.WriteLine($"Retrieved team: {team.Name}, Users: {team.Users.Count}, Songs: {team.Songs.Count}, Messages: {team.Messages.Count}");
 
@@ -66,32 +61,72 @@ namespace back
         CreatedByUserId = 1
       };
 
-      var response = await client.PostAsJsonAsync($"{baseUrl}/teams", team);
-      response.EnsureSuccessStatusCode();
+      Console.WriteLine($"Sending POST request to: {baseUrl}/teams");
+      Console.WriteLine($"Team data: {JsonSerializer.Serialize(team, jsonOptions)}");
 
-      var content = await response.Content.ReadAsStringAsync();
-      var createdTeam = JsonSerializer.Deserialize<Team>(content, jsonOptions);
+      try
+      {
+        var response = await client.PostAsJsonAsync($"{baseUrl}/teams", team);
 
-      return createdTeam.Id;
+        Console.WriteLine($"Response status: {response.StatusCode}");
+        var responseContent = await response.Content.ReadAsStringAsync();
+        Console.WriteLine($"Response content: {responseContent}");
+
+        response.EnsureSuccessStatusCode();
+
+        var createdTeam = JsonSerializer.Deserialize<Team>(responseContent, jsonOptions);
+
+        if (createdTeam == null)
+        {
+          throw new Exception("Failed to deserialize team from response");
+        }
+
+        return createdTeam.Id;
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"Error creating team: {ex.Message}");
+        throw;
+      }
+
     }
 
-    private static async Task<int> AddUser(int teamId, string name, string email)
+    private static async Task<int> AddUser(int teamId, string name)
     {
       var user = new User
       {
         Name = name,
-        Email = email,
         Score = 0,
         IsActive = true
       };
 
-      var response = await client.PostAsJsonAsync($"{baseUrl}/teams/{teamId}/users", user);
-      response.EnsureSuccessStatusCode();
+      Console.WriteLine($"Sending POST request to: {baseUrl}/teams/{teamId}/users");
+      Console.WriteLine($"User data: {JsonSerializer.Serialize(user, jsonOptions)}");
 
-      var content = await response.Content.ReadAsStringAsync();
-      var createdUser = JsonSerializer.Deserialize<User>(content, jsonOptions);
+      try
+      {
+        var response = await client.PostAsJsonAsync($"{baseUrl}/teams/{teamId}/users", user);
 
-      return createdUser.Id;
+        Console.WriteLine($"Response status: {response.StatusCode}");
+        var responseContent = await response.Content.ReadAsStringAsync();
+        Console.WriteLine($"Response content: {responseContent}");
+
+        response.EnsureSuccessStatusCode();
+
+        var createdUser = JsonSerializer.Deserialize<User>(responseContent, jsonOptions);
+
+        if (createdUser == null)
+        {
+          throw new Exception("Failed to deserialize user from response");
+        }
+
+        return createdUser.Id;
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"Error adding user: {ex.Message}");
+        throw;
+      }
     }
 
     private static async Task<int> AddSong(int teamId, string link, string title, string artist, int userId, string userName)

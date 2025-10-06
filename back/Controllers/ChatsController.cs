@@ -56,12 +56,11 @@ public class ChatsController : ControllerBase
     if (team == null)
       return NotFound(new { message = "Team not found" });
 
-    if (message.Id == 0)
-    {
-      message.Id = team.Messages.Count > 0 ? team.Messages.Max(m => m.Id) + 1 : 1;
-    }
-
     message.Timestamp = DateTime.UtcNow;
+    
+    _context.ChatMessages.Add(message);
+    await _context.SaveChangesAsync();
+    
     team.Messages.Add(message);
     await _context.SaveChangesAsync();
 

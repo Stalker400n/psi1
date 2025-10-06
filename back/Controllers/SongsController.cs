@@ -51,10 +51,8 @@ public class SongsController : ControllerBase
 
     if (team == null) return NotFound(new { message = "Team not found" });
 
-    if (song.Id == 0)
-    {
-      song.Id = team.Songs.Count > 0 ? team.Songs.Max(s => s.Id) + 1 : 1;
-    }
+    _context.Songs.Add(song);
+    await _context.SaveChangesAsync();
 
     team.Songs.Add(song);
     await _context.SaveChangesAsync();

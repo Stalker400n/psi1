@@ -51,10 +51,8 @@ public class UsersController : ControllerBase
 
     if (team == null) return NotFound(new { message = "Team not found" });
 
-    if (user.Id == 0)
-    {
-      user.Id = team.Users.Count > 0 ? team.Users.Max(u => u.Id) + 1 : 1;
-    }
+    _context.Users.Add(user);
+    await _context.SaveChangesAsync();
 
     team.Users.Add(user);
     await _context.SaveChangesAsync();
@@ -75,7 +73,6 @@ public class UsersController : ControllerBase
     if (existingUser == null) return NotFound(new { message = "User not found" });
 
     existingUser.Name = user.Name;
-    existingUser.Email = user.Email;
     existingUser.Score = user.Score;
     existingUser.IsActive = user.IsActive;
 

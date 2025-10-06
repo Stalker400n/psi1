@@ -21,15 +21,18 @@ namespace back.Data
 
       modelBuilder.Entity<Team>()
           .HasMany(t => t.Users)
-          .WithMany();
+          .WithMany()
+          .UsingEntity(j => j.ToTable("TeamUsers"));
 
       modelBuilder.Entity<Team>()
           .HasMany(t => t.Songs)
-          .WithMany();
+          .WithMany()
+          .UsingEntity(j => j.ToTable("TeamSongs"));
 
       modelBuilder.Entity<Team>()
           .HasMany(t => t.Messages)
-          .WithMany();
+          .WithMany()
+          .UsingEntity(j => j.ToTable("TeamChatMessages"));
     }
   }
 }

@@ -12,7 +12,7 @@ namespace back
   public class TestApi
   {
     private static readonly HttpClient client = new HttpClient();
-    private static readonly string baseUrl = "http://localhost:7130";
+    private static readonly string baseUrl = "https://localhost:7130";
     private static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions
     {
       PropertyNamingPolicy = JsonNamingPolicy.CamelCase

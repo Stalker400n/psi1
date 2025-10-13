@@ -4,7 +4,7 @@ namespace back.Data.Repositories;
 
 public interface IUsersRepository
 {
-	Task<IEnumerable<User>> GetUsersAsync(int teamId);
+	Task<IEnumerable<User>?> GetUsersAsync(int teamId);
 
 	Task<User?> GetUserAsync(int teamId, int userId);
 

@@ -4,7 +4,7 @@ namespace back.Data.Repositories;
 
 public interface ISongsRepository
 {
-	Task<IEnumerable<Song>> GetSongsAsync(int teamId);
+	Task<IEnumerable<Song>?> GetSongsAsync(int teamId);
 
 	Task<Song?> GetSongAsync(int teamId, int songId);
 

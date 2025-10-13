@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using back.Models;
-using back.Data;
-using Microsoft.EntityFrameworkCore;
+using back.Data.Repositories;
 
 namespace back.Controllers;
 
@@ -9,103 +8,50 @@ namespace back.Controllers;
 [Route("teams/{teamId}/chats")]
 public class ChatsController : ControllerBase
 {
-  private readonly ApplicationDbContext _context;
+  private readonly IChatsRepository _chatsRepository;
 
-  public ChatsController(ApplicationDbContext context)
+  public ChatsController(IChatsRepository chatsRepository)
   {
-    _context = context;
+    _chatsRepository = chatsRepository;
   }
 
   [HttpGet]
   public async Task<ActionResult<IEnumerable<ChatMessage>>> GetMessages(int teamId)
   {
-    var team = await _context.Teams
-        .Include(t => t.Messages)
-        .FirstOrDefaultAsync(t => t.Id == teamId);
-
-    if (team == null)
-      return NotFound(new { message = "Team not found" });
-
-    return Ok(team.Messages.OrderBy(m => m.Timestamp));
+    var messages = await _chatsRepository.GetMessagesAsync(teamId);
+    if (messages == null) return NotFound(new { message = "Team not found" });
+    return Ok(messages);
   }
 
   [HttpGet("{id}")]
   public async Task<ActionResult<ChatMessage>> GetMessage(int teamId, int id)
   {
-    var team = await _context.Teams
-        .Include(t => t.Messages)
-        .FirstOrDefaultAsync(t => t.Id == teamId);
-
-    if (team == null)
-      return NotFound(new { message = "Team not found" });
-
-    var message = team.Messages.FirstOrDefault(m => m.Id == id);
-    if (message == null)
-      return NotFound(new { message = "Message not found" });
-
+    var message = await _chatsRepository.GetMessageAsync(teamId, id);
+    if (message == null) return NotFound(new { message = "Team or message not found" });
     return Ok(message);
   }
 
   [HttpPost]
   public async Task<ActionResult<ChatMessage>> AddMessage(int teamId, [FromBody] ChatMessage message)
   {
-    var team = await _context.Teams
-        .Include(t => t.Messages)
-        .FirstOrDefaultAsync(t => t.Id == teamId);
-
-    if (team == null)
-      return NotFound(new { message = "Team not found" });
-
-    message.Timestamp = DateTime.UtcNow;
-    
-    _context.ChatMessages.Add(message);
-    await _context.SaveChangesAsync();
-    
-    team.Messages.Add(message);
-    await _context.SaveChangesAsync();
-
-    return CreatedAtAction(nameof(GetMessage), new { teamId = teamId, id = message.Id }, message);
+    var created = await _chatsRepository.AddMessageAsync(teamId, message);
+    if (created == null) return NotFound(new { message = "Team not found" });
+    return CreatedAtAction(nameof(GetMessage), new { teamId = teamId, id = created.Id }, created);
   }
 
   [HttpPut("{id}")]
   public async Task<ActionResult<ChatMessage>> UpdateMessage(int teamId, int id, [FromBody] ChatMessage message)
   {
-    var team = await _context.Teams
-        .Include(t => t.Messages)
-        .FirstOrDefaultAsync(t => t.Id == teamId);
-
-    if (team == null)
-      return NotFound(new { message = "Team not found" });
-
-    var existingMessage = team.Messages.FirstOrDefault(m => m.Id == id);
-    if (existingMessage == null)
-      return NotFound(new { message = "Message not found" });
-
-    existingMessage.Text = message.Text;
-
-    _context.Entry(existingMessage).State = EntityState.Modified;
-    await _context.SaveChangesAsync();
-
-    return Ok(existingMessage);
+    var updated = await _chatsRepository.UpdateMessageAsync(teamId, id, message);
+    if (updated == null) return NotFound(new { message = "Team or message not found" });
+    return Ok(updated);
   }
 
   [HttpDelete("{id}")]
   public async Task<IActionResult> DeleteMessage(int teamId, int id)
   {
-    var team = await _context.Teams
-        .Include(t => t.Messages)
-        .FirstOrDefaultAsync(t => t.Id == teamId);
-
-    if (team == null)
-      return NotFound(new { message = "Team not found" });
-
-    var message = team.Messages.FirstOrDefault(m => m.Id == id);
-    if (message == null)
-      return NotFound(new { message = "Message not found" });
-
-    team.Messages.Remove(message);
-    await _context.SaveChangesAsync();
-
+    var deleted = await _chatsRepository.DeleteMessageAsync(teamId, id);
+    if (!deleted) return NotFound(new { message = "Team or message not found" });
     return NoContent();
   }
 }

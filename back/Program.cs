@@ -26,6 +26,12 @@ builder.Services.AddControllers()
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Register repositories for DI
+builder.Services.AddScoped<back.Data.Repositories.ITeamsRepository, back.Data.Repositories.TeamsRepository>();
+builder.Services.AddScoped<back.Data.Repositories.IChatsRepository, back.Data.Repositories.ChatsRepository>();
+builder.Services.AddScoped<back.Data.Repositories.ISongsRepository, back.Data.Repositories.SongsRepository>();
+builder.Services.AddScoped<back.Data.Repositories.IUsersRepository, back.Data.Repositories.UsersRepository>();
+
 builder.Services.AddCors(options =>
 {
   options.AddPolicy("AllowAll", builder =>

@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using back.Models;
-using back.Data;
-using Microsoft.EntityFrameworkCore;
+using back.Data.Repositories;
 
 namespace back.Controllers;
 
@@ -9,94 +8,50 @@ namespace back.Controllers;
 [Route("teams/{teamId}/users")]
 public class UsersController : ControllerBase
 {
-  private readonly ApplicationDbContext _context;
+  private readonly IUsersRepository _usersRepository;
 
-  public UsersController(ApplicationDbContext context)
+  public UsersController(IUsersRepository usersRepository)
   {
-    _context = context;
+    _usersRepository = usersRepository;
   }
 
   [HttpGet]
   public async Task<ActionResult<IEnumerable<User>>> GetUsers(int teamId)
   {
-    var team = await _context.Teams
-        .Include(t => t.Users)
-        .FirstOrDefaultAsync(t => t.Id == teamId);
-
-    if (team == null) return NotFound(new { message = "Team not found" });
-    return Ok(team.Users);
+    var users = await _usersRepository.GetUsersAsync(teamId);
+    if (users == null) return NotFound(new { message = "Team not found" });
+    return Ok(users);
   }
 
   [HttpGet("{id}")]
   public async Task<ActionResult<User>> GetUser(int teamId, int id)
   {
-    var team = await _context.Teams
-        .Include(t => t.Users)
-        .FirstOrDefaultAsync(t => t.Id == teamId);
-
-    if (team == null) return NotFound(new { message = "Team not found" });
-
-    var user = team.Users.FirstOrDefault(u => u.Id == id);
-    if (user == null) return NotFound(new { message = "User not found" });
-
+    var user = await _usersRepository.GetUserAsync(teamId, id);
+    if (user == null) return NotFound(new { message = "Team or user not found" });
     return Ok(user);
   }
 
   [HttpPost]
   public async Task<ActionResult<User>> AddUser(int teamId, [FromBody] User user)
   {
-    var team = await _context.Teams
-        .Include(t => t.Users)
-        .FirstOrDefaultAsync(t => t.Id == teamId);
-
-    if (team == null) return NotFound(new { message = "Team not found" });
-
-    _context.Users.Add(user);
-    await _context.SaveChangesAsync();
-
-    team.Users.Add(user);
-    await _context.SaveChangesAsync();
-
-    return CreatedAtAction(nameof(GetUser), new { teamId = teamId, id = user.Id }, user);
+    var created = await _usersRepository.CreateUserAsync(teamId, user);
+    if (created == null) return NotFound(new { message = "Team not found" });
+    return CreatedAtAction(nameof(GetUser), new { teamId = teamId, id = created.Id }, created);
   }
 
   [HttpPut("{id}")]
   public async Task<ActionResult<User>> UpdateUser(int teamId, int id, [FromBody] User user)
   {
-    var team = await _context.Teams
-        .Include(t => t.Users)
-        .FirstOrDefaultAsync(t => t.Id == teamId);
-
-    if (team == null) return NotFound(new { message = "Team not found" });
-
-    var existingUser = team.Users.FirstOrDefault(u => u.Id == id);
-    if (existingUser == null) return NotFound(new { message = "User not found" });
-
-    existingUser.Name = user.Name;
-    existingUser.Score = user.Score;
-    existingUser.IsActive = user.IsActive;
-
-    _context.Entry(existingUser).State = EntityState.Modified;
-    await _context.SaveChangesAsync();
-
-    return Ok(existingUser);
+    var updated = await _usersRepository.UpdateUserAsync(teamId, id, user);
+    if (updated == null) return NotFound(new { message = "Team or user not found" });
+    return Ok(updated);
   }
 
   [HttpDelete("{id}")]
   public async Task<IActionResult> DeleteUser(int teamId, int id)
   {
-    var team = await _context.Teams
-        .Include(t => t.Users)
-        .FirstOrDefaultAsync(t => t.Id == teamId);
-
-    if (team == null) return NotFound(new { message = "Team not found" });
-
-    var user = team.Users.FirstOrDefault(u => u.Id == id);
-    if (user == null) return NotFound(new { message = "User not found" });
-
-    team.Users.Remove(user);
-    await _context.SaveChangesAsync();
-
+    var deleted = await _usersRepository.DeleteUserAsync(teamId, id);
+    if (!deleted) return NotFound(new { message = "Team or user not found" });
     return NoContent();
   }
 }

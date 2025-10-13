@@ -8,7 +8,7 @@ public interface ISongsRepository
 
 	Task<Song?> GetSongAsync(int teamId, int songId);
 
-	Task<Song> AddSongAsync(int teamId, Song song);
+	Task<Song?> AddSongAsync(int teamId, Song song);
 
 	Task<Song?> UpdateSongAsync(int teamId, int songId, Song song);
 

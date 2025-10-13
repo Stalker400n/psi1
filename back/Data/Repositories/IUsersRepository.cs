@@ -8,7 +8,7 @@ public interface IUsersRepository
 
 	Task<User?> GetUserAsync(int teamId, int userId);
 
-	Task<User> CreateUserAsync(int teamId, User user);
+	Task<User?> CreateUserAsync(int teamId, User user);
 
 	Task<User?> UpdateUserAsync(int teamId, int userId, User user);
 

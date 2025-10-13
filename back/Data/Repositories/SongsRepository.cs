@@ -37,13 +37,13 @@ public class SongsRepository : ISongsRepository
         return team.Songs.FirstOrDefault(s => s.Id == songId);
     }
 
-    public async Task<Song> AddSongAsync(int teamId, Song song)
+    public async Task<Song?> AddSongAsync(int teamId, Song song)
     {
         var team = await _context.Teams
             .Include(t => t.Songs)
             .FirstOrDefaultAsync(t => t.Id == teamId);
 
-        if (team == null) throw new KeyNotFoundException("Team not found");
+        if (team == null) return null;
 
         _context.Songs.Add(song);
         await _context.SaveChangesAsync();

@@ -48,7 +48,6 @@ public class UsersRepository : IUsersRepository
 
         user.JoinedAt = DateTime.UtcNow;
 
-        // Mirror controller: add user, save, then associate to team and save
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 

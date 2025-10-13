@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using back.Models;
-using back.Data;
-using Microsoft.EntityFrameworkCore;
+using back.Data.Repositories;
 
 namespace back.Controllers;
 
@@ -9,95 +8,50 @@ namespace back.Controllers;
 [Route("teams/{teamId}/songs")]
 public class SongsController : ControllerBase
 {
-  private readonly ApplicationDbContext _context;
+  private readonly ISongsRepository _songsRepository;
 
-  public SongsController(ApplicationDbContext context)
+  public SongsController(ISongsRepository songsRepository)
   {
-    _context = context;
+    _songsRepository = songsRepository;
   }
 
   [HttpGet]
   public async Task<ActionResult<IEnumerable<Song>>> GetSongs(int teamId)
   {
-    var team = await _context.Teams
-        .Include(t => t.Songs)
-        .FirstOrDefaultAsync(t => t.Id == teamId);
-
-    if (team == null) return NotFound(new { message = "Team not found" });
-    return Ok(team.Songs);
+    var songs = await _songsRepository.GetSongsAsync(teamId);
+    if (songs == null) return NotFound(new { message = "Team not found" });
+    return Ok(songs);
   }
 
   [HttpGet("{id}")]
   public async Task<ActionResult<Song>> GetSong(int teamId, int id)
   {
-    var team = await _context.Teams
-        .Include(t => t.Songs)
-        .FirstOrDefaultAsync(t => t.Id == teamId);
-
-    if (team == null) return NotFound(new { message = "Team not found" });
-
-    var song = team.Songs.FirstOrDefault(s => s.Id == id);
-    if (song == null) return NotFound(new { message = "Song not found" });
-
+    var song = await _songsRepository.GetSongAsync(teamId, id);
+    if (song == null) return NotFound(new { message = "Team or song not found" });
     return Ok(song);
   }
 
   [HttpPost]
   public async Task<ActionResult<Song>> AddSong(int teamId, [FromBody] Song song)
   {
-    var team = await _context.Teams
-        .Include(t => t.Songs)
-        .FirstOrDefaultAsync(t => t.Id == teamId);
-
-    if (team == null) return NotFound(new { message = "Team not found" });
-
-    _context.Songs.Add(song);
-    await _context.SaveChangesAsync();
-
-    team.Songs.Add(song);
-    await _context.SaveChangesAsync();
-
-    return CreatedAtAction(nameof(GetSong), new { teamId = teamId, id = song.Id }, song);
+    var created = await _songsRepository.AddSongAsync(teamId, song);
+    if (created == null) return NotFound(new { message = "Team not found" });
+    return CreatedAtAction(nameof(GetSong), new { teamId = teamId, id = created.Id }, created);
   }
 
   [HttpPut("{id}")]
   public async Task<ActionResult<Song>> UpdateSong(int teamId, int id, [FromBody] Song song)
   {
-    var team = await _context.Teams
-        .Include(t => t.Songs)
-        .FirstOrDefaultAsync(t => t.Id == teamId);
-
-    if (team == null) return NotFound(new { message = "Team not found" });
-
-    var existingSong = team.Songs.FirstOrDefault(s => s.Id == id);
-    if (existingSong == null) return NotFound(new { message = "Song not found" });
-
-    existingSong.Link = song.Link;
-    existingSong.Title = song.Title;
-    existingSong.Artist = song.Artist;
-    existingSong.Rating = song.Rating;
-
-    _context.Entry(existingSong).State = EntityState.Modified;
-    await _context.SaveChangesAsync();
-
-    return Ok(existingSong);
+    var updated = await _songsRepository.UpdateSongAsync(teamId, id, song);
+    if (updated == null) return NotFound(new { message = "Team or song not found" });
+    return Ok(updated);
   }
 
   [HttpDelete("{id}")]
   public async Task<IActionResult> DeleteSong(int teamId, int id)
   {
-    var team = await _context.Teams
-        .Include(t => t.Songs)
-        .FirstOrDefaultAsync(t => t.Id == teamId);
-
-    if (team == null) return NotFound(new { message = "Team not found" });
-
-    var song = team.Songs.FirstOrDefault(s => s.Id == id);
-    if (song == null) return NotFound(new { message = "Song not found" });
-
-    team.Songs.Remove(song);
-    await _context.SaveChangesAsync();
-
+    var deleted = await _songsRepository.DeleteSongAsync(teamId, id);
+    if (!deleted) return NotFound(new { message = "Team or song not found" });
     return NoContent();
   }
 }

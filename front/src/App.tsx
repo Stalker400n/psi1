@@ -1,7 +1,6 @@
 import {useState} from 'react';
 import type {User, Team} from './services/api.service';
 
-// Import components
 import {NameEntry} from './components/NameEntry';
 import {MainScreen} from './components/MainScreen';
 import {CreateTeam} from './components/CreateTeam';

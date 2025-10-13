@@ -7,7 +7,6 @@ interface MainScreenProps {
 }
 
 export function MainScreen({ onCreateTeam, onBrowseTeams, onJoinTeam }: MainScreenProps) {
-  // Add console logs to debug button clicks
   const handleCreateClick = () => {
     console.log("Create Team button clicked");
     onCreateTeam();

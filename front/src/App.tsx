@@ -1,35 +1,106 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import {useState} from 'react';
+import type {User, Team} from './services/api.service';
 
-function App() {
-  const [count, setCount] = useState(0)
+import {NameEntry} from './components/NameEntry';
+import {MainScreen} from './components/MainScreen';
+import {CreateTeam} from './components/CreateTeam';
+import {BrowseTeams} from './components/BrowseTeams';
+import {JoinTeam} from './components/JoinTeam';
+import {TeamView} from './views/TeamView';
+
+type ViewType = 'home' | 'create' | 'browse' | 'join' | 'team';
+
+export default function App() {
+  const [view, setView] = useState<ViewType>('home');
+  const [userName, setUserName] = useState<string>('');
+  const [currentTeam, setCurrentTeam] = useState<Team | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  const handleViewChange = (newView: ViewType) => {
+    console.log('Changing view to:', newView);
+    setView(newView);
+  };
+
+  const handleTeamCreated = (team: Team, user: User) => {
+    console.log('Team created:', team);
+    setCurrentTeam(team);
+    setCurrentUser(user);
+    setView('team');
+  };
+
+  const handleTeamJoined = (team: Team, user: User) => {
+    console.log('Team joined:', team);
+    setCurrentTeam(team);
+    setCurrentUser(user);
+    setView('team');
+  };
+
+  const handleLeaveTeam = () => {
+    console.log('Leaving team');
+    setCurrentTeam(null);
+    setCurrentUser(null);
+    setView('home');
+  };
+
+  if (!userName) {
+    return <NameEntry onSubmit={setUserName} />;
+  }
+
+  if (!currentTeam && view === 'home') {
+    return (
+      <MainScreen
+        onCreateTeam={() => handleViewChange('create')}
+        onBrowseTeams={() => handleViewChange('browse')}
+        onJoinTeam={() => handleViewChange('join')}
+      />
+    );
+  }
+
+  if (view === 'create') {
+    return (
+      <CreateTeam
+        userName={userName}
+        onBack={() => handleViewChange('home')}
+        onTeamCreated={handleTeamCreated}
+      />
+    );
+  }
+
+  if (view === 'browse') {
+    return (
+      <BrowseTeams
+        onBack={() => handleViewChange('home')}
+        onJoinTeam={handleTeamJoined}
+        userName={userName}
+      />
+    );
+  }
+
+  if (view === 'join') {
+    return (
+      <JoinTeam
+        userName={userName}
+        onBack={() => handleViewChange('home')}
+        onTeamJoined={handleTeamJoined}
+      />
+    );
+  }
+
+  if (currentTeam && currentUser) {
+    return (
+      <TeamView
+        team={currentTeam}
+        user={currentUser}
+        onLeave={handleLeaveTeam}
+      />
+    );
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <MainScreen
+      onCreateTeam={() => handleViewChange('create')}
+      onBrowseTeams={() => handleViewChange('browse')}
+      onJoinTeam={() => handleViewChange('join')}
+    />
+  );
 }
-
-export default App

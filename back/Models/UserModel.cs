@@ -15,4 +15,13 @@ public class User
   public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
 
   public bool IsActive { get; set; } = true;
+
+  public enum Role
+  {
+    Member,
+    Admin,
+    Owner
+  }
+
+  public Role UserRole { get; set; } = Role.Member;
 }

@@ -10,7 +10,9 @@ export function NameEntry({ onSubmit }: NameEntryProps) {
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
       <div className="text-center">
-        <h1 className="text-6xl font-bold text-white mb-2">komcon.</h1>
+        <h1 className="text-6xl font-bold text-white mb-2">
+  komcon<span className="text-yellow-400">.</span>
+</h1>
         <p className="text-slate-400 mb-8">Connect through music!</p>
         <input
           type="text"

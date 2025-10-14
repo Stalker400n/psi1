@@ -3,7 +3,6 @@ import { Music, MessageSquare, Star, LogOut } from 'lucide-react';
 import type { Team, User } from '../services/api.service';
 import { PlaylistView } from './PlaylistView';
 import { ChatView } from './ChatView';
-import { LeaderboardView } from './LeaderboardView';
 
 interface TeamViewProps {
   team: Team;
@@ -59,7 +58,6 @@ export function TeamView({ team, user, onLeave }: TeamViewProps) {
 
         {view === 'playlist' && <PlaylistView teamId={team.id} userId={user.id} />}
         {view === 'chat' && <ChatView teamId={team.id} userName={user.name} />}
-        {view === 'leaderboard' && <LeaderboardView teamId={team.id} />}
       </div>
     </div>
   );

@@ -16,9 +16,20 @@ public class Song
 
   public int Rating { get; set; } = 0;
 
-  public int AddedByUserId { get; set; }
 
-  public string AddedByUserName { get; set; } = string.Empty;
+  public struct UserInfo
+  {
+        public int Id { get; set; }
+        public string Name { get; set; }
+
+        public UserInfo(int id, string name)
+        {
+            Id = id;
+            Name = name;
+        }
+  }
+
+  public UserInfo AddedBy { get; set; }
 
   public DateTime AddedAt { get; set; } = DateTime.UtcNow;
 }

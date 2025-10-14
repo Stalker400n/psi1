@@ -11,8 +11,8 @@ export function NameEntry({ onSubmit }: NameEntryProps) {
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
       <div className="text-center">
         <h1 className="text-6xl font-bold text-white mb-2">
-  komcon<span className="text-yellow-400">.</span>
-</h1>
+            komcon<span className="text-yellow-400">.</span>
+        </h1>
         <p className="text-slate-400 mb-8">Connect through music!</p>
         <input
           type="text"
@@ -24,7 +24,7 @@ export function NameEntry({ onSubmit }: NameEntryProps) {
         />
         <button
           onClick={() => name && onSubmit(name)}
-          className="block w-80 mx-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          className="block w-80 mx-auto px-6 py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition"
         >
           Continue
         </button>

@@ -23,4 +23,19 @@ public class Song
   public string AddedByUserName { get; set; } = string.Empty;
 
   public DateTime AddedAt { get; set; } = DateTime.UtcNow;
+
+    public struct SongMetadata
+    {
+        public string Genre { get; set; }
+        public TimeSpan Duration { get; set; }
+
+        public SongMetadata(string genre, TimeSpan duration)
+        {
+            Genre = genre;
+            Duration = duration;
+        }
+    }
+
+    [NotMapped]
+    public SongMetadata Metadata { get; set; } = new SongMetadata("Unknown", TimeSpan.Zero);
 }

@@ -1,5 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace back.Models;
 
@@ -16,20 +18,9 @@ public class Song
 
   public int Rating { get; set; } = 0;
 
+  public int AddedByUserId { get; set; }
 
-  public struct UserInfo
-  {
-        public int Id { get; set; }
-        public string Name { get; set; }
-
-        public UserInfo(int id, string name)
-        {
-            Id = id;
-            Name = name;
-        }
-  }
-
-  public UserInfo AddedBy { get; set; }
+  public string AddedByUserName { get; set; } = string.Empty;
 
   public DateTime AddedAt { get; set; } = DateTime.UtcNow;
 }

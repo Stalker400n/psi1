@@ -514,3 +514,5 @@ dist-ssr
 
 # Ignore created DB
 *.db
+*.db-shm
+*.db-wal

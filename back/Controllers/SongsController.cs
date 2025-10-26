@@ -51,13 +51,10 @@ namespace back.Controllers
       var team = await _teamsRepository.GetByIdAsync(teamId);
       if (team == null) return NotFound(new { message = "Team not found" });
 
-      // Determine the index for the new song
       if (insertAfterCurrent)
       {
-        // Insert right after current song
         song.Index = team.CurrentSongIndex + 1;
 
-        // Shift all subsequent songs by 1
         var songsToShift = team.Songs
           .Where(s => s.Index > team.CurrentSongIndex)
           .ToList();
@@ -70,7 +67,6 @@ namespace back.Controllers
       }
       else
       {
-        // Add to the end
         var maxIndex = team.Songs.Any() ? team.Songs.Max(s => s.Index) : -1;
         song.Index = maxIndex + 1;
       }
@@ -78,7 +74,6 @@ namespace back.Controllers
       var created = await _songsRepository.AddSongAsync(teamId, song);
       if (created == null) return NotFound(new { message = "Failed to add song" });
 
-      // Reinitialize the queue with updated songs
       var allSongs = await _songsRepository.GetSongsAsync(teamId);
       if (allSongs != null)
       {
@@ -94,7 +89,6 @@ namespace back.Controllers
       var updated = await _songsRepository.UpdateSongAsync(teamId, id, song);
       if (updated == null) return NotFound(new { message = "Team or song not found" });
 
-      // Update the song in the queue if it exists
       var queue = _queueService.GetQueue(teamId);
       var queuedSong = queue.FirstOrDefault(s => s.Id == id);
       if (queuedSong != null)
@@ -120,7 +114,6 @@ namespace back.Controllers
       var deleted = await _songsRepository.DeleteSongAsync(teamId, id);
       if (!deleted) return NotFound(new { message = "Failed to delete song" });
 
-      // Shift down all songs after the deleted one
       var songsToShift = team.Songs
         .Where(s => s.Index > songToDelete.Index)
         .ToList();
@@ -131,7 +124,6 @@ namespace back.Controllers
         await _songsRepository.UpdateSongAsync(teamId, s.Id, s);
       }
 
-      // Reinitialize the queue
       var allSongs = await _songsRepository.GetSongsAsync(teamId);
       if (allSongs != null)
       {
@@ -141,14 +133,12 @@ namespace back.Controllers
       return NoContent();
     }
 
-    // Get the queue (songs from current to end)
     [HttpGet("queue")]
     public async Task<ActionResult<IEnumerable<Song>>> GetQueue(int teamId)
     {
       var team = await _teamsRepository.GetByIdAsync(teamId);
       if (team == null) return NotFound(new { message = "Team not found" });
 
-      // Initialize queue if empty
       var queue = _queueService.GetQueue(teamId);
       if (queue.Count == 0)
       {
@@ -162,7 +152,6 @@ namespace back.Controllers
       return Ok(_queueService.GetQueueAsList(teamId));
     }
 
-    // Get the current song
     [HttpGet("current")]
     public async Task<ActionResult<Song>> GetCurrentSong(int teamId)
     {
@@ -180,7 +169,6 @@ namespace back.Controllers
       return Ok(currentSong);
     }
 
-    // Move to the next song
     [HttpPost("next")]
     public async Task<ActionResult<Song>> NextSong(int teamId)
     {
@@ -196,18 +184,15 @@ namespace back.Controllers
       if (team.CurrentSongIndex >= maxIndex)
         return NotFound(new { message = "No more songs in queue" });
 
-      // Move to next song
       team.CurrentSongIndex++;
       await _teamsRepository.UpdateAsync(teamId, team);
 
-      // Reinitialize queue from new current index
       _queueService.InitializeQueue(teamId, allSongs, team.CurrentSongIndex);
 
       var currentSong = songsList.FirstOrDefault(s => s.Index == team.CurrentSongIndex);
       return Ok(currentSong);
     }
 
-    // Move to the previous song
     [HttpPost("previous")]
     public async Task<ActionResult<Song>> PreviousSong(int teamId)
     {
@@ -217,11 +202,9 @@ namespace back.Controllers
       if (team.CurrentSongIndex <= 0)
         return NotFound(new { message = "Already at first song" });
 
-      // Move to previous song
       team.CurrentSongIndex--;
       await _teamsRepository.UpdateAsync(teamId, team);
 
-      // Reinitialize queue from new current index
       var allSongs = await _songsRepository.GetSongsAsync(teamId);
       if (allSongs != null)
       {
@@ -232,7 +215,6 @@ namespace back.Controllers
       return Ok(currentSong);
     }
 
-    // Jump to a specific song by index
     [HttpPost("jump/{index}")]
     public async Task<ActionResult<Song>> JumpToSong(int teamId, int index)
     {
@@ -247,11 +229,9 @@ namespace back.Controllers
       if (targetSong == null)
         return NotFound(new { message = "Song at specified index not found" });
 
-      // Update current index
       team.CurrentSongIndex = index;
       await _teamsRepository.UpdateAsync(teamId, team);
 
-      // Reinitialize queue from new current index
       _queueService.InitializeQueue(teamId, allSongs, team.CurrentSongIndex);
 
       return Ok(targetSong);

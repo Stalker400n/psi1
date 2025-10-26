@@ -23,7 +23,6 @@ public class SongsRepository : ISongsRepository
 
     if (team == null) return null;
 
-    // Return songs ordered by Index
     return team.Songs.OrderBy(s => s.Index).ToList();
   }
 

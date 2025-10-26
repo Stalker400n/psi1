@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import api from '../services/api.service';
 import type { User } from '../services/api.service';
+import { renderPulsingStar, floatingQuotesCSS } from '../utils/praises';
 
 interface CreateTeamProps {
   userName: string;
@@ -43,7 +44,7 @@ export function CreateTeam({ userName, onUserCreated }: CreateTeamProps) {
       
       <div className="max-w-md mx-auto">
         <h1 className="text-4xl font-bold text-white mb-8 text-center">
-          Create Team<span className="text-yellow-400">.</span>
+          Create Team{renderPulsingStar({ className: 'text-yellow-400' })}
         </h1>
         
         <input
@@ -73,6 +74,8 @@ export function CreateTeam({ userName, onUserCreated }: CreateTeamProps) {
           {loading ? 'Creating...' : 'Create Team'}
         </button>
       </div>
+      
+      <style>{floatingQuotesCSS}</style>
     </div>
   );
 }

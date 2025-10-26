@@ -1,4 +1,15 @@
 import { useState } from 'react';
+import { 
+  getRandomPraises, 
+  generatePraiseStyles, 
+  floatingQuotesCSS,
+  renderFloatingQuote,
+  renderPulsingStar
+} from '../utils/praises';
+
+// Get random praises and generate their styles
+const praises = getRandomPraises();
+const praiseStyles = generatePraiseStyles(praises);
 
 interface NameEntryProps {
   onSubmit: (name: string) => void;
@@ -8,10 +19,16 @@ export function NameEntry({ onSubmit }: NameEntryProps) {
   const [name, setName] = useState<string>('');
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      <div className="text-center">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Praises */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {praises.map((praise, idx) => renderFloatingQuote(praise, praiseStyles[idx], idx))}
+      </div>
+      
+      {/* Main content */}
+      <div className="text-center relative z-10">
         <h1 className="text-6xl font-bold text-white mb-2">
-            komcon<span className="text-yellow-400">.</span>
+            komcon{renderPulsingStar({ className: 'text-yellow-400' })}
         </h1>
         <p className="text-slate-400 mb-8">Connect through music!</p>
         <input
@@ -29,6 +46,8 @@ export function NameEntry({ onSubmit }: NameEntryProps) {
           Continue
         </button>
       </div>
+      
+      <style>{floatingQuotesCSS}</style>
     </div>
   );
 }

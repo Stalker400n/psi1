@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users } from 'lucide-react';
 import api from '../services/api.service';
 import type { Team, User } from '../services/api.service';
+import { renderPulsingStar, floatingQuotesCSS } from '../utils/praises';
 
 interface BrowseTeamsProps {
   userName: string;
@@ -50,7 +51,7 @@ export function BrowseTeams({ userName, onUserCreated }: BrowseTeamsProps) {
       </button>
       
       <h1 className="text-4xl font-bold text-white mb-2 text-center">
-        Public Teams<span className="text-yellow-400">.</span>
+        Public Teams{renderPulsingStar({ className: 'text-yellow-400' })}
       </h1>
       <p className="text-slate-400 text-center mb-8">
         {loading ? 'Loading...' : `${teams.length} ${teams.length === 1 ? 'team' : 'teams'} available`}
@@ -114,6 +115,8 @@ export function BrowseTeams({ userName, onUserCreated }: BrowseTeamsProps) {
           )}
         </div>
       </div>
+      
+      <style>{floatingQuotesCSS}</style>
     </div>
   );
 }

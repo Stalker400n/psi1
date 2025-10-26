@@ -5,6 +5,7 @@ import api from '../services/api.service';
 import type { Team, User } from '../services/api.service';
 import { PlaylistView } from './PlaylistView';
 import { ChatView } from './ChatView';
+import { renderPulsingStar, floatingQuotesCSS } from '../utils/praises';
 
 interface TeamViewProps {
   user: User;
@@ -63,7 +64,7 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-white">
-              {team.name}<span className="text-yellow-400">.</span>
+              {team.name}{renderPulsingStar({ className: 'text-yellow-400', size: '1.2em' })}
             </h1>
             <p className="text-slate-400 text-sm">Code: {team.id} • {user.name}</p>
           </div>
@@ -106,6 +107,8 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
         {view === 'playlist' && <PlaylistView teamId={parseInt(teamId)} userId={user.id} userName={user.name} />}
         {view === 'chat' && <ChatView teamId={parseInt(teamId)} userName={user.name} />}
       </div>
+      
+      <style>{floatingQuotesCSS}</style>
     </div>
   );
 }

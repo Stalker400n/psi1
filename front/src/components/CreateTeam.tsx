@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import api from '../services/api.service';
 import type { Team, User } from '../services/api.service';
 
@@ -30,17 +31,25 @@ export function CreateTeam({ userName, onBack, onTeamCreated }: CreateTeamProps)
 
   return (
     <div className="min-h-screen bg-slate-950 p-8">
-      <button onClick={onBack} className="text-slate-400 hover:text-white mb-8">← Back</button>
+      <button 
+        onClick={onBack} 
+        className="text-slate-400 hover:text-white mb-8 flex items-center gap-2"
+      >
+        <ArrowLeft size={20} />
+        Back
+      </button>
       
       <div className="max-w-md mx-auto">
-        <h1 className="text-4xl font-bold text-white mb-8">Create Team</h1>
+        <h1 className="text-4xl font-bold text-white mb-8">
+          Create Team<span className="text-yellow-400">.</span>
+        </h1>
         
         <input
           type="text"
           placeholder="Team name"
           value={teamName}
           onChange={(e) => setTeamName(e.target.value)}
-          className="w-full px-4 py-3 bg-slate-800 text-white rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-3 bg-slate-800 text-white rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-yellow-500"
         />
         
         <label className="flex items-center gap-3 text-white mb-6 cursor-pointer">
@@ -48,7 +57,7 @@ export function CreateTeam({ userName, onBack, onTeamCreated }: CreateTeamProps)
             type="checkbox"
             checked={isPrivate}
             onChange={(e) => setIsPrivate(e.target.checked)}
-            className="w-5 h-5"
+            className="w-5 h-5 accent-yellow-500"
           />
           Private Team
         </label>
@@ -56,7 +65,7 @@ export function CreateTeam({ userName, onBack, onTeamCreated }: CreateTeamProps)
         <button
           onClick={handleCreate}
           disabled={loading || !teamName}
-          className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+          className="w-full px-6 py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition disabled:opacity-50 font-semibold"
         >
           {loading ? 'Creating...' : 'Create Team'}
         </button>

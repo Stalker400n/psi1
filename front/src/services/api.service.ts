@@ -171,6 +171,27 @@ const songsApi = {
     return response.json();
   },
 
+  getQueue: async (teamId: number): Promise<Song[]> => {
+    const response = await fetch(`${API_BASE}/teams/${teamId}/songs/queue`, {
+      ...fetchOptions,
+      method: 'GET',
+    });
+    if (!response.ok) throw new Error('Failed to fetch queue');
+    return response.json();
+  },
+
+  dequeue: async (teamId: number): Promise<Song | null> => {
+    const response = await fetch(
+      `${API_BASE}/teams/${teamId}/songs/queue/dequeue`,
+      {
+        ...fetchOptions,
+        method: 'POST',
+      }
+    );
+    if (!response.ok) return null;
+    return response.json();
+  },
+
   getById: async (teamId: number, songId: number): Promise<Song> => {
     const response = await fetch(
       `${API_BASE}/teams/${teamId}/songs/${songId}`,

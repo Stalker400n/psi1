@@ -15,6 +15,7 @@ export interface Song {
   addedByUserId: number;
   addedByUserName: string;
   addedAt: string;
+  index: number;
 }
 
 export interface ChatMessage {
@@ -31,6 +32,7 @@ export interface Team {
   inviteCode: string;
   createdAt: string;
   createdByUserId: number;
+  currentSongIndex: number;
   songs: Song[];
   users: User[];
   messages: ChatMessage[];
@@ -180,15 +182,42 @@ const songsApi = {
     return response.json();
   },
 
-  dequeue: async (teamId: number): Promise<Song | null> => {
+  getCurrent: async (teamId: number): Promise<Song> => {
+    const response = await fetch(`${API_BASE}/teams/${teamId}/songs/current`, {
+      ...fetchOptions,
+      method: 'GET',
+    });
+    if (!response.ok) throw new Error('No current song');
+    return response.json();
+  },
+
+  next: async (teamId: number): Promise<Song> => {
+    const response = await fetch(`${API_BASE}/teams/${teamId}/songs/next`, {
+      ...fetchOptions,
+      method: 'POST',
+    });
+    if (!response.ok) throw new Error('No next song');
+    return response.json();
+  },
+
+  previous: async (teamId: number): Promise<Song> => {
+    const response = await fetch(`${API_BASE}/teams/${teamId}/songs/previous`, {
+      ...fetchOptions,
+      method: 'POST',
+    });
+    if (!response.ok) throw new Error('No previous song');
+    return response.json();
+  },
+
+  jumpTo: async (teamId: number, index: number): Promise<Song> => {
     const response = await fetch(
-      `${API_BASE}/teams/${teamId}/songs/queue/dequeue`,
+      `${API_BASE}/teams/${teamId}/songs/jump/${index}`,
       {
         ...fetchOptions,
         method: 'POST',
       }
     );
-    if (!response.ok) return null;
+    if (!response.ok) throw new Error('Failed to jump to song');
     return response.json();
   },
 
@@ -213,7 +242,8 @@ const songsApi = {
       rating?: number;
       addedByUserId: number;
       addedByUserName: string;
-    }
+    },
+    insertAfterCurrent: boolean = false
   ): Promise<Song> => {
     const songData = {
       link: song.link,
@@ -224,9 +254,17 @@ const songsApi = {
       addedByUserName: song.addedByUserName,
     };
 
-    console.log('Adding song:', songData);
+    console.log(
+      'Adding song:',
+      songData,
+      'insertAfterCurrent:',
+      insertAfterCurrent
+    );
 
-    const response = await fetch(`${API_BASE}/teams/${teamId}/songs`, {
+    const url = `${API_BASE}/teams/${teamId}/songs${
+      insertAfterCurrent ? '?insertAfterCurrent=true' : ''
+    }`;
+    const response = await fetch(url, {
       ...fetchOptions,
       method: 'POST',
       body: JSON.stringify(songData),

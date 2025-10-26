@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using back.Models;
 
 namespace back.Services
@@ -8,10 +7,13 @@ namespace back.Services
   public class SongQueue : IEnumerable<Song>
   {
     private readonly List<Song> _songs = new List<Song>();
-
-    public void Enqueue(Song song)
+    public void Enqueue(Song song, bool insertAtFront = false)
     {
-      if (song != null)
+      if (song == null) return;
+
+      if (insertAtFront)
+        _songs.Insert(0, song);
+      else
         _songs.Add(song);
     }
 

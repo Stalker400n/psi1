@@ -42,7 +42,7 @@ export function CreateTeam({ userName, onUserCreated }: CreateTeamProps) {
       </button>
       
       <div className="max-w-md mx-auto">
-        <h1 className="text-4xl font-bold text-white mb-8">
+        <h1 className="text-4xl font-bold text-white mb-8 text-center">
           Create Team<span className="text-yellow-400">.</span>
         </h1>
         

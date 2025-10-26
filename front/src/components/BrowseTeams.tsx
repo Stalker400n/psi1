@@ -49,7 +49,7 @@ export function BrowseTeams({ userName, onUserCreated }: BrowseTeamsProps) {
         Back
       </button>
       
-      <h1 className="text-4xl font-bold text-white mb-8">
+      <h1 className="text-4xl font-bold text-white mb-8 text-center">
         Public Teams<span className="text-yellow-400">.</span>
       </h1>
       
@@ -58,22 +58,24 @@ export function BrowseTeams({ userName, onUserCreated }: BrowseTeamsProps) {
       ) : teams.length === 0 ? (
         <p className="text-slate-400">No public teams available</p>
       ) : (
-        <div className="grid gap-4 max-w-2xl">
-          {teams.map(team => (
-            <div key={team.id} className="bg-slate-800 p-6 rounded-lg flex justify-between items-center hover:bg-slate-750 transition">
-              <div>
-                <h3 className="text-xl text-white font-semibold">{team.name}</h3>
-                <p className="text-slate-400 text-sm">Code: {team.id}</p>
-                <p className="text-slate-500 text-xs mt-1">{team.users?.length || 0} members</p>
+        <div className="flex justify-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl">
+            {teams.map(team => (
+              <div key={team.id} className="bg-slate-800 p-6 rounded-lg hover:bg-slate-750 transition flex flex-col">
+                <div className="flex-1 mb-4">
+                  <h3 className="text-2xl text-white font-bold mb-2">{team.name}</h3>
+                  <p className="text-slate-400 text-sm mb-1">Code: {team.id}</p>
+                  <p className="text-slate-500 text-xs">{team.users?.length || 0} members</p>
+                </div>
+                <button
+                  onClick={() => handleJoin(team)}
+                  className="w-full px-6 py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition font-semibold"
+                >
+                  Join Team
+                </button>
               </div>
-              <button
-                onClick={() => handleJoin(team)}
-                className="px-6 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition font-semibold"
-              >
-                Join
-              </button>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>

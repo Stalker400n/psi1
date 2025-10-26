@@ -41,7 +41,7 @@ export function JoinTeam({ userName, onUserCreated }: JoinTeamProps) {
       </button>
       
       <div className="max-w-md mx-auto">
-        <h1 className="text-4xl font-bold text-white mb-8">
+        <h1 className="text-4xl font-bold text-white mb-8 text-center">
           Join Team<span className="text-yellow-400">.</span>
         </h1>
         
@@ -57,7 +57,7 @@ export function JoinTeam({ userName, onUserCreated }: JoinTeamProps) {
         <button
           onClick={handleJoin}
           disabled={loading || !code}
-          className="w-full px-6 py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition disabled:opacity-50 font-semibold"
+          className="w-full px-6 py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition disabled:opacity-50 font-semibold flex justify-center"
         >
           {loading ? 'Joining...' : 'Join Team'}
         </button>

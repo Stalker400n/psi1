@@ -21,4 +21,7 @@ public class Song
   public string AddedByUserName { get; set; } = string.Empty;
 
   public DateTime AddedAt { get; set; } = DateTime.UtcNow;
+
+  // New property to track song order in the queue
+  public int Index { get; set; } = 0;
 }

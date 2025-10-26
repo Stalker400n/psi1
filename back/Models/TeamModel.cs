@@ -19,6 +19,9 @@ public class Team
 
   public int CreatedByUserId { get; set; }
 
+  // New property to track the current song being played
+  public int CurrentSongIndex { get; set; } = 0;
+
   public List<Song> Songs { get; set; } = new List<Song>();
 
   public List<User> Users { get; set; } = new List<User>();

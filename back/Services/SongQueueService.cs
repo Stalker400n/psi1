@@ -1,52 +1,23 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using back.Models;
 
 namespace back.Services
 {
-  public class SongQueue : IEnumerable<Song>
+  public class SongQueueService
   {
-    private readonly List<Song> _songs = new List<Song>();
+    private readonly Dictionary<int, SongQueue> _queues = new Dictionary<int, SongQueue>();
 
-    public void Enqueue(Song song)
+    public SongQueue GetQueue(int teamId)
     {
-      if (song != null)
-        _songs.Add(song);
+      if (!_queues.ContainsKey(teamId))
+        _queues[teamId] = new SongQueue();
+
+      return _queues[teamId];
     }
 
-    public Song? Dequeue()
+    public void ClearQueue(int teamId)
     {
-      if (_songs.Count == 0) return null;
-
-      var song = _songs[0];
-      _songs.RemoveAt(0);
-      return song;
-    }
-
-    public Song? Peek()
-    {
-      return _songs.Count > 0 ? _songs[0] : null;
-    }
-
-    public bool Remove(Song song)
-    {
-      return _songs.Remove(song);
-    }
-
-    public void Clear()
-    {
-      _songs.Clear();
-    }
-
-    public int Count => _songs.Count;
-
-    public IEnumerator<Song> GetEnumerator() => _songs.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-    public IEnumerable<Song> TopRated(int minRating)
-    {
-      return _songs.Where(s => s.Rating >= minRating);
+      if (_queues.ContainsKey(teamId))
+        _queues[teamId].Clear();
     }
   }
 }

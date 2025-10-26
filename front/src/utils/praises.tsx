@@ -1,31 +1,31 @@
 // Configuration constants for the floating quotes
 export const QUOTE_CONFIG = {
   // Quote selection
-  MIN_QUOTES: 8,           // Minimum number of quotes to display
-  MAX_QUOTES: 12,          // Maximum number of quotes to display
+  MIN_QUOTES: 12,           // Minimum number of quotes to display
+  MAX_QUOTES: 16,          // Maximum number of quotes to display
   
   // Positioning
-  LEFT_SIDE_MIN: 5,        // Minimum position for left side quotes (%)
+  LEFT_SIDE_MIN: 15,        // Minimum position for left side quotes (%)
   LEFT_SIDE_MAX: 35,       // Maximum position for left side quotes (%)
   RIGHT_SIDE_MIN: 65,      // Minimum position for right side quotes (%)
-  RIGHT_SIDE_MAX: 95,      // Maximum position for right side quotes (%)
+  RIGHT_SIDE_MAX: 85,      // Maximum position for right side quotes (%)
   TOP_MIN: 5,              // Minimum vertical position (%)
   TOP_MAX: 95,             // Maximum vertical position (%)
   VERTICAL_SEGMENTS: 5,    // Number of vertical segments for better distribution
   
   // Movement
   MOVEMENT_ENABLED: true,  // Enable multi-directional movement for dots
-  MOVEMENT_RANGE_X: 1.5,   // Horizontal movement range (px) - reduced to 15% of original
-  MOVEMENT_RANGE_Y: 1.5,   // Vertical movement range (px) - reduced to 15% of original
-  MOVEMENT_DURATION: 8,    // Movement animation duration (seconds)
+  MOVEMENT_RANGE_X: 1.5,   // Horizontal movement range (px)
+  MOVEMENT_RANGE_Y: 1.5,   // Vertical movement range (px)
+  MOVEMENT_DURATION: 5,    // Movement animation duration (seconds)
   MOVEMENT_RANDOM: true,   // Use random movement pattern
   
   // Sizing
-  MIN_FONT_SIZE: 0.6,      // Minimum font size (rem)
+  MIN_FONT_SIZE: 0.8,      // Minimum font size (rem)
   MAX_FONT_SIZE: 1.8,      // Maximum font size (rem)
   
   // Appearance
-  MIN_OPACITY: 0.35,       // Minimum opacity
+  MIN_OPACITY: 0.50,       // Minimum opacity
   MAX_OPACITY: 0.75,       // Maximum opacity
   TEXT_COLOR: 'rgba(100,116,139,0.6)', // Text color
   
@@ -33,7 +33,7 @@ export const QUOTE_CONFIG = {
   DOT_COLOR: 'rgba(255, 191, 0, 1)',   // Base color for the dot
   DOT_GLOW_COLOR: 'rgba(255, 215, 0, 0.6)', // Glow color for the dot
   DOT_SIZE: '1.4em',       // Size of the dot relative to text
-  DOT_PULSE_DURATION: '4s', // Duration of the pulse animation
+  DOT_PULSE_DURATION: '3s', // Duration of the pulse animation
   DOT_PULSE_MIN: 0.3,      // Minimum opacity during pulse
   DOT_PULSE_MAX: 1,        // Maximum opacity during pulse
   DOT_CHAR: '.',           // Character to use for the dot
@@ -43,14 +43,14 @@ export const QUOTE_CONFIG = {
   
   // Animation
   MIN_DURATION: 90,        // Minimum animation duration (seconds)
-  MAX_DURATION: 160,       // Maximum animation duration (seconds)
+  MAX_DURATION: 90,       // Maximum animation duration (seconds)
   MAX_DELAY: 60,           // Maximum animation delay (seconds)
   
   // Overlap prevention
   WIDTH_FACTOR: 0.5,       // Factor to estimate width based on text length and font size
   MIN_HORIZONTAL_SPACING: 0.6, // Minimum horizontal spacing between quotes (multiplier of combined widths)
-  MIN_VERTICAL_SPACING: 2.5,   // Minimum vertical spacing between quotes (multiplier of combined heights)
-  MAX_PLACEMENT_ATTEMPTS: 15,  // Maximum attempts to find non-overlapping position
+  MIN_VERTICAL_SPACING: 15.0,   // Minimum vertical spacing between quotes (multiplier of combined heights)
+  MAX_PLACEMENT_ATTEMPTS: 30,  // Maximum attempts to find non-overlapping position
 };
 
 // Full list of praises

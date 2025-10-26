@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import api from '../services/api.service';
 import type { Team, User } from '../services/api.service';
 
 interface BrowseTeamsProps {
-  onBack: () => void;
-  onJoinTeam: (team: Team, user: User) => void;
   userName: string;
+  onUserCreated: (user: User) => void;
 }
 
-export function BrowseTeams({ onBack, onJoinTeam, userName }: BrowseTeamsProps) {
+export function BrowseTeams({ userName, onUserCreated }: BrowseTeamsProps) {
+  const navigate = useNavigate();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -30,7 +31,8 @@ export function BrowseTeams({ onBack, onJoinTeam, userName }: BrowseTeamsProps) 
   const handleJoin = async (team: Team) => {
     try {
       const user = await api.usersApi.add(team.id, { name: userName, score: 0, isActive: true });
-      onJoinTeam(team, user);
+      onUserCreated(user);
+      navigate(`/teams/${team.id}`);
     } catch (error) {
       console.error('Error joining team:', error);
       alert('Failed to join team');
@@ -40,7 +42,7 @@ export function BrowseTeams({ onBack, onJoinTeam, userName }: BrowseTeamsProps) 
   return (
     <div className="min-h-screen bg-slate-950 p-8">
       <button 
-        onClick={onBack} 
+        onClick={() => navigate('/')} 
         className="text-slate-400 hover:text-white mb-8 flex items-center gap-2"
       >
         <ArrowLeft size={20} />
@@ -62,7 +64,7 @@ export function BrowseTeams({ onBack, onJoinTeam, userName }: BrowseTeamsProps) 
               <div>
                 <h3 className="text-xl text-white font-semibold">{team.name}</h3>
                 <p className="text-slate-400 text-sm">Code: {team.id}</p>
-                <p className="text-slate-500 text-xs mt-1">{team.users.length} members</p>
+                <p className="text-slate-500 text-xs mt-1">{team.users?.length || 0} members</p>
               </div>
               <button
                 onClick={() => handleJoin(team)}

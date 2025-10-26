@@ -1,15 +1,16 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import api from '../services/api.service';
-import type { Team, User } from '../services/api.service';
+import type { User } from '../services/api.service';
 
 interface CreateTeamProps {
   userName: string;
-  onBack: () => void;
-  onTeamCreated: (team: Team, user: User) => void;
+  onUserCreated: (user: User) => void;
 }
 
-export function CreateTeam({ userName, onBack, onTeamCreated }: CreateTeamProps) {
+export function CreateTeam({ userName, onUserCreated }: CreateTeamProps) {
+  const navigate = useNavigate();
   const [teamName, setTeamName] = useState<string>('');
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -21,7 +22,8 @@ export function CreateTeam({ userName, onBack, onTeamCreated }: CreateTeamProps)
     try {
       const team = await api.teamsApi.create({ name: teamName, isPrivate });
       const user = await api.usersApi.add(team.id, { name: userName, score: 0, isActive: true });
-      onTeamCreated(team, user);
+      onUserCreated(user);
+      navigate(`/teams/${team.id}`);
     } catch (error) {
       console.error('Error creating team:', error);
       alert('Failed to create team');
@@ -32,7 +34,7 @@ export function CreateTeam({ userName, onBack, onTeamCreated }: CreateTeamProps)
   return (
     <div className="min-h-screen bg-slate-950 p-8">
       <button 
-        onClick={onBack} 
+        onClick={() => navigate('/')} 
         className="text-slate-400 hover:text-white mb-8 flex items-center gap-2"
       >
         <ArrowLeft size={20} />
@@ -49,6 +51,7 @@ export function CreateTeam({ userName, onBack, onTeamCreated }: CreateTeamProps)
           placeholder="Team name"
           value={teamName}
           onChange={(e) => setTeamName(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && !loading && teamName && handleCreate()}
           className="w-full px-4 py-3 bg-slate-800 text-white rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-yellow-500"
         />
         

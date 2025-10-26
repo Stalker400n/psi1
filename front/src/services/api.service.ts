@@ -210,17 +210,34 @@ const songsApi = {
       link: string;
       title: string;
       artist: string;
-      rating: number;
+      rating?: number;
       addedByUserId: number;
       addedByUserName: string;
     }
   ): Promise<Song> => {
+    const songData = {
+      link: song.link,
+      title: song.title,
+      artist: song.artist,
+      rating: song.rating || 0,
+      addedByUserId: song.addedByUserId,
+      addedByUserName: song.addedByUserName,
+    };
+
+    console.log('Adding song:', songData);
+
     const response = await fetch(`${API_BASE}/teams/${teamId}/songs`, {
       ...fetchOptions,
       method: 'POST',
-      body: JSON.stringify(song),
+      body: JSON.stringify(songData),
     });
-    if (!response.ok) throw new Error('Failed to add song');
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Failed to add song:', errorText);
+      throw new Error('Failed to add song');
+    }
+
     return response.json();
   },
 

@@ -1,8 +1,8 @@
 // Configuration constants for the floating quotes
 export const QUOTE_CONFIG = {
   // Quote selection
-  MIN_QUOTES: 12,           // Minimum number of quotes to display
-  MAX_QUOTES: 16,          // Maximum number of quotes to display
+  MIN_QUOTES: 8,            // Minimum number of quotes to display (reduced to prevent overcrowding)
+  MAX_QUOTES: 12,           // Maximum number of quotes to display (reduced to prevent overcrowding)
   
   // Positioning
   LEFT_SIDE_MIN: 15,        // Minimum position for left side quotes (%)
@@ -11,7 +11,7 @@ export const QUOTE_CONFIG = {
   RIGHT_SIDE_MAX: 85,      // Maximum position for right side quotes (%)
   TOP_MIN: 5,              // Minimum vertical position (%)
   TOP_MAX: 95,             // Maximum vertical position (%)
-  VERTICAL_SEGMENTS: 5,    // Number of vertical segments for better distribution
+  VERTICAL_SEGMENTS: 10,   // Number of vertical segments for better distribution (increased)
   
   // Movement
   MOVEMENT_ENABLED: true,  // Enable multi-directional movement for dots
@@ -48,9 +48,9 @@ export const QUOTE_CONFIG = {
   
   // Overlap prevention
   WIDTH_FACTOR: 0.5,       // Factor to estimate width based on text length and font size
-  MIN_HORIZONTAL_SPACING: 0.6, // Minimum horizontal spacing between quotes (multiplier of combined widths)
-  MIN_VERTICAL_SPACING: 15.0,   // Minimum vertical spacing between quotes (multiplier of combined heights)
-  MAX_PLACEMENT_ATTEMPTS: 30,  // Maximum attempts to find non-overlapping position
+  MIN_HORIZONTAL_SPACING: 1000.0, // Minimum horizontal spacing between quotes (multiplier of combined widths)
+  MIN_VERTICAL_SPACING: 1000.0,  // Minimum vertical spacing between quotes (multiplier of combined heights)
+  MAX_PLACEMENT_ATTEMPTS: 50,  // Maximum attempts to find non-overlapping position (increased)
 };
 
 // Full list of praises
@@ -112,8 +112,26 @@ export const generatePraiseStyles = (praises: string[]): QuoteStyle[] => {
   // Distribute quotes across the entire width
   const positions: QuotePosition[] = [];
   
+  // Pre-assign vertical segments to ensure even distribution
+  const leftSegments = Array(QUOTE_CONFIG.VERTICAL_SEGMENTS).fill(0).map((_, i) => i);
+  const rightSegments = Array(QUOTE_CONFIG.VERTICAL_SEGMENTS).fill(0).map((_, i) => i);
+  
+  // Shuffle the segments
+  leftSegments.sort(() => 0.5 - Math.random());
+  rightSegments.sort(() => 0.5 - Math.random());
+  
+  // Distribute quotes evenly between left and right sides
+  const leftCount = Math.ceil(praises.length / 2);
+  
   // Create a more natural distribution of quotes
-  return praises.map((praise) => {
+  return praises.map((praise, index) => {
+    // Determine if this quote should be on the left or right side
+    const isLeftSide = index < leftCount;
+    
+    // Get the next available segment for this side
+    const segmentIndex = isLeftSide ? 
+      leftSegments[index % leftSegments.length] : 
+      rightSegments[(index - leftCount) % rightSegments.length];
     // Generate random position across the entire width
     let leftPosition: number = 0;
     let topPosition: number = 0;
@@ -122,22 +140,19 @@ export const generatePraiseStyles = (praises: string[]): QuoteStyle[] => {
     
     // Keep trying positions until we find one that doesn't overlap
     do {
-      // Position quotes more towards the sides (avoid the center)
-      // 50% chance of being on the left side, 50% chance of being on the right side
-      if (Math.random() > 0.5) {
+      // Position quotes on the predetermined side
+      if (isLeftSide) {
         leftPosition = Math.random() * (QUOTE_CONFIG.LEFT_SIDE_MAX - QUOTE_CONFIG.LEFT_SIDE_MIN) + QUOTE_CONFIG.LEFT_SIDE_MIN;
       } else {
         leftPosition = Math.random() * (QUOTE_CONFIG.RIGHT_SIDE_MAX - QUOTE_CONFIG.RIGHT_SIDE_MIN) + QUOTE_CONFIG.RIGHT_SIDE_MIN;
       }
       
-      // Better vertical distribution using segments
-      // Determine which vertical segment this quote belongs to
-      const verticalSegment = Math.floor(Math.random() * QUOTE_CONFIG.VERTICAL_SEGMENTS);
+      // Use the pre-assigned vertical segment for better distribution
       const segmentHeight = (QUOTE_CONFIG.TOP_MAX - QUOTE_CONFIG.TOP_MIN) / QUOTE_CONFIG.VERTICAL_SEGMENTS;
       
-      // Calculate position within the segment (with some randomness)
-      const segmentTop = QUOTE_CONFIG.TOP_MIN + (verticalSegment * segmentHeight);
-      topPosition = segmentTop + (Math.random() * segmentHeight);
+      // Calculate position within the segment (with some randomness, but limited to prevent overlap)
+      const segmentTop = QUOTE_CONFIG.TOP_MIN + (segmentIndex * segmentHeight);
+      topPosition = segmentTop + (Math.random() * (segmentHeight * 0.8) + segmentHeight * 0.1);
       
       // Smaller font sizes to ensure quotes stay within screen
       fontSize = Math.random() * (QUOTE_CONFIG.MAX_FONT_SIZE - QUOTE_CONFIG.MIN_FONT_SIZE) + QUOTE_CONFIG.MIN_FONT_SIZE;
@@ -146,17 +161,27 @@ export const generatePraiseStyles = (praises: string[]): QuoteStyle[] => {
     } while (
       attempts < QUOTE_CONFIG.MAX_PLACEMENT_ATTEMPTS && 
       positions.some(pos => {
-        // Calculate approximate width of this quote based on font size and text length
-        const thisWidth = praise.length * fontSize * QUOTE_CONFIG.WIDTH_FACTOR;
-        const otherWidth = praises[positions.indexOf(pos)].length * pos.fontSize * QUOTE_CONFIG.WIDTH_FACTOR;
-        
         // Calculate distance between quotes
-        const xDist = Math.abs(pos.left - leftPosition);
         const yDist = Math.abs(pos.top - topPosition);
         
-        // Ensure quotes are far enough apart based on their sizes
-        return (xDist < (thisWidth + otherWidth) * QUOTE_CONFIG.MIN_HORIZONTAL_SPACING) && 
-               (yDist < (pos.fontSize + fontSize) * QUOTE_CONFIG.MIN_VERTICAL_SPACING);
+        // Since we're using pre-assigned segments, quotes on different sides can't overlap
+        // and quotes in different segments shouldn't overlap vertically
+        // Just check for quotes in the same segment or adjacent segments
+        
+        // Check if quotes are on the same side
+        const onSameSide = 
+          (leftPosition < 50 && pos.left < 50) || // Both on left side
+          (leftPosition >= 50 && pos.left >= 50); // Both on right side
+        
+        if (!onSameSide) {
+          // Quotes on different sides don't overlap
+          return false;
+        }
+        
+        // For quotes on the same side, check if they're too close vertically
+        // Use a percentage-based approach instead of font-size based
+        const minVerticalDistance = 10; // Minimum 10% vertical distance
+        return yDist < minVerticalDistance;
       })
     );
     

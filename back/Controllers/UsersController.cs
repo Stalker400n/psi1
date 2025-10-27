@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using back.Models;
 using back.Data.Repositories;
+using back.Models.Enums;
 
 namespace back.Controllers;
 
@@ -47,15 +48,10 @@ public class UsersController : ControllerBase
     return Ok(updated);
   }
 
-  public class RoleDto
-  {
-    public back.Models.Enums.Role Role { get; set; }
-  }
-
   [HttpPut("{id}/role")]
-  public async Task<ActionResult<User>> ChangeUserRole(int teamId, int id, [FromBody] RoleDto dto)
+  public async Task<ActionResult<User>> ChangeUserRole(int teamId, int id, [FromBody] Role role)
   {
-    var updated = await _usersRepository.ChangeUserRoleAsync(teamId, id, dto.Role);
+    var updated = await _usersRepository.ChangeUserRoleAsync(teamId, id, role);
     if (updated == null) return NotFound(new { message = "Team or user not found" });
     return Ok(updated);
   }

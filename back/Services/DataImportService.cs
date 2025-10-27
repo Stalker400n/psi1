@@ -22,8 +22,6 @@ namespace back.Services
             _chatsRepository = chatsRepository;
         }
 
-
-
         public async Task ImportData(string filePath)
         {
             if (!File.Exists(filePath))
@@ -61,9 +59,8 @@ namespace back.Services
                     {
                         foreach (var user in users)
                         {
-                            user.Id = 0; // Reset ID to generate new one
+                            user.Id = 0; 
                             await _usersRepository.CreateUserAsync(createdTeam.Id, user);
-                            Console.WriteLine($" User: {user.Id} - {user.Name}");
                         }
                     }
 
@@ -71,9 +68,8 @@ namespace back.Services
                     {
                         foreach (var song in songs)
                         {
-                            song.Id = 0; // Reset ID to generate new one
+                            song.Id = 0;
                             await _songsRepository.AddSongAsync(createdTeam.Id, song);
-                            Console.WriteLine($" Song: {song.Id} - {song.Title}");
                         }
                     }
 
@@ -81,9 +77,8 @@ namespace back.Services
                     {
                         foreach (var message in messages)
                         {
-                            message.Id = 0; // Reset ID to generate new one
+                            message.Id = 0;
                             await _chatsRepository.AddMessageAsync(createdTeam.Id, message);
-                            Console.WriteLine($" Message: {message.Id} - {message.Text}");
                         }
                     }
                 }

@@ -65,16 +65,22 @@ public class SongsRepository : ISongsRepository
     var existingSong = team.Songs.FirstOrDefault(s => s.Id == songId);
     if (existingSong == null) return null;
 
-    existingSong.Link = song.Link;
-    existingSong.Title = song.Title;
-    existingSong.Artist = song.Artist;
-    existingSong.Rating = song.Rating;
-    existingSong.Index = song.Index;
+    // Create a new Song instance with updated values using 'with' expression
+    var updatedSong = existingSong with
+    {
+      Rating = song.Rating,
+      Index = song.Index
+    };
 
-    _context.Entry(existingSong).State = EntityState.Modified;
+    // Remove old instance and add new one
+    team.Songs.Remove(existingSong);
+    team.Songs.Add(updatedSong);
+
+    _context.Entry(existingSong).State = EntityState.Detached;
+    _context.Songs.Update(updatedSong);
     await _context.SaveChangesAsync();
 
-    return existingSong;
+    return updatedSong;
   }
 
   public async Task<bool> DeleteSongAsync(int teamId, int songId)

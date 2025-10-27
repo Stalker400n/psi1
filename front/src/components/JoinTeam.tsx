@@ -1,14 +1,17 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import api from '../services/api.service';
-import type { Team, User } from '../services/api.service';
+import type { User } from '../services/api.service';
+import { renderPulsingStar, floatingQuotesCSS } from '../utils/praises';
 
 interface JoinTeamProps {
   userName: string;
-  onBack: () => void;
-  onTeamJoined: (team: Team, user: User) => void;
+  onUserCreated: (user: User) => void;
 }
 
-export function JoinTeam({ userName, onBack, onTeamJoined }: JoinTeamProps) {
+export function JoinTeam({ userName, onUserCreated }: JoinTeamProps) {
+  const navigate = useNavigate();
   const [code, setCode] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -19,7 +22,8 @@ export function JoinTeam({ userName, onBack, onTeamJoined }: JoinTeamProps) {
     try {
       const team = await api.teamsApi.getById(parseInt(code));
       const user = await api.usersApi.add(team.id, { name: userName, score: 0, isActive: true });
-      onTeamJoined(team, user);
+      onUserCreated(user);
+      navigate(`/teams/${team.id}`);
     } catch (error) {
       console.error('Error joining team:', error);
       alert('Failed to join team. Check the code.');
@@ -29,28 +33,38 @@ export function JoinTeam({ userName, onBack, onTeamJoined }: JoinTeamProps) {
 
   return (
     <div className="min-h-screen bg-slate-950 p-8">
-      <button onClick={onBack} className="text-slate-400 hover:text-white mb-8">← Back</button>
+      <button 
+        onClick={() => navigate('/')} 
+        className="text-slate-400 hover:text-white mb-8 flex items-center gap-2"
+      >
+        <ArrowLeft size={20} />
+        Back
+      </button>
       
       <div className="max-w-md mx-auto">
-        <h1 className="text-4xl font-bold text-white mb-8">Join Team</h1>
+        <h1 className="text-4xl font-bold text-white mb-8 text-center">
+          Join Team{renderPulsingStar({ className: 'text-yellow-400' })}
+        </h1>
         
         <input
           type="text"
           placeholder="Enter team code"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          className="w-full px-4 py-3 bg-slate-800 text-white rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-3 bg-slate-800 text-white rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-yellow-500"
           onKeyPress={(e) => e.key === 'Enter' && handleJoin()}
         />
         
         <button
           onClick={handleJoin}
           disabled={loading || !code}
-          className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+          className="w-full px-6 py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition disabled:opacity-50 font-semibold flex justify-center"
         >
           {loading ? 'Joining...' : 'Join Team'}
         </button>
       </div>
+      
+      <style>{floatingQuotesCSS}</style>
     </div>
   );
 }

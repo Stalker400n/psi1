@@ -21,4 +21,6 @@ public class Song
   public string AddedByUserName { get; set; } = string.Empty;
 
   public DateTime AddedAt { get; set; } = DateTime.UtcNow;
+
+  public int Index { get; set; } = 0;
 }

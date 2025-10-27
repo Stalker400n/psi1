@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Users } from 'lucide-react';
 import api from '../services/api.service';
 import type { Team, User } from '../services/api.service';
+import { renderPulsingStar, floatingQuotesCSS } from '../utils/praises';
 
 interface BrowseTeamsProps {
-  onBack: () => void;
-  onJoinTeam: (team: Team, user: User) => void;
   userName: string;
+  onUserCreated: (user: User) => void;
 }
 
-export function BrowseTeams({ onBack, onJoinTeam, userName }: BrowseTeamsProps) {
+export function BrowseTeams({ userName, onUserCreated }: BrowseTeamsProps) {
+  const navigate = useNavigate();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -29,7 +32,8 @@ export function BrowseTeams({ onBack, onJoinTeam, userName }: BrowseTeamsProps) 
   const handleJoin = async (team: Team) => {
     try {
       const user = await api.usersApi.add(team.id, { name: userName, score: 0, isActive: true });
-      onJoinTeam(team, user);
+      onUserCreated(user);
+      navigate(`/teams/${team.id}`);
     } catch (error) {
       console.error('Error joining team:', error);
       alert('Failed to join team');
@@ -38,32 +42,81 @@ export function BrowseTeams({ onBack, onJoinTeam, userName }: BrowseTeamsProps) 
 
   return (
     <div className="min-h-screen bg-slate-950 p-8">
-      <button onClick={onBack} className="text-slate-400 hover:text-white mb-8">← Back</button>
+      <button 
+        onClick={() => navigate('/')} 
+        className="text-slate-400 hover:text-white mb-8 flex items-center gap-2 transition"
+      >
+        <ArrowLeft size={20} />
+        Back
+      </button>
       
-      <h1 className="text-4xl font-bold text-white mb-8">Public Teams</h1>
+      <h1 className="text-4xl font-bold text-white mb-2 text-center">
+        Public Teams{renderPulsingStar({ className: 'text-yellow-400' })}
+      </h1>
+      <p className="text-slate-400 text-center mb-8">
+        {loading ? 'Loading...' : `${teams.length} ${teams.length === 1 ? 'team' : 'teams'} available`}
+      </p>
       
-      {loading ? (
-        <p className="text-slate-400">Loading...</p>
-      ) : teams.length === 0 ? (
-        <p className="text-slate-400">No public teams available</p>
-      ) : (
-        <div className="grid gap-4 max-w-2xl">
-          {teams.map(team => (
-            <div key={team.id} className="bg-slate-800 p-6 rounded-lg flex justify-between items-center">
-              <div>
-                <h3 className="text-xl text-white font-semibold">{team.name}</h3>
-                <p className="text-slate-400 text-sm">Code: {team.id}</p>
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {loading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-slate-800/50 p-6 rounded-lg animate-pulse">
+                <div className="h-8 bg-slate-700 rounded mb-3"></div>
+                <div className="h-4 bg-slate-700 rounded w-2/3 mb-2"></div>
+                <div className="h-4 bg-slate-700 rounded w-1/2 mb-4"></div>
+                <div className="h-10 bg-slate-700 rounded"></div>
               </div>
-              <button
-                onClick={() => handleJoin(team)}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            ))
+          ) : teams.length === 0 ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <div 
+                key={i} 
+                className="bg-slate-900/30 border-2 border-dashed border-slate-800 p-6 rounded-lg flex flex-col items-center justify-center min-h-[200px]"
               >
-                Join
-              </button>
-            </div>
-          ))}
+                <Users size={32} className="text-slate-700 mb-2" />
+                <p className="text-slate-600 text-sm">No team yet</p>
+              </div>
+            ))
+          ) : (
+            <>
+              {teams.map(team => (
+                <div 
+                  key={team.id} 
+                  className="bg-slate-800 p-6 rounded-lg hover:bg-slate-750 transition flex flex-col border border-slate-700 hover:border-yellow-500/50"
+                >
+                  <div className="flex-1 mb-4">
+                    <h3 className="text-2xl text-white font-bold mb-2">{team.name}</h3>
+                    <p className="text-slate-400 text-sm mb-1">Code: {team.id}</p>
+                    <div className="flex items-center gap-2 text-slate-500 text-xs">
+                      <Users size={14} />
+                      <span>{team.users?.length || 0} {team.users?.length === 1 ? 'member' : 'members'}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleJoin(team)}
+                    className="w-full px-6 py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition font-semibold"
+                  >
+                    Join Team
+                  </button>
+                </div>
+              ))}
+              
+              {Array.from({ length: Math.max(0, 6 - teams.length) }).map((_, i) => (
+                <div 
+                  key={`empty-${i}`} 
+                  className="bg-slate-900/30 border-2 border-dashed border-slate-800 p-6 rounded-lg flex flex-col items-center justify-center min-h-[200px]"
+                >
+                  <Users size={32} className="text-slate-700 mb-2" />
+                  <p className="text-slate-600 text-sm">No team yet</p>
+                </div>
+              ))}
+            </>
+          )}
         </div>
-      )}
+      </div>
+      
+      <style>{floatingQuotesCSS}</style>
     </div>
   );
 }

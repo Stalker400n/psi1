@@ -8,88 +8,90 @@ namespace back.Data.Repositories;
 
 public class SongsRepository : ISongsRepository
 {
-    private readonly ApplicationDbContext _context;
+  private readonly ApplicationDbContext _context;
 
-    public SongsRepository(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+  public SongsRepository(ApplicationDbContext context)
+  {
+    _context = context;
+  }
 
-    public async Task<IEnumerable<Song>?> GetSongsAsync(int teamId)
-    {
-        var team = await _context.Teams
-            .Include(t => t.Songs)
-            .FirstOrDefaultAsync(t => t.Id == teamId);
+  public async Task<IEnumerable<Song>?> GetSongsAsync(int teamId)
+  {
+    var team = await _context.Teams
+        .Include(t => t.Songs)
+        .FirstOrDefaultAsync(t => t.Id == teamId);
 
-        if (team == null) return null;
+    if (team == null) return null;
 
-        return team.Songs.ToList();
-    }
+    return team.Songs.OrderBy(s => s.Index).ToList();
+  }
 
-    public async Task<Song?> GetSongAsync(int teamId, int songId)
-    {
-        var team = await _context.Teams
-            .Include(t => t.Songs)
-            .FirstOrDefaultAsync(t => t.Id == teamId);
+  public async Task<Song?> GetSongAsync(int teamId, int songId)
+  {
+    var team = await _context.Teams
+        .Include(t => t.Songs)
+        .FirstOrDefaultAsync(t => t.Id == teamId);
 
-        if (team == null) return null;
+    if (team == null) return null;
 
-        return team.Songs.FirstOrDefault(s => s.Id == songId);
-    }
+    return team.Songs.FirstOrDefault(s => s.Id == songId);
+  }
 
-    public async Task<Song?> AddSongAsync(int teamId, Song song)
-    {
-        var team = await _context.Teams
-            .Include(t => t.Songs)
-            .FirstOrDefaultAsync(t => t.Id == teamId);
+  public async Task<Song?> AddSongAsync(int teamId, Song song)
+  {
+    var team = await _context.Teams
+        .Include(t => t.Songs)
+        .FirstOrDefaultAsync(t => t.Id == teamId);
 
-        if (team == null) return null;
+    if (team == null) return null;
 
-        _context.Songs.Add(song);
-        await _context.SaveChangesAsync();
+    _context.Songs.Add(song);
+    await _context.SaveChangesAsync();
 
-        team.Songs.Add(song);
-        await _context.SaveChangesAsync();
+    team.Songs.Add(song);
+    await _context.SaveChangesAsync();
 
-        return song;
-    }
+    return song;
+  }
 
-    public async Task<Song?> UpdateSongAsync(int teamId, int songId, Song song)
-    {
-        var team = await _context.Teams
-            .Include(t => t.Songs)
-            .FirstOrDefaultAsync(t => t.Id == teamId);
+  public async Task<Song?> UpdateSongAsync(int teamId, int songId, Song song)
+  {
+    var team = await _context.Teams
+        .Include(t => t.Songs)
+        .FirstOrDefaultAsync(t => t.Id == teamId);
 
-        if (team == null) return null;
+    if (team == null) return null;
 
-        var existingSong = team.Songs.FirstOrDefault(s => s.Id == songId);
-        if (existingSong == null) return null;
+    var existingSong = team.Songs.FirstOrDefault(s => s.Id == songId);
+    if (existingSong == null) return null;
 
-        existingSong.Link = song.Link;
-        existingSong.Title = song.Title;
-        existingSong.Artist = song.Artist;
-        existingSong.Rating = song.Rating;
+    existingSong.Link = song.Link;
+    existingSong.Title = song.Title;
+    existingSong.Artist = song.Artist;
+    existingSong.Rating = song.Rating;
+    existingSong.Index = song.Index;
 
-        _context.Entry(existingSong).State = EntityState.Modified;
-        await _context.SaveChangesAsync();
+    _context.Entry(existingSong).State = EntityState.Modified;
+    await _context.SaveChangesAsync();
 
-        return existingSong;
-    }
+    return existingSong;
+  }
 
-    public async Task<bool> DeleteSongAsync(int teamId, int songId)
-    {
-        var team = await _context.Teams
-            .Include(t => t.Songs)
-            .FirstOrDefaultAsync(t => t.Id == teamId);
+  public async Task<bool> DeleteSongAsync(int teamId, int songId)
+  {
+    var team = await _context.Teams
+        .Include(t => t.Songs)
+        .FirstOrDefaultAsync(t => t.Id == teamId);
 
-        if (team == null) return false;
+    if (team == null) return false;
 
-        var song = team.Songs.FirstOrDefault(s => s.Id == songId);
-        if (song == null) return false;
+    var song = team.Songs.FirstOrDefault(s => s.Id == songId);
+    if (song == null) return false;
 
-        team.Songs.Remove(song);
-        await _context.SaveChangesAsync();
+    team.Songs.Remove(song);
+    _context.Songs.Remove(song);
+    await _context.SaveChangesAsync();
 
-        return true;
-    }
+    return true;
+  }
 }

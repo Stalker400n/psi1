@@ -29,9 +29,9 @@ namespace back.Services
                 throw new FileNotFoundException($"The file at path {filePath} was not found.");
             }
 
-            string json = await File.ReadAllTextAsync(filePath);
+            await using FileStream stream = File.OpenRead(filePath);
 
-            var importData = JsonSerializer.Deserialize<List<Team>>(json, new JsonSerializerOptions
+            var importData = JsonSerializer.Deserialize<List<Team>>(stream, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });

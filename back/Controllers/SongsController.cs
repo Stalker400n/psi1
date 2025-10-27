@@ -93,7 +93,6 @@ namespace back.Controllers
       var queuedSong = queue.FirstOrDefault(s => s.Id == id);
       if (queuedSong != null)
       {
-        // Create a new instance with updated values using 'with' expression
         var updatedQueuedSong = queuedSong with
         {
           Rating = updated.Rating

@@ -65,14 +65,12 @@ public class SongsRepository : ISongsRepository
     var existingSong = team.Songs.FirstOrDefault(s => s.Id == songId);
     if (existingSong == null) return null;
 
-    // Create a new Song instance with updated values using 'with' expression
     var updatedSong = existingSong with
     {
       Rating = song.Rating,
       Index = song.Index
     };
 
-    // Remove old instance and add new one
     team.Songs.Remove(existingSong);
     team.Songs.Add(updatedSong);
 

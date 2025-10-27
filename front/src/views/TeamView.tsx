@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Music, MessageSquare, LogOut } from 'lucide-react';
-import api from '../services/api.service';
-import type { Team, User } from '../services/api.service';
-import { PlaylistView } from './PlaylistView';
-import { ChatView } from './ChatView';
-import { renderPulsingStar, floatingQuotesCSS } from '../utils/praises';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Music, MessageSquare, LogOut } from "lucide-react";
+import api from "../services/api.service";
+import type { Team, User } from "../services/api.service";
+import { PlaylistView } from "./PlaylistView";
+import { ChatView } from "./ChatView";
+import { renderPulsingStar, floatingQuotesCSS } from "../utils/praises";
 
 interface TeamViewProps {
   user: User;
@@ -16,7 +16,7 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
   const [team, setTeam] = useState<Team | null>(null);
-  const [view, setView] = useState<'playlist' | 'chat'>('playlist');
+  const [view, setView] = useState<"playlist" | "chat">("playlist");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,14 +28,14 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
 
   const fetchTeam = async () => {
     if (!teamId) return;
-    
+
     try {
       const data = await api.teamsApi.getById(parseInt(teamId));
       setTeam(data);
     } catch (error) {
-      console.error('Error fetching team:', error);
-      alert('Team not found');
-      navigate('/');
+      console.error("Error fetching team:", error);
+      alert("Team not found");
+      navigate("/");
     } finally {
       setLoading(false);
     }
@@ -43,7 +43,7 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
 
   const handleLeave = () => {
     onLeave();
-    navigate('/');
+    navigate("/");
   };
 
   if (loading) {
@@ -57,16 +57,36 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
   if (!team || !teamId) {
     return null;
   }
-  
+
   return (
     <div className="min-h-screen bg-slate-950">
       <div className="bg-slate-900 border-b border-slate-800 p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-white">
-              {team.name}{renderPulsingStar({ className: 'text-yellow-400', size: '1.2em' })}
+              {team.name}
+              {renderPulsingStar({
+                className: "text-yellow-400",
+                size: "1.2em",
+              })}
             </h1>
-            <p className="text-slate-400 text-sm">Code: {team.id} • {user.name}</p>
+            <p className="text-slate-400 text-sm">
+              Code: {team.id} • {user.name}
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-slate-300 text-sm">Users:</div>
+            <div className="flex items-center gap-3">
+              {team.users.slice(0, 5).map((u) => (
+                <div
+                  key={u.id}
+                  className="px-3 py-1 bg-slate-800 rounded-md text-sm text-white flex items-center gap-2"
+                >
+                  <span className="font-semibold">{u.name}</span>
+                  <span className="text-xs text-yellow-300">{u.role}</span>
+                </div>
+              ))}
+            </div>
           </div>
           <button
             onClick={handleLeave}
@@ -81,22 +101,22 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
       <div className="max-w-7xl mx-auto p-4">
         <div className="flex gap-2 mb-6">
           <button
-            onClick={() => setView('playlist')}
+            onClick={() => setView("playlist")}
             className={`px-6 py-2 rounded-lg transition font-semibold ${
-              view === 'playlist' 
-                ? 'bg-yellow-500 text-black' 
-                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+              view === "playlist"
+                ? "bg-yellow-500 text-black"
+                : "bg-slate-800 text-slate-400 hover:bg-slate-700"
             }`}
           >
             <Music size={18} className="inline mr-2" />
             Playlist
           </button>
           <button
-            onClick={() => setView('chat')}
+            onClick={() => setView("chat")}
             className={`px-6 py-2 rounded-lg transition font-semibold ${
-              view === 'chat' 
-                ? 'bg-yellow-500 text-black' 
-                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+              view === "chat"
+                ? "bg-yellow-500 text-black"
+                : "bg-slate-800 text-slate-400 hover:bg-slate-700"
             }`}
           >
             <MessageSquare size={18} className="inline mr-2" />
@@ -104,10 +124,65 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
           </button>
         </div>
 
-        {view === 'playlist' && <PlaylistView teamId={parseInt(teamId)} userId={user.id} userName={user.name} />}
-        {view === 'chat' && <ChatView teamId={parseInt(teamId)} userName={user.name} />}
+        <div className="mb-6">
+          <h3 className="text-white font-semibold mb-2">Team Members</h3>
+          <div className="grid grid-cols-1 gap-2 max-w-md">
+            {team.users.map((u) => (
+              <div
+                key={u.id}
+                className="flex items-center justify-between bg-slate-800 p-2 rounded-md"
+              >
+                <div>
+                  <div className="text-white font-medium">{u.name}</div>
+                  <div className="text-slate-400 text-xs">
+                    Joined: {new Date(u.joinedAt).toLocaleString()}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="px-2 py-1 bg-slate-700 text-slate-200 rounded text-xs">
+                    {u.role}
+                  </div>
+                  {user.role === "Owner" && (
+                    <select
+                      value={u.role}
+                      onChange={async (e) => {
+                        const newRole = e.target.value as
+                          | "Member"
+                          | "Moderator"
+                          | "Owner";
+                        try {
+                          await api.usersApi.changeRole(team.id, u.id, newRole);
+                          await fetchTeam();
+                        } catch (err) {
+                          console.error("Failed to change role", err);
+                          alert("Failed to change role");
+                        }
+                      }}
+                      className="bg-slate-700 text-white rounded px-2 py-1 text-sm"
+                    >
+                      <option value="Member">Member</option>
+                      <option value="Moderator">Moderator</option>
+                      <option value="Owner">Owner</option>
+                    </select>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {view === "playlist" && (
+          <PlaylistView
+            teamId={parseInt(teamId)}
+            userId={user.id}
+            userName={user.name}
+          />
+        )}
+        {view === "chat" && (
+          <ChatView teamId={parseInt(teamId)} userName={user.name} />
+        )}
       </div>
-      
+
       <style>{floatingQuotesCSS}</style>
     </div>
   );

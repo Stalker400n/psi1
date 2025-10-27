@@ -47,6 +47,19 @@ public class UsersController : ControllerBase
     return Ok(updated);
   }
 
+  public class RoleDto
+  {
+    public back.Models.Enums.Role Role { get; set; }
+  }
+
+  [HttpPut("{id}/role")]
+  public async Task<ActionResult<User>> ChangeUserRole(int teamId, int id, [FromBody] RoleDto dto)
+  {
+    var updated = await _usersRepository.ChangeUserRoleAsync(teamId, id, dto.Role);
+    if (updated == null) return NotFound(new { message = "Team or user not found" });
+    return Ok(updated);
+  }
+
   [HttpDelete("{id}")]
   public async Task<IActionResult> DeleteUser(int teamId, int id)
   {

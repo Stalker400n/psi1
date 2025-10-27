@@ -14,7 +14,8 @@
         "name": "as",
         "score": 0,
         "joinedAt": "2025-10-27T14:23:49.0972369",
-        "isActive": true
+        "isActive": true,
+        "role": "Owner"
       }
     ],
     "messages": [
@@ -76,14 +77,16 @@
         "name": "Eigintas",
         "score": 0,
         "joinedAt": "2025-10-27T12:01:06.745773",
-        "isActive": true
+        "isActive": true,
+        "role": "Owner"
       },
       {
         "id": 6,
         "name": "as",
         "score": 0,
         "joinedAt": "2025-10-27T14:24:35.7062541",
-        "isActive": true
+        "isActive": true,
+        "role": "Member"
       }
     ],
     "messages": [

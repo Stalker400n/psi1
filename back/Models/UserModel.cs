@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using back.Models.Enums;
 
 namespace back.Models;
 
@@ -15,4 +16,6 @@ public class User
   public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
 
   public bool IsActive { get; set; } = true;
+
+  public Role Role { get; set; } = Role.Member;
 }

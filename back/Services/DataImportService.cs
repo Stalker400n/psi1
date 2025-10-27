@@ -1,6 +1,7 @@
 using back.Data.Repositories;
 using back.Models;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace back.Services
 {
@@ -29,7 +30,8 @@ namespace back.Services
       await using FileStream stream = File.OpenRead(filePath);
       var importData = JsonSerializer.Deserialize<List<Team>>(stream, new JsonSerializerOptions
       {
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
       });
       if (importData == null || importData.Count == 0)
       {

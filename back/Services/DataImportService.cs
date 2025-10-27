@@ -11,9 +11,8 @@ namespace back.Services
         private readonly ISongsRepository _songsRepository;
         private readonly IChatsRepository _chatsRepository;
 
-        public DataImportService(
-            ITeamsRepository teamsRepository,
-            IUsersRepository usersRepository,
+        public DataImportService(ITeamsRepository teamsRepository,
+        IUsersRepository usersRepository,
             ISongsRepository songsRepository,
             IChatsRepository chatsRepository)
         {
@@ -43,11 +42,50 @@ namespace back.Services
             {
                 throw new InvalidOperationException("No data found to import.");
             }
+
             if (importData != null)
             {
                 foreach (var team in importData)
                 {
+                    var users = team.Users?.ToList();
+                    var songs = team.Songs?.ToList();
+                    var messages = team.Messages?.ToList();
+
+                    team.Users = new List<User>();
+                    team.Songs = new List<Song>();
+                    team.Messages = new List<ChatMessage>();
+
                     var createdTeam = await _teamsRepository.CreateAsync(team);
+
+                    if (users != null)
+                    {
+                        foreach (var user in users)
+                        {
+                            user.Id = 0; // Reset ID to generate new one
+                            await _usersRepository.CreateUserAsync(createdTeam.Id, user);
+                            Console.WriteLine($" User: {user.Id} - {user.Name}");
+                        }
+                    }
+
+                    if (songs != null)
+                    {
+                        foreach (var song in songs)
+                        {
+                            song.Id = 0; // Reset ID to generate new one
+                            await _songsRepository.AddSongAsync(createdTeam.Id, song);
+                            Console.WriteLine($" Song: {song.Id} - {song.Title}");
+                        }
+                    }
+
+                    if (messages != null)
+                    {
+                        foreach (var message in messages)
+                        {
+                            message.Id = 0; // Reset ID to generate new one
+                            await _chatsRepository.AddMessageAsync(createdTeam.Id, message);
+                            Console.WriteLine($" Message: {message.Id} - {message.Text}");
+                        }
+                    }
                 }
             }
         }

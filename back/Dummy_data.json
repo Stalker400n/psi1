@@ -20,7 +20,7 @@
     "messages": [
       {
         "id": 1,
-        "userName": "as",
+        "userName": "Eigintas",
         "text": "adsadad",
         "timestamp": "2025-10-27T14:23:52.5044535"
       },
@@ -40,7 +40,7 @@
   },
   {
     "id": 691170,
-    "name": "asdsadas",
+    "name": "Gynimas",
     "isPrivate": false,
     "inviteCode": "",
     "createdAt": "2025-10-27T12:01:05.9922801",
@@ -49,7 +49,7 @@
     "songs": [
       {
         "id": 1,
-        "link": "https://youtu.be/W5NpNJ3dbIE?si=CmacXhuoYHmRV190",
+        "link": "https://youtu.be/H-elyK2cnxI?si=cdRMBcxx2UoOcpHK",
         "title": "Song Name",
         "artist": "Artist",
         "rating": 0,
@@ -60,7 +60,7 @@
       },
       {
         "id": 2,
-        "link": "https://youtu.be/lqTAUAzxFZo?si=LX-rbfPIwsR7f1KS",
+        "link": "https://youtu.be/vH4zvGZ7jCY?si=zvV_sytCo8x4W_7m",
         "title": "Song Name",
         "artist": "Artist",
         "rating": 0,
@@ -73,7 +73,7 @@
     "users": [
       {
         "id": 1,
-        "name": "asd",
+        "name": "Eigintas",
         "score": 0,
         "joinedAt": "2025-10-27T12:01:06.745773",
         "isActive": true
@@ -90,7 +90,7 @@
       {
         "id": 7,
         "userName": "as",
-        "text": "asdasd",
+        "text": "Eigintai eik ginti!!",
         "timestamp": "2025-10-27T14:24:41.118852"
       }
     ]

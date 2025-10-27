@@ -1,0 +1,151 @@
+[
+  {
+    "id": 395326,
+    "name": "Dummy private team",
+    "isPrivate": true,
+    "inviteCode": "",
+    "createdAt": "2025-10-27T14:23:49.0699724",
+    "createdByUserId": 0,
+    "currentSongIndex": 0,
+    "songs": [],
+    "users": [
+      {
+        "id": 3,
+        "name": "as",
+        "score": 0,
+        "joinedAt": "2025-10-27T14:23:49.0972369",
+        "isActive": true
+      }
+    ],
+    "messages": [
+      {
+        "id": 1,
+        "userName": "as",
+        "text": "adsadad",
+        "timestamp": "2025-10-27T14:23:52.5044535"
+      },
+      {
+        "id": 2,
+        "userName": "as",
+        "text": "adadad",
+        "timestamp": "2025-10-27T14:23:53.6726151"
+      },
+      {
+        "id": 3,
+        "userName": "as",
+        "text": "asdadads",
+        "timestamp": "2025-10-27T14:23:54.7892957"
+      }
+    ]
+  },
+  {
+    "id": 691170,
+    "name": "asdsadas",
+    "isPrivate": false,
+    "inviteCode": "",
+    "createdAt": "2025-10-27T12:01:05.9922801",
+    "createdByUserId": 0,
+    "currentSongIndex": 0,
+    "songs": [
+      {
+        "id": 1,
+        "link": "https://youtu.be/W5NpNJ3dbIE?si=CmacXhuoYHmRV190",
+        "title": "Song Name",
+        "artist": "Artist",
+        "rating": 0,
+        "addedByUserId": 1,
+        "addedByUserName": "asd",
+        "addedAt": "2025-10-27T12:01:56.7366433",
+        "index": 0
+      },
+      {
+        "id": 2,
+        "link": "https://youtu.be/lqTAUAzxFZo?si=LX-rbfPIwsR7f1KS",
+        "title": "Song Name",
+        "artist": "Artist",
+        "rating": 0,
+        "addedByUserId": 1,
+        "addedByUserName": "asd",
+        "addedAt": "2025-10-27T12:04:21.9157625",
+        "index": 1
+      }
+    ],
+    "users": [
+      {
+        "id": 1,
+        "name": "asd",
+        "score": 0,
+        "joinedAt": "2025-10-27T12:01:06.745773",
+        "isActive": true
+      },
+      {
+        "id": 6,
+        "name": "as",
+        "score": 0,
+        "joinedAt": "2025-10-27T14:24:35.7062541",
+        "isActive": true
+      }
+    ],
+    "messages": [
+      {
+        "id": 7,
+        "userName": "as",
+        "text": "asdasd",
+        "timestamp": "2025-10-27T14:24:41.118852"
+      }
+    ]
+  },
+  {
+    "id": 717832,
+    "name": "Dummy team",
+    "isPrivate": false,
+    "inviteCode": "",
+    "createdAt": "2025-10-27T14:23:33.1189594",
+    "createdByUserId": 0,
+    "currentSongIndex": 0,
+    "songs": [],
+    "users": [
+      {
+        "id": 2,
+        "name": "as",
+        "score": 0,
+        "joinedAt": "2025-10-27T14:23:33.3564114",
+        "isActive": true
+      },
+      {
+        "id": 4,
+        "name": "lasdaldj",
+        "score": 0,
+        "joinedAt": "2025-10-27T14:24:06.6389028",
+        "isActive": true
+      },
+      {
+        "id": 5,
+        "name": "as",
+        "score": 0,
+        "joinedAt": "2025-10-27T14:24:21.1894165",
+        "isActive": true
+      }
+    ],
+    "messages": [
+      {
+        "id": 4,
+        "userName": "lasdaldj",
+        "text": "asdladl;akd;ad",
+        "timestamp": "2025-10-27T14:24:11.0520181"
+      },
+      {
+        "id": 5,
+        "userName": "as",
+        "text": "adskaldad",
+        "timestamp": "2025-10-27T14:24:25.2484839"
+      },
+      {
+        "id": 6,
+        "userName": "as",
+        "text": "asdalkd",
+        "timestamp": "2025-10-27T14:24:26.8643539"
+      }
+    ]
+  }
+]

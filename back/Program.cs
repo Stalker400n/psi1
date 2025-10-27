@@ -33,6 +33,7 @@ builder.Services.AddScoped<back.Data.Repositories.ISongsRepository, back.Data.Re
 builder.Services.AddScoped<back.Data.Repositories.IUsersRepository, back.Data.Repositories.UsersRepository>();
 
 builder.Services.AddSingleton<SongQueueService>();
+builder.Services.AddScoped<back.Services.IDataImportService, back.Services.DataImportService>();
 
 builder.Services.AddCors(options =>
 {
@@ -47,7 +48,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
-{
+{  
   app.UseSwagger();
   app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "komcon API"));
 }
@@ -70,6 +71,9 @@ using (var scope = app.Services.CreateScope())
   {
     Console.WriteLine($"An error occurred while creating the database: {ex.Message}");
   }
+
+  var importer = scope.ServiceProvider.GetRequiredService<IDataImportService>();
+  await importer.ImportData("Dummy_data.json");
 }
 
 app.Start();
@@ -80,5 +84,7 @@ foreach (var url in app.Urls)
 {
   Console.WriteLine($"{separator}\nkomcon API: Swagger is available at: {url}/swagger\n{separator}");
 }
+
+
 
 app.WaitForShutdown();

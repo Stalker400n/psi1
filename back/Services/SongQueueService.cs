@@ -50,6 +50,12 @@ namespace back.Services
       queue.Enqueue(song, insertAfterCurrent);
     }
 
+    public void UpdateSongInQueue(int teamId, int songId, Song updatedSong)
+    {
+      var queue = GetQueue(teamId);
+      queue.UpdateSong(songId, updatedSong);
+    }
+
     public bool RemoveFromQueue(int teamId, int songId)
     {
       var queue = GetQueue(teamId);

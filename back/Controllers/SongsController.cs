@@ -61,8 +61,8 @@ namespace back.Controllers
 
         foreach (var s in songsToShift)
         {
-          s.Index++;
-          await _songsRepository.UpdateSongAsync(teamId, s.Id, s);
+          var shiftedSong = s with { Index = s.Index + 1 };
+          await _songsRepository.UpdateSongAsync(teamId, s.Id, shiftedSong);
         }
       }
       else
@@ -93,10 +93,11 @@ namespace back.Controllers
       var queuedSong = queue.FirstOrDefault(s => s.Id == id);
       if (queuedSong != null)
       {
-        queuedSong.Title = updated.Title;
-        queuedSong.Artist = updated.Artist;
-        queuedSong.Link = updated.Link;
-        queuedSong.Rating = updated.Rating;
+        var updatedQueuedSong = queuedSong with
+        {
+          Rating = updated.Rating
+        };
+        _queueService.UpdateSongInQueue(teamId, id, updatedQueuedSong);
       }
 
       return Ok(updated);

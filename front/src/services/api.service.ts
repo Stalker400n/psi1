@@ -4,6 +4,7 @@ export interface User {
   score: number;
   joinedAt: string;
   isActive: boolean;
+  role: 'Member' | 'Moderator' | 'Owner';
 }
 
 export interface Song {
@@ -136,7 +137,7 @@ const usersApi = {
   update: async (
     teamId: number,
     userId: number,
-    user: { name: string; score: number; isActive: boolean }
+    user: { name: string; score: number; isActive: boolean; role?: 'Member' | 'Moderator' | 'Owner' }
   ): Promise<User> => {
     const response = await fetch(
       `${API_BASE}/teams/${teamId}/users/${userId}`,
@@ -160,6 +161,20 @@ const usersApi = {
     );
     if (!response.ok) throw new Error('Failed to delete user');
     return true;
+  },
+  
+  changeRole: async (
+    teamId: number,
+    userId: number,
+    role: 'Member' | 'Moderator' | 'Owner'
+  ): Promise<User> => {
+    const response = await fetch(`${API_BASE}/teams/${teamId}/users/${userId}/role`, {
+      ...fetchOptions,
+      method: 'PUT',
+      body: JSON.stringify({ role }),
+    });
+    if (!response.ok) throw new Error('Failed to change role');
+    return response.json();
   },
 };
 

@@ -33,6 +33,10 @@ namespace back.Data
           .HasMany(t => t.Messages)
           .WithMany()
           .UsingEntity(j => j.ToTable("TeamChatMessages"));
+
+      modelBuilder.Entity<User>()
+          .Property(u => u.Role)
+          .HasConversion<string>();
     }
   }
 }

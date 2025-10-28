@@ -34,6 +34,15 @@ namespace back.Services
 
     public int Count => _songs.Count;
 
+    public void UpdateSong(int songId, Song updatedSong)
+    {
+      var index = _songs.FindIndex(s => s.Id == songId);
+      if (index != -1)
+      {
+        _songs[index] = updatedSong;
+      }
+    }
+
     public IEnumerator<Song> GetEnumerator() => _songs.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
   }

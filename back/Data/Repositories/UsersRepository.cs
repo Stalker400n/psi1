@@ -48,9 +48,16 @@ public class UsersRepository : IUsersRepository
 
         user.JoinedAt = DateTime.UtcNow;
 
+        // If this is the first user in the team, make them the Owner
+        if (team.Users == null || team.Users.Count == 0)
+        {
+            user.Role = back.Models.Enums.Role.Owner;
+        }
+
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
+        team.Users ??= new System.Collections.Generic.List<User>();
         team.Users.Add(user);
         await _context.SaveChangesAsync();
 
@@ -71,7 +78,27 @@ public class UsersRepository : IUsersRepository
         existing.Name = user.Name;
         existing.Score = user.Score;
         existing.IsActive = user.IsActive;
+        // allow updating role as well
+        existing.Role = user.Role;
 
+        _context.Entry(existing).State = EntityState.Modified;
+        await _context.SaveChangesAsync();
+
+        return existing;
+    }
+
+    public async Task<User?> ChangeUserRoleAsync(int teamId, int userId, back.Models.Enums.Role newRole)
+    {
+        var team = await _context.Teams
+            .Include(t => t.Users)
+            .FirstOrDefaultAsync(t => t.Id == teamId);
+
+        if (team == null) return null;
+
+        var existing = team.Users.FirstOrDefault(u => u.Id == userId);
+        if (existing == null) return null;
+
+        existing.Role = newRole;
         _context.Entry(existing).State = EntityState.Modified;
         await _context.SaveChangesAsync();
 

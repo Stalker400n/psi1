@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using back.Models;
 using back.Data.Repositories;
 using back.Services;
+using back.Extensions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -48,6 +49,11 @@ namespace back.Controllers
       [FromBody] Song song,
       [FromQuery] bool insertAfterCurrent = false)
     {
+      if (!song.Link.IsValidYoutubeLink())
+      {
+          return BadRequest(new { message = "Invalid YouTube link" });
+      }
+
       var team = await _teamsRepository.GetByIdAsync(teamId);
       if (team == null) return NotFound(new { message = "Team not found" });
 

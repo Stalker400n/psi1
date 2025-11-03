@@ -3,9 +3,12 @@ using back.Models;
 using back.Data.Repositories;
 using back.Services;
 using back.Extensions;
+using back.Exceptions;
+using back.Validators;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace back.Controllers
 {
@@ -16,15 +19,21 @@ namespace back.Controllers
     private readonly ISongsRepository _songsRepository;
     private readonly ITeamsRepository _teamsRepository;
     private readonly ISongQueueService _queueService;
+    private readonly IYoutubeValidator _youtubeValidator;
+    private readonly ILogger<SongsController> _logger;
 
     public SongsController(
       ISongsRepository songsRepository,
       ITeamsRepository teamsRepository,
-      ISongQueueService queueService)
+      ISongQueueService queueService,
+      IYoutubeValidator youtubeValidator,
+      ILogger<SongsController> logger)
     {
       _songsRepository = songsRepository;
       _teamsRepository = teamsRepository;
       _queueService = queueService;
+      _youtubeValidator = youtubeValidator;
+      _logger = logger;
     }
 
     [HttpGet]
@@ -49,9 +58,14 @@ namespace back.Controllers
       [FromBody] Song song,
       [FromQuery] bool insertAfterCurrent = false)
     {
-      if (!song.Link.IsValidYoutubeLink())
+      try
       {
-        return BadRequest(new { message = "Invalid YouTube link" });
+        _youtubeValidator.ValidateLink(song.Link);
+      }
+      catch (YoutubeValidationException ex)
+      {
+        _logger.LogWarning(ex, "YouTube validation failed for link: {Link}", song.Link);
+        return BadRequest(new { message = ex.Message });
       }
 
       var team = await _teamsRepository.GetByIdAsync(teamId);

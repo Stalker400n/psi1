@@ -15,12 +15,12 @@ namespace back.Controllers
   {
     private readonly ISongsRepository _songsRepository;
     private readonly ITeamsRepository _teamsRepository;
-    private readonly SongQueueService _queueService;
+    private readonly ISongQueueService _queueService;
 
     public SongsController(
       ISongsRepository songsRepository,
       ITeamsRepository teamsRepository,
-      SongQueueService queueService)
+      ISongQueueService queueService)
     {
       _songsRepository = songsRepository;
       _teamsRepository = teamsRepository;
@@ -51,7 +51,7 @@ namespace back.Controllers
     {
       if (!song.Link.IsValidYoutubeLink())
       {
-          return BadRequest(new { message = "Invalid YouTube link" });
+        return BadRequest(new { message = "Invalid YouTube link" });
       }
 
       var team = await _teamsRepository.GetByIdAsync(teamId);
@@ -80,11 +80,7 @@ namespace back.Controllers
       var created = await _songsRepository.AddSongAsync(teamId, song);
       if (created == null) return NotFound(new { message = "Failed to add song" });
 
-      var allSongs = await _songsRepository.GetSongsAsync(teamId);
-      if (allSongs != null)
-      {
-        _queueService.InitializeQueue(teamId, allSongs, team.CurrentSongIndex);
-      }
+      await _queueService.RefreshQueueAsync(teamId);
 
       return CreatedAtAction(nameof(GetSong), new { teamId = teamId, id = created.Id }, created);
     }
@@ -95,16 +91,7 @@ namespace back.Controllers
       var updated = await _songsRepository.UpdateSongAsync(teamId, id, song);
       if (updated == null) return NotFound(new { message = "Team or song not found" });
 
-      var queue = _queueService.GetQueue(teamId);
-      var queuedSong = queue.FirstOrDefault(s => s.Id == id);
-      if (queuedSong != null)
-      {
-        var updatedQueuedSong = queuedSong with
-        {
-          Rating = updated.Rating
-        };
-        _queueService.UpdateSongInQueue(teamId, id, updatedQueuedSong);
-      }
+      await _queueService.RefreshQueueAsync(teamId);
 
       return Ok(updated);
     }
@@ -131,11 +118,7 @@ namespace back.Controllers
         await _songsRepository.UpdateSongAsync(teamId, s.Id, s);
       }
 
-      var allSongs = await _songsRepository.GetSongsAsync(teamId);
-      if (allSongs != null)
-      {
-        _queueService.InitializeQueue(teamId, allSongs, team.CurrentSongIndex);
-      }
+      await _queueService.RefreshQueueAsync(teamId);
 
       return NoContent();
     }
@@ -146,17 +129,8 @@ namespace back.Controllers
       var team = await _teamsRepository.GetByIdAsync(teamId);
       if (team == null) return NotFound(new { message = "Team not found" });
 
-      var queue = _queueService.GetQueue(teamId);
-      if (queue.Count == 0)
-      {
-        var allSongs = await _songsRepository.GetSongsAsync(teamId);
-        if (allSongs != null)
-        {
-          _queueService.InitializeQueue(teamId, allSongs, team.CurrentSongIndex);
-        }
-      }
-
-      return Ok(_queueService.GetQueueAsList(teamId));
+      var queue = await _queueService.GetQueueAsync(teamId);
+      return Ok(queue);
     }
 
     [HttpGet("current")]
@@ -165,10 +139,7 @@ namespace back.Controllers
       var team = await _teamsRepository.GetByIdAsync(teamId);
       if (team == null) return NotFound(new { message = "Team not found" });
 
-      var allSongs = await _songsRepository.GetSongsAsync(teamId);
-      if (allSongs == null) return NotFound(new { message = "No songs found" });
-
-      var currentSong = allSongs.FirstOrDefault(s => s.Index == team.CurrentSongIndex);
+      var currentSong = await _queueService.GetCurrentSongAsync(teamId);
 
       if (currentSong == null)
         return NotFound(new { message = "No current song" });
@@ -179,67 +150,32 @@ namespace back.Controllers
     [HttpPost("next")]
     public async Task<ActionResult<Song>> NextSong(int teamId)
     {
-      var team = await _teamsRepository.GetByIdAsync(teamId);
-      if (team == null) return NotFound(new { message = "Team not found" });
+      var nextSong = await _queueService.AdvanceToNextSongAsync(teamId);
 
-      var allSongs = await _songsRepository.GetSongsAsync(teamId);
-      if (allSongs == null) return NotFound(new { message = "No songs found" });
-
-      var songsList = allSongs.ToList();
-      var maxIndex = songsList.Any() ? songsList.Max(s => s.Index) : -1;
-
-      if (team.CurrentSongIndex >= maxIndex)
+      if (nextSong == null)
         return NotFound(new { message = "No more songs in queue" });
 
-      team.CurrentSongIndex++;
-      await _teamsRepository.UpdateAsync(teamId, team);
-
-      _queueService.InitializeQueue(teamId, allSongs, team.CurrentSongIndex);
-
-      var currentSong = songsList.FirstOrDefault(s => s.Index == team.CurrentSongIndex);
-      return Ok(currentSong);
+      return Ok(nextSong);
     }
 
     [HttpPost("previous")]
     public async Task<ActionResult<Song>> PreviousSong(int teamId)
     {
-      var team = await _teamsRepository.GetByIdAsync(teamId);
-      if (team == null) return NotFound(new { message = "Team not found" });
+      var previousSong = await _queueService.GoToPreviousSongAsync(teamId);
 
-      if (team.CurrentSongIndex <= 0)
+      if (previousSong == null)
         return NotFound(new { message = "Already at first song" });
 
-      team.CurrentSongIndex--;
-      await _teamsRepository.UpdateAsync(teamId, team);
-
-      var allSongs = await _songsRepository.GetSongsAsync(teamId);
-      if (allSongs != null)
-      {
-        _queueService.InitializeQueue(teamId, allSongs, team.CurrentSongIndex);
-      }
-
-      var currentSong = allSongs?.FirstOrDefault(s => s.Index == team.CurrentSongIndex);
-      return Ok(currentSong);
+      return Ok(previousSong);
     }
 
     [HttpPost("jump/{index}")]
     public async Task<ActionResult<Song>> JumpToSong(int teamId, int index)
     {
-      var team = await _teamsRepository.GetByIdAsync(teamId);
-      if (team == null) return NotFound(new { message = "Team not found" });
-
-      var allSongs = await _songsRepository.GetSongsAsync(teamId);
-      if (allSongs == null) return NotFound(new { message = "No songs found" });
-
-      var targetSong = allSongs.FirstOrDefault(s => s.Index == index);
+      var targetSong = await _queueService.JumpToSongAsync(teamId, index);
 
       if (targetSong == null)
         return NotFound(new { message = "Song at specified index not found" });
-
-      team.CurrentSongIndex = index;
-      await _teamsRepository.UpdateAsync(teamId, team);
-
-      _queueService.InitializeQueue(teamId, allSongs, team.CurrentSongIndex);
 
       return Ok(targetSong);
     }

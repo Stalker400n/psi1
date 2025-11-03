@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using back.Data;
 using back.Services;
+using back.Data.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,12 +30,15 @@ builder.Services.AddControllers()
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddScoped<back.Data.Repositories.ITeamsRepository, back.Data.Repositories.TeamsRepository>();
-builder.Services.AddScoped<back.Data.Repositories.IChatsRepository, back.Data.Repositories.ChatsRepository>();
-builder.Services.AddScoped<back.Data.Repositories.ISongsRepository, back.Data.Repositories.SongsRepository>();
-builder.Services.AddScoped<back.Data.Repositories.IUsersRepository, back.Data.Repositories.UsersRepository>();
+// Repository registrations (Scoped - one instance per HTTP request)
+builder.Services.AddScoped<ITeamsRepository, TeamsRepository>();
+builder.Services.AddScoped<IChatsRepository, ChatsRepository>();
+builder.Services.AddScoped<ISongsRepository, SongsRepository>();
+builder.Services.AddScoped<IUsersRepository, UsersRepository>();
 
-builder.Services.AddSingleton<SongQueueService>();
+// Service registrations
+// Changed from Singleton to Scoped to avoid DI issues with repository dependencies
+builder.Services.AddScoped<back.Services.ISongQueueService, back.Services.SongQueueService>();
 builder.Services.AddScoped<back.Services.IDataImportService, back.Services.DataImportService>();
 
 builder.Services.AddCors(options =>
@@ -86,7 +90,5 @@ foreach (var url in app.Urls)
 {
   Console.WriteLine($"{separator}\nkomcon API: Swagger is available at: {url}/swagger\n{separator}");
 }
-
-
 
 app.WaitForShutdown();

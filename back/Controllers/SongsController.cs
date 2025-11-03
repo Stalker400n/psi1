@@ -60,7 +60,7 @@ namespace back.Controllers
     {
       try
       {
-        _youtubeValidator.ValidateLink(song.Link);
+        await _youtubeValidator.ValidateLink(song.Link);
       }
       catch (YoutubeValidationException ex)
       {

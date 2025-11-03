@@ -17,7 +17,6 @@ namespace back.Controllers
     private readonly ITeamsRepository _teamsRepository;
     private readonly ISongQueueService _queueService;
 
-    // Constructor injection - all dependencies injected here
     public SongsController(
       ISongsRepository songsRepository,
       ITeamsRepository teamsRepository,
@@ -81,7 +80,6 @@ namespace back.Controllers
       var created = await _songsRepository.AddSongAsync(teamId, song);
       if (created == null) return NotFound(new { message = "Failed to add song" });
 
-      // Use the queue service to refresh the queue
       await _queueService.RefreshQueueAsync(teamId);
 
       return CreatedAtAction(nameof(GetSong), new { teamId = teamId, id = created.Id }, created);
@@ -93,7 +91,6 @@ namespace back.Controllers
       var updated = await _songsRepository.UpdateSongAsync(teamId, id, song);
       if (updated == null) return NotFound(new { message = "Team or song not found" });
 
-      // Refresh queue to ensure consistency
       await _queueService.RefreshQueueAsync(teamId);
 
       return Ok(updated);
@@ -121,7 +118,6 @@ namespace back.Controllers
         await _songsRepository.UpdateSongAsync(teamId, s.Id, s);
       }
 
-      // Use the queue service to refresh the queue
       await _queueService.RefreshQueueAsync(teamId);
 
       return NoContent();
@@ -133,7 +129,6 @@ namespace back.Controllers
       var team = await _teamsRepository.GetByIdAsync(teamId);
       if (team == null) return NotFound(new { message = "Team not found" });
 
-      // Use the queue service - it handles initialization if needed
       var queue = await _queueService.GetQueueAsync(teamId);
       return Ok(queue);
     }
@@ -144,7 +139,6 @@ namespace back.Controllers
       var team = await _teamsRepository.GetByIdAsync(teamId);
       if (team == null) return NotFound(new { message = "Team not found" });
 
-      // Use the queue service to get current song
       var currentSong = await _queueService.GetCurrentSongAsync(teamId);
 
       if (currentSong == null)
@@ -156,7 +150,6 @@ namespace back.Controllers
     [HttpPost("next")]
     public async Task<ActionResult<Song>> NextSong(int teamId)
     {
-      // Use the queue service to advance to next song
       var nextSong = await _queueService.AdvanceToNextSongAsync(teamId);
 
       if (nextSong == null)
@@ -168,7 +161,6 @@ namespace back.Controllers
     [HttpPost("previous")]
     public async Task<ActionResult<Song>> PreviousSong(int teamId)
     {
-      // Use the queue service to go to previous song
       var previousSong = await _queueService.GoToPreviousSongAsync(teamId);
 
       if (previousSong == null)
@@ -180,7 +172,6 @@ namespace back.Controllers
     [HttpPost("jump/{index}")]
     public async Task<ActionResult<Song>> JumpToSong(int teamId, int index)
     {
-      // Use the queue service to jump to a specific song
       var targetSong = await _queueService.JumpToSongAsync(teamId, index);
 
       if (targetSong == null)

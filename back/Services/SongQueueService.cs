@@ -7,7 +7,6 @@ namespace back.Services
   public class SongQueueService : ISongQueueService
   {
     private readonly ConcurrentDictionary<int, SongQueue> _queues = new ConcurrentDictionary<int, SongQueue>();
-    //private readonly Dictionary<int, SongQueue> _queues = new Dictionary<int, SongQueue>();
     private readonly ITeamsRepository _teamsRepository;
     private readonly ISongsRepository _songsRepository;
 

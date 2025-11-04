@@ -1,5 +1,3 @@
-using System;
-
 namespace back.Exceptions
 {
     public class YoutubeValidationException : Exception

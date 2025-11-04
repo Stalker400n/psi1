@@ -38,8 +38,11 @@ builder.Services.AddScoped<IUsersRepository, UsersRepository>();
 
 // Service registrations
 // Changed from Singleton to Scoped to avoid DI issues with repository dependencies
+builder.Services.AddHttpClient();
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<back.Services.ISongQueueService, back.Services.SongQueueService>();
 builder.Services.AddScoped<back.Services.IDataImportService, back.Services.DataImportService>();
+builder.Services.AddScoped<back.Validators.IYoutubeValidator, back.Validators.YoutubeValidator>();
 
 builder.Services.AddCors(options =>
 {

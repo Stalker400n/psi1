@@ -1,8 +1,4 @@
-using System;
 using System.Text.RegularExpressions;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using back.Exceptions;
 
 namespace back.Validators

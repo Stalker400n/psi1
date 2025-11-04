@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using back.Models;
-using System.Security.Cryptography;
 using back.Data.Repositories;
 
 namespace back.Controllers;

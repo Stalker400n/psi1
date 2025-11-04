@@ -2,13 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using back.Models;
 using back.Data.Repositories;
 using back.Services;
-using back.Extensions;
 using back.Exceptions;
 using back.Validators;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
 namespace back.Controllers
 {

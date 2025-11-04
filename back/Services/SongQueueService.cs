@@ -1,14 +1,12 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using back.Models;
 using back.Data.Repositories;
+using System.Collections.Concurrent;
 
 namespace back.Services
 {
   public class SongQueueService : ISongQueueService
   {
-    private readonly Dictionary<int, SongQueue> _queues = new Dictionary<int, SongQueue>();
+    private readonly ConcurrentDictionary<int, SongQueue> _queues = new ConcurrentDictionary<int, SongQueue>();
     private readonly ITeamsRepository _teamsRepository;
     private readonly ISongsRepository _songsRepository;
 
@@ -126,10 +124,7 @@ namespace back.Services
 
     private SongQueue GetOrCreateQueue(int teamId)
     {
-      if (!_queues.ContainsKey(teamId))
-        _queues[teamId] = new SongQueue();
-
-      return _queues[teamId];
+      return _queues.GetOrAdd(teamId, _ => new SongQueue());
     }
   }
 }

@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Music, MessageSquare, LogOut } from "lucide-react";
+import { Music, MessageSquare, LogOut, Trophy } from "lucide-react";
 import api from "../services/api.service";
 import type { Team, User } from "../services/api.service";
 import { PlaylistView } from "./PlaylistView";
 import { ChatView } from "./ChatView";
+import { Leaderboard } from "../components/Leaderboard";
 import { renderPulsingStar, floatingQuotesCSS } from "../utils/praises";
 
 interface TeamViewProps {
@@ -16,14 +17,13 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
   const [team, setTeam] = useState<Team | null>(null);
-  const [view, setView] = useState<"playlist" | "chat">("playlist");
+  const [view, setView] = useState<"playlist" | "chat" | "leaderboard">("playlist");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (teamId) {
       fetchTeam();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
 
   const fetchTeam = async () => {
@@ -112,6 +112,17 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
             Playlist
           </button>
           <button
+            onClick={() => setView("leaderboard")}
+            className={`px-6 py-2 rounded-lg transition font-semibold ${
+              view === "leaderboard"
+                ? "bg-yellow-500 text-black"
+                : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+            }`}
+          >
+            <Trophy size={18} className="inline mr-2" />
+            Leaderboard
+          </button>
+          <button
             onClick={() => setView("chat")}
             className={`px-6 py-2 rounded-lg transition font-semibold ${
               view === "chat"
@@ -176,6 +187,12 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
             teamId={parseInt(teamId)}
             userId={user.id}
             userName={user.name}
+          />
+        )}
+        {view === "leaderboard" && (
+          <Leaderboard
+            teamId={parseInt(teamId)}
+            userId={user.id}
           />
         )}
         {view === "chat" && (

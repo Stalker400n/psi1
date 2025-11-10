@@ -23,22 +23,20 @@ builder.Services.AddControllers()
     {
       options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
       options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-      // serialize enums as strings for readability on the client
       options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Repository registrations (Scoped - one instance per HTTP request)
+// Repository registrations
 builder.Services.AddScoped<ITeamsRepository, TeamsRepository>();
 builder.Services.AddScoped<IChatsRepository, ChatsRepository>();
 builder.Services.AddScoped<ISongsRepository, SongsRepository>();
 builder.Services.AddScoped<IUsersRepository, UsersRepository>();
+builder.Services.AddScoped<IRatingsRepository, RatingsRepository>();
 
 // Service registrations
-// Changed from Singleton to Scoped to avoid DI issues with repository dependencies
-builder.Services.AddHttpClient();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<back.Services.ISongQueueService, back.Services.SongQueueService>();
 builder.Services.AddScoped<back.Services.IDataImportService, back.Services.DataImportService>();
@@ -70,8 +68,7 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
   var services = scope.ServiceProvider;
-  try
-  {
+  try {
     var context = services.GetRequiredService<ApplicationDbContext>();
     context.Database.EnsureCreated();
     Console.WriteLine("Database created successfully.");

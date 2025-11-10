@@ -3,6 +3,7 @@ import { Plus, Trash2, SkipForward, SkipBack, Zap } from 'lucide-react';
 import api from '../services/api.service';
 import type { Song } from '../services/api.service';
 import { extractYoutubeId } from '../utils/youtube';
+import { HeatMeter } from '../components/HeatMeter';
 
 interface PlaylistViewProps {
   teamId: number;
@@ -13,6 +14,7 @@ interface PlaylistViewProps {
 export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
   const [queue, setQueue] = useState<Song[]>([]);
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
+  const [currentRating, setCurrentRating] = useState<number>(0);
   const [showAdd, setShowAdd] = useState<boolean>(false);
   const [videoUrl, setVideoUrl] = useState<string>('');
   const [addMode, setAddMode] = useState<'end' | 'next'>('end');
@@ -21,16 +23,31 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
     fetchQueueAndCurrent();
     const interval = setInterval(fetchQueueAndCurrent, 3000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
+
+  useEffect(() => {
+    if (currentSong) {
+      fetchCurrentRating();
+    }
+  }, [currentSong?.id, userId]);
+
+  const fetchCurrentRating = async () => {
+    if (!currentSong) return;
+    
+    try {
+      const userRating = await api.ratingsApi.getUserRating(teamId, currentSong.id, userId);
+      setCurrentRating(userRating?.rating || 0);
+    } catch (error) {
+      console.error('Error fetching current rating:', error);
+      setCurrentRating(0);
+    }
+  };
 
   const fetchQueueAndCurrent = async () => {
     try {
-      // Fetch queue (songs from current index onwards)
       const queueData = await api.songsApi.getQueue(teamId);
       setQueue(queueData);
       
-      // Current song is the first in queue
       if (queueData.length > 0) {
         setCurrentSong(queueData[0]);
       } else {
@@ -43,19 +60,24 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
     }
   };
 
+  const handleRatingSubmit = async (rating: number) => {
+    if (!currentSong) return;
+
+    try {
+      await api.ratingsApi.submitRating(teamId, currentSong.id, userId, rating);
+      setCurrentRating(rating);
+      alert('Rating submitted successfully!');
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      alert('Failed to submit rating');
+    }
+  };
+
   const addSong = async () => {
     if (!videoUrl.trim()) return;
 
-    console.log('Adding song with:', { 
-      teamId, 
-      userId, 
-      userName, 
-      videoUrl,
-      insertAfterCurrent: addMode === 'next'
-    });
-
     try {
-      const result = await api.songsApi.add(
+      await api.songsApi.add(
         teamId, 
         { 
           link: videoUrl,
@@ -67,7 +89,6 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
         },
         addMode === 'next'
       );
-      console.log('Song added successfully:', result);
       setVideoUrl('');
       setShowAdd(false);
       fetchQueueAndCurrent();
@@ -116,8 +137,19 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Heat Meter - Left Column */}
+      <div className="lg:col-span-1">
+        {currentSong && (
+          <HeatMeter 
+            currentRating={currentRating}
+            onSubmit={handleRatingSubmit}
+          />
+        )}
+      </div>
+
+      {/* Now Playing - Middle Column */}
+      <div className="lg:col-span-1">
         <div className="bg-slate-900 rounded-lg p-6 mb-6">
           <h2 className="text-xl font-semibold text-white mb-4">Now Playing</h2>
           {currentSong ? (
@@ -219,7 +251,8 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
         )}
       </div>
 
-      <div className="bg-slate-900 rounded-lg p-6">
+      {/* Queue - Right Column */}
+      <div className="lg:col-span-1 bg-slate-900 rounded-lg p-6">
         <h2 className="text-xl font-semibold text-white mb-4">
           Queue ({Math.max(0, queue.length - 1)} {queue.length - 1 === 1 ? 'song' : 'songs'})
         </h2>

@@ -19,6 +19,15 @@ export interface Song {
   index: number;
 }
 
+export interface SongRating {
+  id: number;
+  songId: number;
+  userId: number;
+  rating: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ChatMessage {
   id: number;
   userName: string;
@@ -137,7 +146,12 @@ const usersApi = {
   update: async (
     teamId: number,
     userId: number,
-    user: { name: string; score: number; isActive: boolean; role?: 'Member' | 'Moderator' | 'Owner' }
+    user: {
+      name: string;
+      score: number;
+      isActive: boolean;
+      role?: 'Member' | 'Moderator' | 'Owner';
+    }
   ): Promise<User> => {
     const response = await fetch(
       `${API_BASE}/teams/${teamId}/users/${userId}`,
@@ -162,17 +176,20 @@ const usersApi = {
     if (!response.ok) throw new Error('Failed to delete user');
     return true;
   },
-  
+
   changeRole: async (
     teamId: number,
     userId: number,
     role: 'Member' | 'Moderator' | 'Owner'
   ): Promise<User> => {
-    const response = await fetch(`${API_BASE}/teams/${teamId}/users/${userId}/role`, {
-      ...fetchOptions,
-      method: 'PUT',
-      body: JSON.stringify({ role }),
-    });
+    const response = await fetch(
+      `${API_BASE}/teams/${teamId}/users/${userId}/role`,
+      {
+        ...fetchOptions,
+        method: 'PUT',
+        body: JSON.stringify({ role }),
+      }
+    );
     if (!response.ok) throw new Error('Failed to change role');
     return response.json();
   },
@@ -269,13 +286,6 @@ const songsApi = {
       addedByUserName: song.addedByUserName,
     };
 
-    console.log(
-      'Adding song:',
-      songData,
-      'insertAfterCurrent:',
-      insertAfterCurrent
-    );
-
     const url = `${API_BASE}/teams/${teamId}/songs${
       insertAfterCurrent ? '?insertAfterCurrent=true' : ''
     }`;
@@ -326,6 +336,57 @@ const songsApi = {
     );
     if (!response.ok) throw new Error('Failed to delete song');
     return true;
+  },
+};
+
+const ratingsApi = {
+  // Get all ratings for a specific song
+  getSongRatings: async (
+    teamId: number,
+    songId: number
+  ): Promise<SongRating[]> => {
+    const response = await fetch(
+      `${API_BASE}/teams/${teamId}/songs/${songId}/ratings`,
+      {
+        ...fetchOptions,
+        method: 'GET',
+      }
+    );
+    if (!response.ok) throw new Error('Failed to fetch ratings');
+    return response.json();
+  },
+
+  // Submit or update a rating
+  submitRating: async (
+    teamId: number,
+    songId: number,
+    userId: number,
+    rating: number
+  ): Promise<SongRating> => {
+    const response = await fetch(
+      `${API_BASE}/teams/${teamId}/songs/${songId}/ratings`,
+      {
+        ...fetchOptions,
+        method: 'POST',
+        body: JSON.stringify({ userId, rating }),
+      }
+    );
+    if (!response.ok) throw new Error('Failed to submit rating');
+    return response.json();
+  },
+
+  // Get user's rating for a specific song
+  getUserRating: async (
+    teamId: number,
+    songId: number,
+    userId: number
+  ): Promise<SongRating | null> => {
+    try {
+      const ratings = await ratingsApi.getSongRatings(teamId, songId);
+      return ratings.find((r) => r.userId === userId) || null;
+    } catch {
+      return null;
+    }
   },
 };
 
@@ -398,6 +459,7 @@ const api = {
   teamsApi,
   usersApi,
   songsApi,
+  ratingsApi,
   chatsApi,
   API_BASE,
 };

@@ -14,6 +14,7 @@ namespace back.Data
     public DbSet<Team> Teams { get; set; }
     public DbSet<Song> Songs { get; set; }
     public DbSet<ChatMessage> ChatMessages { get; set; }
+    public DbSet<SongRating> SongRatings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -37,6 +38,10 @@ namespace back.Data
       modelBuilder.Entity<User>()
           .Property(u => u.Role)
           .HasConversion<string>();
+
+      modelBuilder.Entity<SongRating>()
+          .HasIndex(r => new { r.SongId, r.UserId })
+          .IsUnique();
     }
   }
 }

@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace back.Models;
 
-public record Song
+public record Song : IComparable<Song>
 {
   public int Id { get; set; }
 
@@ -22,4 +22,10 @@ public record Song
   public DateTime AddedAt { get; init; } = DateTime.UtcNow;
 
   public int Index { get; set; } = 0;
+
+  public int CompareTo(Song? other)
+  {
+    if (other == null) return 1;
+    return Rating.CompareTo(other.Rating);
+  }
 }

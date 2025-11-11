@@ -122,6 +122,18 @@ namespace back.Services
       await InitializeQueueAsync(teamId);
     }
 
+    public async Task<List<Song>> GetSongsSortedByRatingAsync(int teamId)
+    {
+      var songs = await GetQueueAsync(teamId);
+      return SongQueue.SortByComparable(songs);
+    }
+
+    public async Task<Song?> GetLowestRatedSongAsync(int teamId)
+    {
+      var songs = await GetQueueAsync(teamId);
+      return SongQueue.FindMinimum(songs);
+    }
+
     private SongQueue GetOrCreateQueue(int teamId)
     {
       return _queues.GetOrAdd(teamId, _ => new SongQueue());

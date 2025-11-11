@@ -11,5 +11,7 @@ namespace back.Services
     Task<Song?> GoToPreviousSongAsync(int teamId);
     Task<Song?> JumpToSongAsync(int teamId, int index);
     Task RefreshQueueAsync(int teamId);
+    Task<List<Song>> GetSongsSortedByRatingAsync(int teamId);
+    Task<Song?> GetLowestRatedSongAsync(int teamId);
   }
 }

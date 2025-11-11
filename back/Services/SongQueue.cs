@@ -7,6 +7,27 @@ namespace back.Services
   {
     private readonly List<Song> _songs = new List<Song>();
     private readonly object _lock = new object();
+
+    public static List<T> SortByComparable<T>(List<T> items) where T : class, IComparable<T>
+    {
+      items.Sort();
+      return items;
+    }
+
+    public static T? FindMinimum<T>(List<T> items) where T : class, IComparable<T>
+    {
+      if (items.Count == 0) return null;
+      
+      T min = items[0];
+      for (int i = 1; i < items.Count; i++)
+      {
+        if (items[i].CompareTo(min) < 0)
+        {
+          min = items[i];
+        }
+      }
+      return min;
+    }
     public void Enqueue(Song song, bool insertAtFront = false)
     {
       if (song == null) return;

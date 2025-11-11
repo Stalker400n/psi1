@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using back.Models;
 using back.Data.Repositories;
 using back.Models.Enums;
+using back.Exceptions;
 
 namespace back.Controllers;
 
@@ -49,11 +50,18 @@ public class UsersController : ControllerBase
   }
 
   [HttpPut("{id}/role")]
-  public async Task<ActionResult<User>> ChangeUserRole(int teamId, int id, [FromBody] Role role)
+  public async Task<ActionResult<User>> ChangeUserRole(int teamId, int id, [FromBody] RoleChangeRequest request)
   {
-    var updated = await _usersRepository.ChangeUserRoleAsync(teamId, id, role);
-    if (updated == null) return NotFound(new { message = "Team or user not found" });
-    return Ok(updated);
+    try
+    {
+      var updated = await _usersRepository.ChangeUserRoleAsync(teamId, id, request.Role, request.RequestingUserId);
+      if (updated == null) return NotFound(new { message = "Team or user not found" });
+      return Ok(updated);
+    }
+    catch (RoleChangeException ex)
+    {
+      return BadRequest(new { message = ex.Message });
+    }
   }
 
   [HttpDelete("{id}")]

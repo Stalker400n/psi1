@@ -15,5 +15,7 @@ public interface IUsersRepository
 	Task<bool> DeleteUserAsync(int teamId, int userId);
 
 	Task<User?> ChangeUserRoleAsync(int teamId, int userId, back.Models.Enums.Role newRole);
+
+	Task<User?> ChangeUserRoleAsync(int teamId, int userId, back.Models.Enums.Role newRole, int requestingUserId);
 }
 

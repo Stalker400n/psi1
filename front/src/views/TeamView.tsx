@@ -17,8 +17,11 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
   const [team, setTeam] = useState<Team | null>(null);
-  const [view, setView] = useState<"playlist" | "chat" | "leaderboard">("playlist");
+  const [view, setView] = useState<"playlist" | "chat" | "leaderboard">(
+    "playlist"
+  );
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (teamId) {
@@ -99,6 +102,17 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
       </div>
 
       <div className="max-w-7xl mx-auto p-4">
+        {error && (
+          <div className="mb-4 p-4 bg-red-900/30 border border-red-600 rounded-lg text-red-300">
+            {error}
+            <button
+              onClick={() => setError(null)}
+              className="ml-2 underline hover:text-red-200"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
         <div className="flex gap-2 mb-6">
           <button
             onClick={() => setView("playlist")}
@@ -153,7 +167,7 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
                   <div className="px-2 py-1 bg-slate-700 text-slate-200 rounded text-xs">
                     {u.role}
                   </div>
-                  {user.role === "Owner" && (
+                  {(user.role === "Owner" || user.role === "Moderator") && (
                     <select
                       value={u.role}
                       onChange={async (e) => {
@@ -162,11 +176,23 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
                           | "Moderator"
                           | "Owner";
                         try {
-                          await api.usersApi.changeRole(team.id, u.id, newRole);
+                          setError(null);
+                          await api.usersApi.changeRole(
+                            team.id,
+                            u.id,
+                            newRole,
+                            user.id
+                          );
                           await fetchTeam();
                         } catch (err) {
+                          const errorMessage =
+                            err instanceof Error
+                              ? err.message
+                              : "Failed to change role";
                           console.error("Failed to change role", err);
-                          alert("Failed to change role");
+                          setError(errorMessage);
+                          alert(`Error: ${errorMessage}`);
+                          await fetchTeam();
                         }
                       }}
                       className="bg-slate-700 text-white rounded px-2 py-1 text-sm"
@@ -190,10 +216,7 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
           />
         )}
         {view === "leaderboard" && (
-          <Leaderboard
-            teamId={parseInt(teamId)}
-            userId={user.id}
-          />
+          <Leaderboard teamId={parseInt(teamId)} userId={user.id} />
         )}
         {view === "chat" && (
           <ChatView teamId={parseInt(teamId)} userName={user.name} />

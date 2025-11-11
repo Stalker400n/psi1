@@ -7,6 +7,9 @@ using back.Data.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.AddProvider(new FileLoggerProvider("Logs/log.txt"));
+
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {

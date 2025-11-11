@@ -9,24 +9,50 @@ import { BrowseTeams } from './components/BrowseTeams';
 import { JoinTeam } from './components/JoinTeam';
 import { TeamView } from './views/TeamView';
 
+// Define a type for user profiles
+interface UserProfile {
+  id: string;
+  name: string;
+  createdAt: string;
+  lastUsed: string;
+}
+
 export default function App() {
-  const [userName, setUserName] = useState<string>(() => {
-    return localStorage.getItem('userName') || '';
+  // Store multiple user profiles
+  const [userProfiles, setUserProfiles] = useState<UserProfile[]>(() => {
+    const savedProfiles = localStorage.getItem('userProfiles');
+    return savedProfiles ? JSON.parse(savedProfiles) : [];
   });
   
+  // Currently selected profile
+  const [selectedProfileId, setSelectedProfileId] = useState<string>(() => {
+    return localStorage.getItem('selectedProfileId') || '';
+  });
+  
+  // Current active user in a team
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     const savedUser = localStorage.getItem('currentUser');
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  useEffect(() => {
-    if (userName) {
-      localStorage.setItem('userName', userName);
-    } else {
-      localStorage.removeItem('userName');
-    }
-  }, [userName]);
+  // Get the currently selected profile
+  const selectedProfile = userProfiles.find(profile => profile.id === selectedProfileId);
 
+  // Save user profiles to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('userProfiles', JSON.stringify(userProfiles));
+  }, [userProfiles]);
+
+  // Save selected profile ID to localStorage whenever it changes
+  useEffect(() => {
+    if (selectedProfileId) {
+      localStorage.setItem('selectedProfileId', selectedProfileId);
+    } else {
+      localStorage.removeItem('selectedProfileId');
+    }
+  }, [selectedProfileId]);
+
+  // Save currentUser to localStorage whenever it changes
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -35,30 +61,66 @@ export default function App() {
     }
   }, [currentUser]);
 
+  // Add a new user profile
+  const addUserProfile = (name: string) => {
+    const newProfile: UserProfile = {
+      id: Date.now().toString(),
+      name,
+      createdAt: new Date().toISOString(),
+      lastUsed: new Date().toISOString()
+    };
+    
+    setUserProfiles(prev => [...prev, newProfile]);
+    setSelectedProfileId(newProfile.id);
+  };
+
+  // Select an existing profile
+  const selectUserProfile = (id: string) => {
+    setSelectedProfileId(id);
+    
+    // Update lastUsed timestamp
+    setUserProfiles(prev => 
+      prev.map(profile => 
+        profile.id === id 
+          ? { ...profile, lastUsed: new Date().toISOString() } 
+          : profile
+      )
+    );
+  };
+
+  // Handle logout
   const handleLogout = () => {
-    setUserName('');
+    setSelectedProfileId('');
     setCurrentUser(null);
   };
 
-  if (!userName) {
-    return <NameEntry onSubmit={setUserName} />;
+  // If no profile is selected, show the name entry screen
+  if (!selectedProfile) {
+    return <NameEntry 
+      onSubmit={addUserProfile} 
+      existingProfiles={userProfiles}
+      onSelectProfile={selectUserProfile}
+    />;
   }
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<MainScreen onLogout={handleLogout} />} />
+        <Route path="/" element={<MainScreen 
+          onLogout={handleLogout} 
+          profileName={selectedProfile.name}
+        />} />
         <Route 
           path="/teams/create" 
-          element={<CreateTeam userName={userName} onUserCreated={setCurrentUser} />} 
+          element={<CreateTeam userName={selectedProfile.name} onUserCreated={setCurrentUser} />} 
         />
         <Route 
           path="/teams/browse" 
-          element={<BrowseTeams userName={userName} onUserCreated={setCurrentUser} />} 
+          element={<BrowseTeams userName={selectedProfile.name} onUserCreated={setCurrentUser} />} 
         />
         <Route 
           path="/teams/join" 
-          element={<JoinTeam userName={userName} onUserCreated={setCurrentUser} />} 
+          element={<JoinTeam userName={selectedProfile.name} onUserCreated={setCurrentUser} />} 
         />
         <Route 
           path="/teams/:teamId" 

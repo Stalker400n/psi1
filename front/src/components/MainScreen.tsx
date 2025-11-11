@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Home, Users, Plus, LogOut } from 'lucide-react';
+import { Home, Users, Plus, LogOut, User } from 'lucide-react';
 import { 
   getRandomPraises, 
   generatePraiseStyles, 
@@ -13,9 +13,10 @@ const praiseStyles = generatePraiseStyles(praises);
 
 interface MainScreenProps {
   onLogout: () => void;
+  profileName: string;
 }
 
-export function MainScreen({ onLogout }: MainScreenProps) {
+export function MainScreen({ onLogout, profileName }: MainScreenProps) {
   const navigate = useNavigate();
 
   return (
@@ -28,7 +29,14 @@ export function MainScreen({ onLogout }: MainScreenProps) {
 
       {/* Main content */}
       <div className="text-center relative z-10">
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-between items-center mb-4">
+          <div className="px-3 py-2 bg-slate-800 text-white rounded-lg flex items-center gap-2">
+            <span className="text-yellow-500">
+              <User size={18} />
+            </span>
+            <span>{profileName}</span>
+          </div>
+          
           <button
             onClick={onLogout}
             className="px-3 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition flex items-center gap-2"

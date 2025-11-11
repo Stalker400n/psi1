@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using back.Models;
+using back.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace back.Data.Repositories;
@@ -103,6 +104,42 @@ public class UsersRepository : IUsersRepository
         await _context.SaveChangesAsync();
 
         return existing;
+    }
+
+    public async Task<User?> ChangeUserRoleAsync(int teamId, int userId, back.Models.Enums.Role newRole, int requestingUserId)
+    {
+        var team = await _context.Teams
+            .Include(t => t.Users)
+            .FirstOrDefaultAsync(t => t.Id == teamId);
+
+        if (team == null) return null;
+
+        var requestingUser = team.Users.FirstOrDefault(u => u.Id == requestingUserId);
+        if (requestingUser == null)
+            throw new RoleChangeException("Requesting user not found in team");
+
+        // Only owners and moderators can change roles
+        if (requestingUser.Role != back.Models.Enums.Role.Owner &&
+            requestingUser.Role != back.Models.Enums.Role.Moderator)
+            throw new RoleChangeException("Only owners and moderators can change user roles");
+
+        var userToUpdate = team.Users.FirstOrDefault(u => u.Id == userId);
+        if (userToUpdate == null) return null;
+
+        // Prevent removing the last owner
+        if (userToUpdate.Role == back.Models.Enums.Role.Owner &&
+            newRole != back.Models.Enums.Role.Owner)
+        {
+            var ownerCount = team.Users.Count(u => u.Role == back.Models.Enums.Role.Owner);
+            if (ownerCount == 1)
+                throw new RoleChangeException("A team must have at least one owner");
+        }
+
+        userToUpdate.Role = newRole;
+        _context.Entry(userToUpdate).State = EntityState.Modified;
+        await _context.SaveChangesAsync();
+
+        return userToUpdate;
     }
 
     public async Task<bool> DeleteUserAsync(int teamId, int userId)

@@ -180,17 +180,21 @@ const usersApi = {
   changeRole: async (
     teamId: number,
     userId: number,
-    role: 'Member' | 'Moderator' | 'Owner'
+    role: 'Member' | 'Moderator' | 'Owner',
+    requestingUserId: number
   ): Promise<User> => {
     const response = await fetch(
       `${API_BASE}/teams/${teamId}/users/${userId}/role`,
       {
         ...fetchOptions,
         method: 'PUT',
-        body: JSON.stringify({ role }),
+        body: JSON.stringify({ role, requestingUserId }),
       }
     );
-    if (!response.ok) throw new Error('Failed to change role');
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to change role' }));
+      throw new Error(error.message || 'Failed to change role');
+    }
     return response.json();
   },
 };

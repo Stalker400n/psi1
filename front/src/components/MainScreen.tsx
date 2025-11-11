@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Home, Users, Plus } from 'lucide-react';
+import { Home, Users, Plus, LogOut } from 'lucide-react';
 import { 
   getRandomPraises, 
   generatePraiseStyles, 
@@ -8,11 +8,14 @@ import {
   renderPulsingStar
 } from '../utils/praises';
 
-// Get random praises and generate their styles
 const praises = getRandomPraises();
 const praiseStyles = generatePraiseStyles(praises);
 
-export function MainScreen() {
+interface MainScreenProps {
+  onLogout: () => void;
+}
+
+export function MainScreen({ onLogout }: MainScreenProps) {
   const navigate = useNavigate();
 
   return (
@@ -25,6 +28,17 @@ export function MainScreen() {
 
       {/* Main content */}
       <div className="text-center relative z-10">
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={onLogout}
+            className="px-3 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition flex items-center gap-2"
+            title="Logout"
+          >
+            <LogOut size={18} />
+            <span>Logout</span>
+          </button>
+        </div>
+        
         <h1 className="text-6xl font-bold text-white mb-2 drop-shadow-2xl">
           komcon{renderPulsingStar({ className: 'text-yellow-400' })}
         </h1>

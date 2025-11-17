@@ -14,6 +14,8 @@ public class UsersRepository : IUsersRepository
 
     public UsersRepository(ApplicationDbContext context)
     {
+        if (context == null) throw new ArgumentNullException(nameof(context));
+
         _context = context;
     }
 

@@ -12,6 +12,8 @@ public class SongsRepository : ISongsRepository
 
   public SongsRepository(ApplicationDbContext context)
   {
+    if (context == null) throw new ArgumentNullException(nameof(context));
+
     _context = context;
   }
 

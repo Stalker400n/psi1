@@ -16,6 +16,11 @@ namespace back.Services
       ISongsRepository songsRepository,
       IChatsRepository chatsRepository)
     {
+      if (teamsRepository == null) throw new ArgumentNullException(nameof(teamsRepository));
+      if (usersRepository == null) throw new ArgumentNullException(nameof(songsRepository));
+      if (songsRepository == null) throw new ArgumentNullException(nameof(songsRepository));
+      if (chatsRepository == null) throw new ArgumentNullException(nameof(chatsRepository));
+
       _teamsRepository = teamsRepository;
       _usersRepository = usersRepository;
       _songsRepository = songsRepository;

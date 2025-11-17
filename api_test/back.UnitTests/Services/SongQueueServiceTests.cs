@@ -27,6 +27,35 @@ namespace back.Tests.Services
       );
     }
 
+    #region Constructor Tests
+
+    [Fact]
+    public void Constructor_WhenTeamsRepositoryIsNull_ShouldThrowArgumentNullException()
+    {
+      // Act & Assert
+      Assert.Throws<ArgumentNullException>(() => 
+        new SongQueueService(null!, _songsRepositoryMock.Object, _comparableUtilsMock.Object));
+    }
+
+    [Fact]
+    public void Constructor_WhenSongsRepositoryIsNull_ShouldThrowArgumentNullException()
+    {
+      // Act & Assert
+      Assert.Throws<ArgumentNullException>(() => 
+        new SongQueueService(_teamsRepositoryMock.Object, null!, _comparableUtilsMock.Object));
+    }
+
+    [Fact]
+    public void Constructor_WhenComparableUtilsIsNull_ShouldThrowArgumentNullException()
+    {
+      // Act & Assert
+      Assert.Throws<ArgumentNullException>(() => 
+        new SongQueueService(_teamsRepositoryMock.Object, _songsRepositoryMock.Object, null!));
+    }
+
+    #endregion
+
+
     #region InitializeQueueAsync Tests
 
     [Fact]

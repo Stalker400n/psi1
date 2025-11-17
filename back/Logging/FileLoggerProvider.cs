@@ -4,6 +4,8 @@ public class FileLoggerProvider : ILoggerProvider
 
   public FileLoggerProvider(string filePath)
   {
+    if (filePath == null) throw new ArgumentNullException(nameof(filePath));
+        
     _filePath = filePath;
   }
 

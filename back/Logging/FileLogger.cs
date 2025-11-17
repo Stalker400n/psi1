@@ -6,6 +6,8 @@ public class FileLogger : ILogger
 
   public FileLogger(string filePath)
   {
+    if (filePath == null) throw new ArgumentNullException(nameof(filePath));
+    
     _filePath = filePath;
   }
 

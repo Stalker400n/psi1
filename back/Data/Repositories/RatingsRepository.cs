@@ -12,6 +12,8 @@ public class RatingsRepository : IRatingsRepository
 
   public RatingsRepository(ApplicationDbContext context)
   {
+    if (context == null) throw new ArgumentNullException(nameof(context));
+    
     _context = context;
   }
 

@@ -12,6 +12,7 @@ public class TeamsController : ControllerBase
 
   public TeamsController(ITeamsRepository teamsRepository)
   {
+    if (teamsRepository == null) throw new ArgumentNullException(nameof(teamsRepository));
     _teamsRepository = teamsRepository;
   }
 

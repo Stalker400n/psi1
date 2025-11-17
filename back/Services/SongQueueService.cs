@@ -14,6 +14,10 @@ namespace back.Services
 
     public SongQueueService(ITeamsRepository teamsRepository, ISongsRepository songsRepository, IComparableUtils comparableUtils)
     {
+      if (teamsRepository == null) throw new ArgumentNullException(nameof(teamsRepository));
+      if (songsRepository == null) throw new ArgumentNullException(nameof(songsRepository));
+      if (comparableUtils == null) throw new ArgumentNullException(nameof(comparableUtils));
+
       _teamsRepository = teamsRepository;
       _songsRepository = songsRepository;
       _comparableUtils = comparableUtils;

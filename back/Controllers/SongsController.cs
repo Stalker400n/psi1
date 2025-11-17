@@ -24,6 +24,12 @@ namespace back.Controllers
       IYoutubeValidator youtubeValidator,
       ILogger<SongsController> logger)
     {
+      if (songsRepository == null) throw new ArgumentNullException(nameof(songsRepository));
+      if (teamsRepository == null) throw new ArgumentNullException(nameof(teamsRepository));
+      if (queueService == null) throw new ArgumentNullException(nameof(queueService));
+      if (youtubeValidator == null) throw new ArgumentNullException(nameof(youtubeValidator));
+      if (logger == null) throw new ArgumentNullException(nameof(logger));
+      
       _songsRepository = songsRepository;
       _teamsRepository = teamsRepository;
       _queueService = queueService;

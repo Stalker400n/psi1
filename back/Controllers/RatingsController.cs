@@ -17,6 +17,10 @@ namespace back.Controllers
       ISongsRepository songsRepository,
       ILogger<RatingsController> logger)
     {
+      if (ratingsRepository == null) throw new ArgumentNullException(nameof(ratingsRepository));
+      if (songsRepository == null) throw new ArgumentNullException(nameof(songsRepository));
+      if (logger == null) throw new ArgumentNullException(nameof(logger));
+      
       _ratingsRepository = ratingsRepository;
       _songsRepository = songsRepository;
       _logger = logger;

@@ -12,6 +12,7 @@ public class ChatsController : ControllerBase
 
   public ChatsController(IChatsRepository chatsRepository)
   {
+    if (chatsRepository == null) throw new ArgumentNullException(nameof(chatsRepository));
     _chatsRepository = chatsRepository;
   }
 

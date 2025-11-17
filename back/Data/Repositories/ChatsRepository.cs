@@ -13,6 +13,8 @@ public class ChatsRepository : IChatsRepository
 
     public ChatsRepository(ApplicationDbContext context)
     {
+        if (context == null) throw new ArgumentNullException(nameof(context));
+        
         _context = context;
     }
 

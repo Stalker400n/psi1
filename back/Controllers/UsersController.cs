@@ -14,6 +14,7 @@ public class UsersController : ControllerBase
 
   public UsersController(IUsersRepository usersRepository)
   {
+    if (usersRepository == null) throw new ArgumentNullException(nameof(usersRepository));
     _usersRepository = usersRepository;
   }
 

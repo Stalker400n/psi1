@@ -18,6 +18,9 @@ namespace back.Validators
 
         public YoutubeValidator(ILogger<YoutubeValidator> logger, IHttpClientFactory httpClientFactory)
         {
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+            if (httpClientFactory == null) throw new ArgumentNullException(nameof(httpClientFactory));
+      
             _logger = logger;
             _httpClientFactory = httpClientFactory;
         }

@@ -17,7 +17,7 @@ namespace back.Services
       IChatsRepository chatsRepository)
     {
       if (teamsRepository == null) throw new ArgumentNullException(nameof(teamsRepository));
-      if (usersRepository == null) throw new ArgumentNullException(nameof(songsRepository));
+      if (usersRepository == null) throw new ArgumentNullException(nameof(usersRepository));
       if (songsRepository == null) throw new ArgumentNullException(nameof(songsRepository));
       if (chatsRepository == null) throw new ArgumentNullException(nameof(chatsRepository));
 

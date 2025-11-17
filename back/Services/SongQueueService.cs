@@ -1,5 +1,6 @@
 using back.Models;
 using back.Data.Repositories;
+using back.Utils;
 using System.Collections.Concurrent;
 
 namespace back.Services
@@ -9,11 +10,13 @@ namespace back.Services
     private readonly ConcurrentDictionary<int, SongQueue> _queues = new ConcurrentDictionary<int, SongQueue>();
     private readonly ITeamsRepository _teamsRepository;
     private readonly ISongsRepository _songsRepository;
+    private readonly IComparableUtils _comparableUtils;
 
-    public SongQueueService(ITeamsRepository teamsRepository, ISongsRepository songsRepository)
+    public SongQueueService(ITeamsRepository teamsRepository, ISongsRepository songsRepository, IComparableUtils comparableUtils)
     {
       _teamsRepository = teamsRepository;
       _songsRepository = songsRepository;
+      _comparableUtils = comparableUtils;
     }
 
     public async Task InitializeQueueAsync(int teamId)
@@ -125,13 +128,13 @@ namespace back.Services
     public async Task<List<Song>> GetSongsSortedByRatingAsync(int teamId)
     {
       var songs = await GetQueueAsync(teamId);
-      return SongQueue.SortByComparable(songs);
+      return _comparableUtils.SortByComparable(songs);
     }
 
     public async Task<Song?> GetLowestRatedSongAsync(int teamId)
     {
       var songs = await GetQueueAsync(teamId);
-      return SongQueue.FindMinimum(songs);
+      return _comparableUtils.FindMinimum(songs);
     }
 
     private SongQueue GetOrCreateQueue(int teamId)

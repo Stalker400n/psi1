@@ -516,3 +516,6 @@ dist-ssr
 *.db
 *.db-shm
 *.db-wal
+
+# coverage report
+api_test/back.UnitTests/coveragereport/*

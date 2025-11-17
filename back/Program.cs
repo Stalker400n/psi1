@@ -39,6 +39,9 @@ builder.Services.AddScoped<ISongsRepository, SongsRepository>();
 builder.Services.AddScoped<IUsersRepository, UsersRepository>();
 builder.Services.AddScoped<IRatingsRepository, RatingsRepository>();
 
+// Utils
+builder.Services.AddSingleton<back.Utils.IComparableUtils, back.Utils.ComparableUtils>();
+
 // Service registrations
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<back.Services.ISongQueueService, back.Services.SongQueueService>();

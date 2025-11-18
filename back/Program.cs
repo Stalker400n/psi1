@@ -74,7 +74,8 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
   var services = scope.ServiceProvider;
-  try {
+  try
+  {
     var context = services.GetRequiredService<ApplicationDbContext>();
     context.Database.EnsureCreated();
     Console.WriteLine("Database created successfully.");
@@ -98,3 +99,5 @@ foreach (var url in app.Urls)
 }
 
 app.WaitForShutdown();
+
+public partial class Program { }

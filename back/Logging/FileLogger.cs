@@ -15,7 +15,7 @@ public class FileLogger : ILogger
 
   public bool IsEnabled(LogLevel logLevel)
   {
-    return logLevel >= LogLevel.Error;
+    return logLevel >= LogLevel.Warning;
   }
 
   public void Log<TState>(LogLevel logLevel,

@@ -1,10 +1,9 @@
+using FluentAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net;
 using System.Net.Http.Json;
 using back.Models;
 using back.Models.Enums;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Xunit;
-using FluentAssertions;
 
 namespace back.IntegrationTests.Controllers
 {
@@ -17,7 +16,6 @@ namespace back.IntegrationTests.Controllers
         {
             _factory = new WebApplicationFactory<Program>();
             _client = _factory.CreateClient();
-            // Add any database setup here if needed
             await Task.CompletedTask;
         }
 
@@ -32,7 +30,6 @@ namespace back.IntegrationTests.Controllers
         public async Task GetUsers_WhenTeamExists_ShouldReturnListOfUsers()
         {
             // Arrange
-            // Using a team ID from the dummy data
             var teamId = 395326;
             var endpoint = $"/teams/{teamId}/users";
 

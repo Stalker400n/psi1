@@ -26,12 +26,12 @@ export default function App() {
   
   // Currently selected profile
   const [selectedProfileId, setSelectedProfileId] = useState<string>(() => {
-    return localStorage.getItem('selectedProfileId') || '';
+    return sessionStorage.getItem('selectedProfileId') || '';
   });
   
   // Current active user in a team
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem('currentUser');
+    const savedUser = sessionStorage.getItem('currentUser');
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
@@ -43,21 +43,21 @@ export default function App() {
     localStorage.setItem('userProfiles', JSON.stringify(userProfiles));
   }, [userProfiles]);
 
-  // Save selected profile ID to localStorage whenever it changes
+  // Save selected profile ID to sessionStorage whenever it changes
   useEffect(() => {
     if (selectedProfileId) {
-      localStorage.setItem('selectedProfileId', selectedProfileId);
+      sessionStorage.setItem('selectedProfileId', selectedProfileId);
     } else {
-      localStorage.removeItem('selectedProfileId');
+      sessionStorage.removeItem('selectedProfileId');
     }
   }, [selectedProfileId]);
 
-  // Save currentUser to localStorage whenever it changes
+  // Save currentUser to sessionStorage whenever it changes
   useEffect(() => {
     if (currentUser) {
-      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
     } else {
-      localStorage.removeItem('currentUser');
+      sessionStorage.removeItem('currentUser');
     }
   }, [currentUser]);
 
@@ -92,6 +92,8 @@ export default function App() {
   const handleLogout = () => {
     setSelectedProfileId('');
     setCurrentUser(null);
+    sessionStorage.removeItem('selectedProfileId');
+    sessionStorage.removeItem('currentUser');
   };
 
   // If no profile is selected, show the name entry screen

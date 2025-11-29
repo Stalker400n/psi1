@@ -54,14 +54,16 @@ export function HeatMeter({ currentRating, onSubmit }: HeatMeterProps) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-4 bg-slate-900 p-6 rounded-lg">
-      <div className="flex items-center gap-2 mb-2">
-        <Flame className="text-orange-500" size={24} />
-        <h3 className="text-white font-semibold text-lg">HEAT METER</h3>
+    <div className="flex flex-col items-center gap-3 bg-slate-900 p-3 rounded-lg h-full">
+      {/* Compact title */}
+      <div className="flex flex-col items-center gap-1">
+        <Flame className="text-orange-500" size={20} />
+        <h3 className="text-white font-semibold text-xs text-center">HEAT</h3>
       </div>
 
+      {/* Meter - taller */}
       <div
-        className="relative w-16 h-80 bg-slate-800 rounded-full cursor-pointer select-none"
+        className="relative w-12 h-full min-h-[500px] bg-slate-800 rounded-full cursor-pointer select-none"
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
@@ -79,7 +81,7 @@ export function HeatMeter({ currentRating, onSubmit }: HeatMeterProps) {
 
         {/* Slider thumb */}
         <div
-          className="absolute left-1/2 -translate-x-1/2 w-20 h-6 rounded-full border-4 border-white shadow-lg transition-all"
+          className="absolute left-1/2 -translate-x-1/2 w-16 h-5 rounded-full border-2 border-white shadow-lg transition-all"
           style={{
             bottom: `${heat}%`,
             transform: 'translate(-50%, 50%)',
@@ -99,12 +101,13 @@ export function HeatMeter({ currentRating, onSubmit }: HeatMeterProps) {
         </div>
       </div>
 
+      {/* Submit button - compact */}
       <button
         onClick={handleSubmit}
         disabled={isSubmitting}
-        className="w-full px-6 py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full px-2 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-xs"
       >
-        {isSubmitting ? 'Submitting...' : 'Submit Rating'}
+        {isSubmitting ? '...' : 'Rate'}
       </button>
     </div>
   );

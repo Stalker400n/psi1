@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Music, MessageSquare, LogOut, Trophy } from "lucide-react";
+import { LogOut } from "lucide-react";
 import api from "../services/api.service";
 import type { Team, User } from "../services/api.service";
 import { PlaylistView } from "./PlaylistView";
-import { ChatView } from "./ChatView";
-import { Leaderboard } from "../components/Leaderboard";
 import { renderPulsingStar, floatingQuotesCSS } from "../utils/praises";
 import { useToast } from "../contexts/ToastContext";
 
@@ -19,9 +17,6 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [team, setTeam] = useState<Team | null>(null);
-  const [view, setView] = useState<"playlist" | "chat" | "leaderboard">(
-    "playlist"
-  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -79,20 +74,6 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
               Code: {team.id} • {user.name}
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-slate-300 text-sm">Users:</div>
-            <div className="flex items-center gap-3">
-              {team.users.slice(0, 5).map((u) => (
-                <div
-                  key={u.id}
-                  className="px-3 py-1 bg-slate-800 rounded-md text-sm text-white flex items-center gap-2"
-                >
-                  <span className="font-semibold">{u.name}</span>
-                  <span className="text-xs text-yellow-300">{u.role}</span>
-                </div>
-              ))}
-            </div>
-          </div>
           <button
             onClick={handleLeave}
             className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition flex items-center gap-2"
@@ -115,114 +96,11 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
             </button>
           </div>
         )}
-        <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => setView("playlist")}
-            className={`px-6 py-2 rounded-lg transition font-semibold ${
-              view === "playlist"
-                ? "bg-yellow-500 text-black"
-                : "bg-slate-800 text-slate-400 hover:bg-slate-700"
-            }`}
-          >
-            <Music size={18} className="inline mr-2" />
-            Playlist
-          </button>
-          <button
-            onClick={() => setView("leaderboard")}
-            className={`px-6 py-2 rounded-lg transition font-semibold ${
-              view === "leaderboard"
-                ? "bg-yellow-500 text-black"
-                : "bg-slate-800 text-slate-400 hover:bg-slate-700"
-            }`}
-          >
-            <Trophy size={18} className="inline mr-2" />
-            Leaderboard
-          </button>
-          <button
-            onClick={() => setView("chat")}
-            className={`px-6 py-2 rounded-lg transition font-semibold ${
-              view === "chat"
-                ? "bg-yellow-500 text-black"
-                : "bg-slate-800 text-slate-400 hover:bg-slate-700"
-            }`}
-          >
-            <MessageSquare size={18} className="inline mr-2" />
-            Chat
-          </button>
-        </div>
-
-        <div className="mb-6">
-          <h3 className="text-white font-semibold mb-2">Team Members</h3>
-          <div className="grid grid-cols-1 gap-2 max-w-md">
-            {team.users.map((u) => (
-              <div
-                key={u.id}
-                className="flex items-center justify-between bg-slate-800 p-2 rounded-md"
-              >
-                <div>
-                  <div className="text-white font-medium">{u.name}</div>
-                  <div className="text-slate-400 text-xs">
-                    Joined: {new Date(u.joinedAt).toLocaleString()}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="px-2 py-1 bg-slate-700 text-slate-200 rounded text-xs">
-                    {u.role}
-                  </div>
-                  {(user.role === "Owner" || user.role === "Moderator") && (
-                    <select
-                      value={u.role}
-                      onChange={async (e) => {
-                        const newRole = e.target.value as
-                          | "Member"
-                          | "Moderator"
-                          | "Owner";
-                        try {
-                          setError(null);
-                          await api.usersApi.changeRole(
-                            team.id,
-                            u.id,
-                            newRole,
-                            user.id
-                          );
-                          await fetchTeam();
-                        } catch (err) {
-                          const errorMessage =
-                            err instanceof Error
-                              ? err.message
-                              : "Failed to change role";
-                          console.error("Failed to change role", err);
-                          setError(errorMessage);
-                          showToast(`Error: ${errorMessage}`, "error");
-                          await fetchTeam();
-                        }
-                      }}
-                      className="bg-slate-700 text-white rounded px-2 py-1 text-sm"
-                    >
-                      <option value="Member">Member</option>
-                      <option value="Moderator">Moderator</option>
-                      <option value="Owner">Owner</option>
-                    </select>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {view === "playlist" && (
-          <PlaylistView
-            teamId={parseInt(teamId)}
-            userId={user.id}
-            userName={user.name}
-          />
-        )}
-        {view === "leaderboard" && (
-          <Leaderboard teamId={parseInt(teamId)} userId={user.id} />
-        )}
-        {view === "chat" && (
-          <ChatView teamId={parseInt(teamId)} userName={user.name} />
-        )}
+        <PlaylistView
+          teamId={parseInt(teamId)}
+          userId={user.id}
+          userName={user.name}
+        />
       </div>
 
       <style>{floatingQuotesCSS}</style>

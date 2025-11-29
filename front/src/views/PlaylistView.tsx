@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, SkipForward, SkipBack, Zap } from 'lucide-react';
+import { Plus, SkipForward, SkipBack, Zap } from 'lucide-react';
 import api from '../services/api.service';
-import type { Song } from '../services/api.service';
+import type { Song, User } from '../services/api.service';
 import { extractYoutubeId } from '../utils/youtube';
 import { HeatMeter } from '../components/HeatMeter';
+import { RightPanel } from '../components/RightPanel';
 import { useToast } from '../contexts/ToastContext';
 
 interface PlaylistViewProps {
@@ -15,6 +16,7 @@ interface PlaylistViewProps {
 export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
   const { showToast } = useToast();
   const [queue, setQueue] = useState<Song[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [currentRating, setCurrentRating] = useState<number>(0);
   const [showAdd, setShowAdd] = useState<boolean>(false);
@@ -23,7 +25,11 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
 
   useEffect(() => {
     fetchQueueAndCurrent();
-    const interval = setInterval(fetchQueueAndCurrent, 3000);
+    fetchUsers();
+    const interval = setInterval(() => {
+      fetchQueueAndCurrent();
+      fetchUsers();
+    }, 3000);
     return () => clearInterval(interval);
   }, [teamId]);
 
@@ -42,6 +48,16 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
     } catch (error) {
       console.error('Error fetching current rating:', error);
       setCurrentRating(0);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const userData = await api.usersApi.getAll(teamId);
+      setUsers(userData);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      setUsers([]);
     }
   };
 
@@ -145,9 +161,9 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Heat Meter - Left Column */}
-      <div className="lg:col-span-1">
+    <div className="flex gap-4 h-[calc(100vh-200px)]">
+      {/* Left: Slim Heat Meter */}
+      <div className="w-20 flex-shrink-0">
         {currentSong && (
           <HeatMeter 
             currentRating={currentRating}
@@ -156,13 +172,15 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
         )}
       </div>
 
-      {/* Now Playing - Middle Column */}
-      <div className="lg:col-span-1">
-        <div className="bg-slate-900 rounded-lg p-6 mb-6">
+      {/* Center: Player - Large */}
+      <div className="flex-1 flex flex-col gap-4">
+        {/* Now Playing */}
+        <div className="bg-slate-900 rounded-lg p-6 flex-1">
           <h2 className="text-xl font-semibold text-white mb-4">Now Playing</h2>
           {currentSong ? (
-            <div>
-              <div className="bg-black aspect-video rounded mb-4 flex items-center justify-center">
+            <div className="h-full flex flex-col">
+              {/* Video player */}
+              <div className="bg-black aspect-video rounded mb-4 flex items-center justify-center flex-shrink-0">
                 <iframe
                   width="100%"
                   height="100%"
@@ -173,25 +191,27 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
                   className="rounded"
                 />
               </div>
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h3 className="text-white font-semibold">{currentSong.title}</h3>
-                  <p className="text-slate-400">{currentSong.artist}</p>
-                  <p className="text-slate-500 text-sm">Added by {currentSong.addedByUserName}</p>
-                  <p className="text-yellow-400 text-xs mt-1">Position: #{currentSong.index + 1}</p>
-                </div>
+              
+              {/* Song info */}
+              <div className="mb-4">
+                <h3 className="text-white font-semibold text-lg">{currentSong.title}</h3>
+                <p className="text-slate-400">{currentSong.artist}</p>
+                <p className="text-slate-500 text-sm">Added by {currentSong.addedByUserName}</p>
+                <p className="text-yellow-400 text-xs mt-1">Position: #{currentSong.index + 1}</p>
               </div>
-              <div className="flex gap-2 mt-4">
+              
+              {/* Controls */}
+              <div className="flex gap-2 mt-auto">
                 <button
                   onClick={previousSong}
-                  className="flex-1 px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition flex items-center justify-center gap-2 font-semibold"
                 >
                   <SkipBack size={18} />
                   Previous
                 </button>
                 <button
                   onClick={nextSong}
-                  className="flex-1 px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition flex items-center justify-center gap-2 font-semibold"
                 >
                   <SkipForward size={18} />
                   Next
@@ -199,10 +219,13 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
               </div>
             </div>
           ) : (
-            <p className="text-slate-400">No songs in queue</p>
+            <div className="h-full flex items-center justify-center">
+              <p className="text-slate-400">No songs in queue</p>
+            </div>
           )}
         </div>
 
+        {/* Add Song Button & Form */}
         <button
           onClick={() => setShowAdd(!showAdd)}
           className="w-full px-6 py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition flex items-center justify-center gap-2 font-semibold"
@@ -212,8 +235,8 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
         </button>
 
         {showAdd && (
-          <div className="mt-4 bg-slate-900 rounded-lg p-6">
-            <div className="mb-4">
+          <div className="bg-slate-900 rounded-lg p-4">
+            <div className="mb-3">
               <label className="text-white text-sm mb-2 block">Add song to:</label>
               <div className="flex gap-2">
                 <button
@@ -259,38 +282,18 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
         )}
       </div>
 
-      {/* Queue - Right Column */}
-      <div className="lg:col-span-1 bg-slate-900 rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-white mb-4">
-          Queue ({Math.max(0, queue.length - 1)} {queue.length - 1 === 1 ? 'song' : 'songs'})
-        </h2>
-        <div className="space-y-3 max-h-[600px] overflow-y-auto">
-          {queue.slice(1).map((song) => (
-            <div key={song.id} className="bg-slate-800 p-4 rounded-lg hover:bg-slate-750 transition">
-              <div className="flex justify-between items-start">
-                <div 
-                  className="flex-1 cursor-pointer"
-                  onClick={() => jumpToSong(song.index)}
-                >
-                  <p className="text-yellow-400 text-sm font-semibold">#{song.index + 1}</p>
-                  <h4 className="text-white font-semibold hover:text-yellow-400 transition">{song.title}</h4>
-                  <p className="text-slate-400 text-sm">{song.artist}</p>
-                  <p className="text-slate-500 text-xs mt-1">Added by {song.addedByUserName}</p>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteSong(song.id);
-                  }}
-                  className="ml-2 p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-          ))}
-          {queue.length <= 1 && <p className="text-slate-400">No songs in queue</p>}
-        </div>
+      {/* Right: Tabbed Panel */}
+      <div className="w-96 flex-shrink-0">
+        <RightPanel
+          teamId={teamId}
+          userId={userId}
+          userName={userName}
+          queue={queue}
+          users={users}
+          userRole={users.find(u => u.id === userId)?.role || 'Member'}
+          onJumpToSong={jumpToSong}
+          onDeleteSong={deleteSong}
+        />
       </div>
     </div>
   );

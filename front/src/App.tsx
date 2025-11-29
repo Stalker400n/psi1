@@ -87,6 +87,17 @@ export default function App() {
       )
     );
   };
+  
+  // Delete a user profile
+  const deleteUserProfile = (id: string) => {
+    setUserProfiles(prev => prev.filter(profile => profile.id !== id));
+    
+    // If the deleted profile was selected, clear selection
+    if (selectedProfileId === id) {
+      setSelectedProfileId('');
+      sessionStorage.removeItem('selectedProfileId');
+    }
+  };
 
   // Handle logout
   const handleLogout = () => {
@@ -102,6 +113,7 @@ export default function App() {
       onSubmit={addUserProfile} 
       existingProfiles={userProfiles}
       onSelectProfile={selectUserProfile}
+      onDeleteProfile={deleteUserProfile}
     />;
   }
 

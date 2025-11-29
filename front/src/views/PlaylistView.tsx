@@ -94,7 +94,8 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
       fetchQueueAndCurrent();
     } catch (error) {
       console.error('Error adding song:', error);
-      alert('Failed to add song. Check console for details.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add song';
+      alert(errorMessage);
     }
   };
 

@@ -300,9 +300,23 @@ const songsApi = {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Failed to add song:', errorText);
-      throw new Error('Failed to add song');
+      // Try to parse JSON response for structured error message
+      const text = await response.text();
+      let errorMessage = 'Failed to add song';
+      
+      try {
+        const errorData = JSON.parse(text);
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch {
+        // If not valid JSON, use the text as error message if it's not empty
+        if (text.trim()) {
+          errorMessage = text;
+        }
+      }
+      
+      throw new Error(errorMessage);
     }
 
     return response.json();

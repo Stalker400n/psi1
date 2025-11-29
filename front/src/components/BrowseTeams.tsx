@@ -4,6 +4,7 @@ import { ArrowLeft, Users } from 'lucide-react';
 import api from '../services/api.service';
 import type { Team, User } from '../services/api.service';
 import { renderPulsingStar, floatingQuotesCSS } from '../utils/praises';
+import { useToast } from '../contexts/ToastContext';
 
 interface BrowseTeamsProps {
   userName: string;
@@ -12,6 +13,7 @@ interface BrowseTeamsProps {
 
 export function BrowseTeams({ userName, onUserCreated }: BrowseTeamsProps) {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -36,7 +38,7 @@ export function BrowseTeams({ userName, onUserCreated }: BrowseTeamsProps) {
       navigate(`/teams/${team.id}`);
     } catch (error) {
       console.error('Error joining team:', error);
-      alert('Failed to join team');
+      showToast('Failed to join team', 'error');
     }
   };
 

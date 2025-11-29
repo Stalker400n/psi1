@@ -4,6 +4,7 @@ import api from '../services/api.service';
 import type { Song } from '../services/api.service';
 import { extractYoutubeId } from '../utils/youtube';
 import { HeatMeter } from '../components/HeatMeter';
+import { useToast } from '../contexts/ToastContext';
 
 interface PlaylistViewProps {
   teamId: number;
@@ -12,6 +13,7 @@ interface PlaylistViewProps {
 }
 
 export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
+  const { showToast } = useToast();
   const [queue, setQueue] = useState<Song[]>([]);
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [currentRating, setCurrentRating] = useState<number>(0);
@@ -66,10 +68,10 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
     try {
       await api.ratingsApi.submitRating(teamId, currentSong.id, userId, rating);
       setCurrentRating(rating);
-      alert('Rating submitted successfully!');
+      // Remove success alert - rating update is visible in the heat meter
     } catch (error) {
       console.error('Error submitting rating:', error);
-      alert('Failed to submit rating');
+      showToast('Failed to submit rating', 'error');
     }
   };
 
@@ -92,10 +94,11 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
       setVideoUrl('');
       setShowAdd(false);
       fetchQueueAndCurrent();
+      showToast('Song added to queue', 'success');
     } catch (error) {
       console.error('Error adding song:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to add song';
-      alert(errorMessage);
+      showToast(errorMessage, 'error');
     }
   };
 
@@ -103,8 +106,10 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
     try {
       await api.songsApi.delete(teamId, songId);
       fetchQueueAndCurrent();
+      showToast('Song removed from queue', 'success');
     } catch (error) {
       console.error('Error deleting song:', error);
+      showToast('Failed to remove song', 'error');
     }
   };
 
@@ -114,7 +119,7 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
       fetchQueueAndCurrent();
     } catch (error) {
       console.error('Error skipping to next song:', error);
-      alert('No more songs in queue');
+      showToast('No more songs in queue', 'info');
     }
   };
 
@@ -124,7 +129,7 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
       fetchQueueAndCurrent();
     } catch (error) {
       console.error('Error going to previous song:', error);
-      alert('Already at first song');
+      showToast('Already at first song', 'info');
     }
   };
 
@@ -132,8 +137,10 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
     try {
       await api.songsApi.jumpTo(teamId, index);
       fetchQueueAndCurrent();
+      showToast('Jumped to song', 'success');
     } catch (error) {
       console.error('Error jumping to song:', error);
+      showToast('Failed to jump to song', 'error');
     }
   };
 

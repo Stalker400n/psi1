@@ -7,6 +7,7 @@ import { PlaylistView } from "./PlaylistView";
 import { ChatView } from "./ChatView";
 import { Leaderboard } from "../components/Leaderboard";
 import { renderPulsingStar, floatingQuotesCSS } from "../utils/praises";
+import { useToast } from "../contexts/ToastContext";
 
 interface TeamViewProps {
   user: User;
@@ -16,6 +17,7 @@ interface TeamViewProps {
 export function TeamView({ user, onLeave }: TeamViewProps) {
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [team, setTeam] = useState<Team | null>(null);
   const [view, setView] = useState<"playlist" | "chat" | "leaderboard">(
     "playlist"
@@ -37,7 +39,7 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
       setTeam(data);
     } catch (error) {
       console.error("Error fetching team:", error);
-      alert("Team not found");
+      showToast("Team not found", "error");
       navigate("/");
     } finally {
       setLoading(false);
@@ -191,7 +193,7 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
                               : "Failed to change role";
                           console.error("Failed to change role", err);
                           setError(errorMessage);
-                          alert(`Error: ${errorMessage}`);
+                          showToast(`Error: ${errorMessage}`, "error");
                           await fetchTeam();
                         }
                       }}

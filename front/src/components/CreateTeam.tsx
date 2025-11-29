@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import api from '../services/api.service';
 import type { User } from '../services/api.service';
 import { renderPulsingStar, floatingQuotesCSS } from '../utils/praises';
+import { useToast } from '../contexts/ToastContext';
 
 interface CreateTeamProps {
   userName: string;
@@ -12,6 +13,7 @@ interface CreateTeamProps {
 
 export function CreateTeam({ userName, onUserCreated }: CreateTeamProps) {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [teamName, setTeamName] = useState<string>('');
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -27,7 +29,7 @@ export function CreateTeam({ userName, onUserCreated }: CreateTeamProps) {
       navigate(`/teams/${team.id}`);
     } catch (error) {
       console.error('Error creating team:', error);
-      alert('Failed to create team');
+      showToast('Failed to create team', 'error');
     }
     setLoading(false);
   };

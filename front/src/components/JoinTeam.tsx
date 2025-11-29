@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import api from '../services/api.service';
 import type { User } from '../services/api.service';
 import { renderPulsingStar, floatingQuotesCSS } from '../utils/praises';
+import { useToast } from '../contexts/ToastContext';
 
 interface JoinTeamProps {
   userName: string;
@@ -12,6 +13,7 @@ interface JoinTeamProps {
 
 export function JoinTeam({ userName, onUserCreated }: JoinTeamProps) {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [code, setCode] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -26,7 +28,7 @@ export function JoinTeam({ userName, onUserCreated }: JoinTeamProps) {
       navigate(`/teams/${team.id}`);
     } catch (error) {
       console.error('Error joining team:', error);
-      alert('Failed to join team. Check the code.');
+      showToast('Failed to join team. Check the code.', 'error');
     }
     setLoading(false);
   };

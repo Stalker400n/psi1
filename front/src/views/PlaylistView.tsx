@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, SkipForward, SkipBack, Zap } from 'lucide-react';
+import { SkipForward, SkipBack } from 'lucide-react';
 import api from '../services/api.service';
 import type { Song, User } from '../services/api.service';
 import { extractYoutubeId } from '../utils/youtube';
@@ -19,9 +19,6 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [currentRating, setCurrentRating] = useState<number>(0);
-  const [showAdd, setShowAdd] = useState<boolean>(false);
-  const [videoUrl, setVideoUrl] = useState<string>('');
-  const [addMode, setAddMode] = useState<'end' | 'next'>('end');
 
   useEffect(() => {
     fetchQueueAndCurrent();
@@ -91,30 +88,27 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
     }
   };
 
-  const addSong = async () => {
-    if (!videoUrl.trim()) return;
+  const addSong = async (url: string, addToBeginning: boolean) => {
+    if (!url.trim()) return;
 
     try {
       await api.songsApi.add(
         teamId, 
         { 
-          link: videoUrl,
+          link: url,
           title: 'Song Name',
           artist: 'Artist',
           rating: 0,
           addedByUserId: userId,
           addedByUserName: userName
         },
-        addMode === 'next'
+        addToBeginning
       );
-      setVideoUrl('');
-      setShowAdd(false);
       fetchQueueAndCurrent();
-      showToast('Song added to queue', 'success');
     } catch (error) {
       console.error('Error adding song:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to add song';
-      showToast(errorMessage, 'error');
+      throw new Error(errorMessage);
     }
   };
 
@@ -224,62 +218,6 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
             </div>
           )}
         </div>
-
-        {/* Add Song Button & Form */}
-        <button
-          onClick={() => setShowAdd(!showAdd)}
-          className="w-full px-6 py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition flex items-center justify-center gap-2 font-semibold"
-        >
-          <Plus size={20} />
-          Add Song to Queue
-        </button>
-
-        {showAdd && (
-          <div className="bg-slate-900 rounded-lg p-4">
-            <div className="mb-3">
-              <label className="text-white text-sm mb-2 block">Add song to:</label>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setAddMode('end')}
-                  className={`flex-1 px-4 py-2 rounded-lg transition font-semibold ${
-                    addMode === 'end' 
-                      ? 'bg-yellow-500 text-black' 
-                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                  }`}
-                >
-                  End of Queue
-                </button>
-                <button
-                  onClick={() => setAddMode('next')}
-                  className={`flex-1 px-4 py-2 rounded-lg transition font-semibold flex items-center justify-center gap-2 ${
-                    addMode === 'next' 
-                      ? 'bg-yellow-500 text-black' 
-                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                  }`}
-                >
-                  <Zap size={16} />
-                  Play Next
-                </button>
-              </div>
-            </div>
-            
-            <input
-              type="text"
-              placeholder="YouTube Video URL"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && addSong()}
-              className="w-full px-4 py-2 bg-slate-800 text-white rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-            />
-            <button
-              onClick={addSong}
-              disabled={!videoUrl.trim()}
-              className="w-full px-6 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {addMode === 'next' ? 'Add to Play Next' : 'Add to End'}
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Right: Tabbed Panel */}
@@ -293,6 +231,7 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
           userRole={users.find(u => u.id === userId)?.role || 'Member'}
           onJumpToSong={jumpToSong}
           onDeleteSong={deleteSong}
+          onAddSong={addSong}
         />
       </div>
     </div>

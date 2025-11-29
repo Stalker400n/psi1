@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Music, Users, MessageSquare, Trophy, Trash2 } from 'lucide-react';
+import { Music, Users, MessageSquare, Trophy, Trash2, Plus, Zap } from 'lucide-react';
 import api from '../services/api.service';
 import type { Song, User } from '../services/api.service';
 import { ChatView } from '../views/ChatView';
@@ -17,6 +17,7 @@ interface RightPanelProps {
   userRole: 'Member' | 'Moderator' | 'Owner';
   onJumpToSong: (index: number) => void;
   onDeleteSong: (songId: number) => void;
+  onAddSong?: (url: string, addToBeginning: boolean) => Promise<void>;
   onRefreshTeam?: () => void;
 }
 
@@ -29,8 +30,39 @@ export function RightPanel({
   userRole,
   onJumpToSong,
   onDeleteSong,
+  onAddSong,
 }: RightPanelProps) {
+  const { showToast } = useToast();
   const [view, setView] = useState<PanelView>('queue');
+  const [videoUrl, setVideoUrl] = useState<string>('');
+  const [addToBeginning, setAddToBeginning] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  
+  const canAddToBeginning = userRole === 'Owner' || userRole === 'Moderator';
+  
+  const handleAddSong = async () => {
+    if (!videoUrl.trim() || !onAddSong || isSubmitting) return;
+    
+    try {
+      setIsSubmitting(true);
+      
+      if (addToBeginning && !canAddToBeginning) {
+        showToast('Only Moderators and Owners can add songs to beginning of queue', 'warning');
+        setAddToBeginning(false);
+        return;
+      }
+      
+      await onAddSong(videoUrl, addToBeginning);
+      setVideoUrl('');
+      showToast('Song added to queue', 'success');
+    } catch (error) {
+      console.error('Error adding song:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add song';
+      showToast(errorMessage, 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="bg-slate-900 rounded-lg p-4 h-full flex flex-col">
@@ -110,6 +142,53 @@ export function RightPanel({
         {view === 'leaderboard' && (
           <LeaderboardPanel teamId={teamId} userId={userId} />
         )}
+      </div>
+
+      {/* Add Song - Always visible at bottom */}
+      <div className="pt-4 mt-3 border-t border-slate-700">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-white font-semibold text-sm">Add Song to Queue</h3>
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={addToBeginning}
+                onChange={() => {
+                  if (!canAddToBeginning) {
+                    showToast('Only Moderators and Owners can add songs to beginning of queue', 'warning');
+                    return;
+                  }
+                  setAddToBeginning(!addToBeginning);
+                }}
+                className={`h-4 w-4 rounded ${!canAddToBeginning ? 'opacity-50 cursor-not-allowed' : ''}`}
+              />
+              <span className={`text-xs flex items-center gap-1 ${
+                !canAddToBeginning ? 'text-slate-500' : 'text-white'
+              }`}>
+                <Zap size={12} /> Play Next
+              </span>
+            </label>
+          </div>
+        </div>
+        
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="YouTube URL"
+            value={videoUrl}
+            onChange={(e) => setVideoUrl(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleAddSong()}
+            className="flex-1 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg focus:outline-none focus:ring-1 focus:ring-yellow-500"
+          />
+          <button
+            onClick={handleAddSong}
+            disabled={!videoUrl.trim() || isSubmitting}
+            className="px-3 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center gap-1.5"
+          >
+            <Plus size={16} />
+            Add
+          </button>
+        </div>
       </div>
     </div>
   );

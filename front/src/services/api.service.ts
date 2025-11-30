@@ -7,6 +7,18 @@ export interface User {
   role: 'Member' | 'Moderator' | 'Owner';
 }
 
+export interface GlobalUser {
+  id: number;
+  name: string;
+  isNew: boolean;
+}
+
+export interface LoginRequest {
+  name: string;
+  deviceFingerprint: string;
+  deviceInfo?: string;
+}
+
 export interface Song {
   id: number;
   link: string;
@@ -473,12 +485,42 @@ const chatsApi = {
   },
 };
 
+const globalUsersApi = {
+  registerOrLogin: async (request: LoginRequest): Promise<GlobalUser> => {
+    const response = await fetch(`${API_BASE}/users/register-or-login`, {
+      ...fetchOptions,
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ 
+        message: 'Failed to authenticate' 
+      }));
+      throw new Error(error.message || 'Failed to authenticate');
+    }
+
+    return response.json();
+  },
+
+  getById: async (id: number): Promise<GlobalUser> => {
+    const response = await fetch(`${API_BASE}/users/${id}`, {
+      ...fetchOptions,
+      method: 'GET',
+    });
+
+    if (!response.ok) throw new Error('User not found');
+    return response.json();
+  },
+};
+
 const api = {
   teamsApi,
   usersApi,
   songsApi,
   ratingsApi,
   chatsApi,
+  globalUsersApi,
   API_BASE,
 };
 

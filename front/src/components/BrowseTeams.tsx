@@ -33,7 +33,22 @@ export function BrowseTeams({ userName, onUserCreated }: BrowseTeamsProps) {
 
   const handleJoin = async (team: Team) => {
     try {
-      const user = await api.usersApi.add(team.id, { name: userName, score: 0, isActive: true });
+      // Check if user already in team
+      const existingUser = team.users?.find(u => u.name === userName);
+      
+      if (existingUser) {
+        // User already exists - use existing user
+        onUserCreated(existingUser);
+        navigate(`/teams/${team.id}`);
+        return;
+      }
+      
+      // User doesn't exist - create new
+      const user = await api.usersApi.add(team.id, { 
+        name: userName, 
+        score: 0, 
+        isActive: true 
+      });
       onUserCreated(user);
       navigate(`/teams/${team.id}`);
     } catch (error) {

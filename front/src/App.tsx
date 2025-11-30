@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import type { User } from './services/api.service';
+import type { User, GlobalUser } from './services/api.service';
 
 import { NameEntry } from './components/NameEntry';
 import { MainScreen } from './components/MainScreen';
@@ -9,24 +9,22 @@ import { BrowseTeams } from './components/BrowseTeams';
 import { JoinTeam } from './components/JoinTeam';
 import { TeamView } from './views/TeamView';
 
-// Define a type for user profiles
-interface UserProfile {
-  id: string;
-  name: string;
-  createdAt: string;
-  lastUsed: string;
-}
+// App.tsx - Main application component
 
 export default function App() {
-  // Store multiple user profiles
-  const [userProfiles, setUserProfiles] = useState<UserProfile[]>(() => {
-    const savedProfiles = localStorage.getItem('userProfiles');
-    return savedProfiles ? JSON.parse(savedProfiles) : [];
-  });
-  
-  // Currently selected profile
-  const [selectedProfileId, setSelectedProfileId] = useState<string>(() => {
-    return sessionStorage.getItem('selectedProfileId') || '';
+  // Global user data (from fingerprint authentication)
+  const [globalUser, setGlobalUser] = useState<GlobalUser | null>(() => {
+    const savedId = sessionStorage.getItem('globalUserId');
+    const savedName = sessionStorage.getItem('globalUserName');
+    
+    if (savedId && savedName) {
+      return { 
+        id: parseInt(savedId), 
+        name: savedName, 
+        isNew: false 
+      };
+    }
+    return null;
   });
   
   // Current active user in a team
@@ -34,23 +32,6 @@ export default function App() {
     const savedUser = sessionStorage.getItem('currentUser');
     return savedUser ? JSON.parse(savedUser) : null;
   });
-
-  // Get the currently selected profile
-  const selectedProfile = userProfiles.find(profile => profile.id === selectedProfileId);
-
-  // Save user profiles to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('userProfiles', JSON.stringify(userProfiles));
-  }, [userProfiles]);
-
-  // Save selected profile ID to sessionStorage whenever it changes
-  useEffect(() => {
-    if (selectedProfileId) {
-      sessionStorage.setItem('selectedProfileId', selectedProfileId);
-    } else {
-      sessionStorage.removeItem('selectedProfileId');
-    }
-  }, [selectedProfileId]);
 
   // Save currentUser to sessionStorage whenever it changes
   useEffect(() => {
@@ -61,60 +42,25 @@ export default function App() {
     }
   }, [currentUser]);
 
-  // Add a new user profile
-  const addUserProfile = (name: string) => {
-    const newProfile: UserProfile = {
-      id: Date.now().toString(),
-      name,
-      createdAt: new Date().toISOString(),
-      lastUsed: new Date().toISOString()
-    };
-    
-    setUserProfiles(prev => [...prev, newProfile]);
-    setSelectedProfileId(newProfile.id);
-  };
-
-  // Select an existing profile
-  const selectUserProfile = (id: string) => {
-    setSelectedProfileId(id);
-    
-    // Update lastUsed timestamp
-    setUserProfiles(prev => 
-      prev.map(profile => 
-        profile.id === id 
-          ? { ...profile, lastUsed: new Date().toISOString() } 
-          : profile
-      )
-    );
-  };
-  
-  // Delete a user profile
-  const deleteUserProfile = (id: string) => {
-    setUserProfiles(prev => prev.filter(profile => profile.id !== id));
-    
-    // If the deleted profile was selected, clear selection
-    if (selectedProfileId === id) {
-      setSelectedProfileId('');
-      sessionStorage.removeItem('selectedProfileId');
-    }
+  // Handle user login with fingerprinting
+  const handleUserLogin = (user: GlobalUser) => {
+    setGlobalUser(user);
+    sessionStorage.setItem('globalUserId', user.id.toString());
+    sessionStorage.setItem('globalUserName', user.name);
   };
 
   // Handle logout
   const handleLogout = () => {
-    setSelectedProfileId('');
+    setGlobalUser(null);
     setCurrentUser(null);
-    sessionStorage.removeItem('selectedProfileId');
+    sessionStorage.removeItem('globalUserId');
+    sessionStorage.removeItem('globalUserName');
     sessionStorage.removeItem('currentUser');
   };
 
-  // If no profile is selected, show the name entry screen
-  if (!selectedProfile) {
-    return <NameEntry 
-      onSubmit={addUserProfile} 
-      existingProfiles={userProfiles}
-      onSelectProfile={selectUserProfile}
-      onDeleteProfile={deleteUserProfile}
-    />;
+  // If no global user, show the name entry screen
+  if (!globalUser) {
+    return <NameEntry onSubmit={handleUserLogin} />;
   }
 
   return (
@@ -122,19 +68,23 @@ export default function App() {
       <Routes>
         <Route path="/" element={<MainScreen 
           onLogout={handleLogout} 
-          profileName={selectedProfile.name}
+          profileName={globalUser.name}
         />} />
         <Route 
           path="/teams/create" 
-          element={<CreateTeam userName={selectedProfile.name} onUserCreated={setCurrentUser} />} 
+          element={<CreateTeam 
+            userName={globalUser.name} 
+            userId={globalUser.id}
+            onUserCreated={setCurrentUser} 
+          />} 
         />
         <Route 
           path="/teams/browse" 
-          element={<BrowseTeams userName={selectedProfile.name} onUserCreated={setCurrentUser} />} 
+          element={<BrowseTeams userName={globalUser.name} onUserCreated={setCurrentUser} />} 
         />
         <Route 
           path="/teams/join" 
-          element={<JoinTeam userName={selectedProfile.name} onUserCreated={setCurrentUser} />} 
+          element={<JoinTeam userName={globalUser.name} onUserCreated={setCurrentUser} />} 
         />
         <Route 
           path="/teams/:teamId" 

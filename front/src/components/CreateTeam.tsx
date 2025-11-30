@@ -8,10 +8,11 @@ import { useToast } from '../contexts/ToastContext';
 
 interface CreateTeamProps {
   userName: string;
+  userId: number;
   onUserCreated: (user: User) => void;
 }
 
-export function CreateTeam({ userName, onUserCreated }: CreateTeamProps) {
+export function CreateTeam({ userName, userId, onUserCreated }: CreateTeamProps) {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [teamName, setTeamName] = useState<string>('');
@@ -22,10 +23,30 @@ export function CreateTeam({ userName, onUserCreated }: CreateTeamProps) {
     if (!teamName) return;
     setLoading(true);
     
+    // Log the global user ID for debugging/tracking
+    console.log(`Creating team with global user ID: ${userId}`);
+    
     try {
-      const team = await api.teamsApi.create({ name: teamName, isPrivate });
-      const user = await api.usersApi.add(team.id, { name: userName, score: 0, isActive: true });
-      onUserCreated(user);
+      const team = await api.teamsApi.create({ 
+        name: teamName, 
+        isPrivate
+      });
+      
+      // Check if user somehow already in team (shouldn't happen, but be safe)
+      const existingUser = team.users?.find(u => u.name === userName);
+      
+      if (existingUser) {
+        onUserCreated(existingUser);
+      } else {
+        // Create new user as Owner (using the name from global user with ID: userId)
+        const user = await api.usersApi.add(team.id, { 
+          name: userName, 
+          score: 0, 
+          isActive: true
+        });
+        onUserCreated(user);
+      }
+      
       navigate(`/teams/${team.id}`);
     } catch (error) {
       console.error('Error creating team:', error);

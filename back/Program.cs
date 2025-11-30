@@ -38,6 +38,7 @@ builder.Services.AddScoped<IChatsRepository, ChatsRepository>();
 builder.Services.AddScoped<ISongsRepository, SongsRepository>();
 builder.Services.AddScoped<IUsersRepository, UsersRepository>();
 builder.Services.AddScoped<IRatingsRepository, RatingsRepository>();
+builder.Services.AddScoped<IGlobalUsersRepository, GlobalUsersRepository>();
 
 // Utils
 builder.Services.AddSingleton<back.Utils.IComparableUtils, back.Utils.ComparableUtils>();

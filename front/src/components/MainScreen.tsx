@@ -27,26 +27,25 @@ export function MainScreen({ onLogout, profileName }: MainScreenProps) {
         {praises.map((praise, idx) => renderFloatingQuote(praise, praiseStyles[idx], idx))}
       </div>
 
-      {/* Main content */}
-      <div className="text-center relative z-10">
-        <div className="flex justify-between items-center mb-4">
-          <div className="px-3 py-2 bg-slate-800 text-white rounded-lg flex items-center gap-2">
-            <span className="text-yellow-500">
-              <User size={18} />
-            </span>
-            <span>{profileName}</span>
+      {/* Profile in top left corner */}
+      <div className="absolute top-4 left-4 z-10">
+        <div className="flex items-center gap-3 px-4 py-2 bg-slate-800 rounded-lg border border-slate-700 hover:border-slate-600 transition">
+          <div className="flex items-center gap-2">
+            <User className="text-yellow-500" size={18} />
+            <span className="text-white font-medium">{profileName}</span>
           </div>
-          
           <button
             onClick={onLogout}
-            className="px-3 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition flex items-center gap-2"
-            title="Logout"
+            className="flex items-center gap-1 px-3 py-1 bg-slate-700 text-white rounded hover:bg-slate-600 transition text-sm font-medium"
           >
-            <LogOut size={18} />
-            <span>Logout</span>
+            <LogOut size={14} />
+            Log out
           </button>
         </div>
-        
+      </div>
+
+      {/* Main content */}
+      <div className="text-center relative z-10">
         <h1 className="text-6xl font-bold text-white mb-2 drop-shadow-2xl">
           komcon{renderPulsingStar({ className: 'text-yellow-400' })}
         </h1>
@@ -66,7 +65,7 @@ export function MainScreen({ onLogout, profileName }: MainScreenProps) {
             className="w-80 px-8 py-6 bg-slate-800 text-white text-xl rounded-lg hover:bg-slate-700 transition flex items-center justify-center gap-3 font-semibold shadow-xl hover:shadow-2xl"
           >
             <Users size={28} />
-            Browse Public Teams
+            Browse Teams
           </button>
           
           <button

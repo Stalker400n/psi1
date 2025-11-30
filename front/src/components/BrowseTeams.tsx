@@ -12,16 +12,33 @@ interface BrowseTeamsProps {
   onUserCreated: (user: User) => void;
 }
 
-type FilterType = 'all' | 'joined' | 'public' | 'private' | 'moderator' | 'owner';
-type SortType = 'alpha' | 'newest' | 'oldest' | 'most-members' | 'least-members' | 'by-role';
+type SortType = 'most-members' | 'least-members' | 'alpha' | 'by-role' | 'newest' | 'oldest';
+
+// Define filter types for the multi-select filtering
+interface FiltersState {
+  public: boolean;
+  private: boolean;
+  joined: boolean;
+  owner: boolean;
+  moderator: boolean;
+}
 
 export function BrowseTeams({ userName, userId, onUserCreated }: BrowseTeamsProps) {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [filter, setFilter] = useState<FilterType>('all');
-  const [sort, setSort] = useState<SortType>('newest');
+  
+  // New filters state with all options enabled by default
+  const [filters, setFilters] = useState<FiltersState>({
+    public: true,
+    private: true,
+    joined: true,
+    owner: true,
+    moderator: true,
+  });
+  
+  const [sort, setSort] = useState<SortType>('most-members');
 
   useEffect(() => {
     fetchTeams();
@@ -39,6 +56,14 @@ export function BrowseTeams({ userName, userId, onUserCreated }: BrowseTeamsProp
       showToast('Failed to load teams', 'error');
     }
     setLoading(false);
+  };
+
+  // Toggle a specific filter
+  const toggleFilter = (filterName: keyof FiltersState) => {
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      [filterName]: !prevFilters[filterName]
+    }));
   };
 
   const handleJoin = async (team: Team) => {
@@ -93,35 +118,41 @@ export function BrowseTeams({ userName, userId, onUserCreated }: BrowseTeamsProp
     return 4;                            // Not joined (lowest priority)
   };
 
-  // Filter teams
+  // Updated filter teams logic to support multiple filters
   const getFilteredTeams = (): Team[] => {
-    let filtered = teams;
-
-    switch (filter) {
-      case 'joined':
-        filtered = teams.filter(t => isUserInTeam(t));
-        break;
-      case 'public':
-        filtered = teams.filter(t => !t.isPrivate);
-        break;
-      case 'private':
-        // Show private teams only if user is a member
-        filtered = teams.filter(t => t.isPrivate && isUserInTeam(t));
-        break;
-      case 'moderator':
-        filtered = teams.filter(t => getUserRole(t) === 'moderator');
-        break;
-      case 'owner':
-        filtered = teams.filter(t => getUserRole(t) === 'owner');
-        break;
-      case 'all':
-      default:
-        // Show all public teams + private teams user has joined
-        filtered = teams.filter(t => !t.isPrivate || isUserInTeam(t));
-        break;
+    // If all filters are disabled, show no teams
+    if (!Object.values(filters).some(value => value)) {
+      return [];
     }
 
-    return filtered;
+    return teams.filter(team => {
+      // Public teams filter
+      if (filters.public && !team.isPrivate) {
+        return true;
+      }
+      
+      // Private teams filter (only if user is a member)
+      if (filters.private && team.isPrivate && isUserInTeam(team)) {
+        return true;
+      }
+      
+      // Joined teams filter
+      if (filters.joined && isUserInTeam(team)) {
+        return true;
+      }
+      
+      // Owner teams filter
+      if (filters.owner && getUserRole(team) === 'owner') {
+        return true;
+      }
+      
+      // Moderator teams filter
+      if (filters.moderator && getUserRole(team) === 'moderator') {
+        return true;
+      }
+      
+      return false;
+    });
   };
 
   // Simplified sorting function with a clear approach
@@ -252,6 +283,35 @@ export function BrowseTeams({ userName, userId, onUserCreated }: BrowseTeamsProp
     return 'Connect';
   };
 
+  // Custom switch component for filter toggles
+  const ToggleSwitch = ({ 
+    label, 
+    checked, 
+    onChange 
+  }: { 
+    label: string; 
+    checked: boolean; 
+    onChange: () => void;
+  }) => (
+    <label className="flex items-center justify-between cursor-pointer group">
+      <span className="text-slate-300 group-hover:text-slate-200">{label}</span>
+      <div className="relative">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={onChange}
+          className="sr-only"
+        />
+        <div className={`block w-10 h-6 rounded-full transition-colors ${
+          checked ? 'bg-yellow-500' : 'bg-slate-700'
+        }`} />
+        <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${
+          checked ? 'transform translate-x-4' : ''
+        }`} />
+      </div>
+    </label>
+  );
+
   return (
     <div className="min-h-screen bg-slate-950 p-8">
       <button 
@@ -262,150 +322,75 @@ export function BrowseTeams({ userName, userId, onUserCreated }: BrowseTeamsProp
         Back
       </button>
       
-      <h1 className="text-4xl font-bold text-white mb-2 text-center">
+      <h1 className="text-5xl font-bold text-white -mt-7 mb-7 text-center">
         Browse Teams{renderPulsingStar({ className: 'text-yellow-400' })}
       </h1>
       
-      {/* Filter and Sort Controls */}
+      {/* Redesigned Filter and Sort Controls */}
       <div className="max-w-6xl mx-auto mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Filter */}
-          <div className="bg-slate-900 p-4 rounded-lg border border-slate-800">
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Filter Box - Narrow */}
+          <div className="bg-slate-900 p-4 rounded-lg border border-slate-800 md:w-64">
             <div className="flex items-center gap-2 mb-3">
               <Filter size={18} className="text-yellow-500" />
-              <h3 className="text-white font-semibold">Filter</h3>
+              <h3 className="text-white font-semibold">Filter by</h3>
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => setFilter('all')}
-                className={`px-3 py-2 rounded text-sm font-medium transition ${
-                  filter === 'all'
-                    ? 'bg-yellow-500 text-black'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setFilter('joined')}
-                className={`px-3 py-2 rounded text-sm font-medium transition ${
-                  filter === 'joined'
-                    ? 'bg-yellow-500 text-black'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                }`}
-              >
-                Joined
-              </button>
-              <button
-                onClick={() => setFilter('public')}
-                className={`px-3 py-2 rounded text-sm font-medium transition ${
-                  filter === 'public'
-                    ? 'bg-yellow-500 text-black'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                }`}
-              >
-                Public
-              </button>
-              <button
-                onClick={() => setFilter('private')}
-                className={`px-3 py-2 rounded text-sm font-medium transition ${
-                  filter === 'private'
-                    ? 'bg-yellow-500 text-black'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                }`}
-              >
-                Private
-              </button>
-              <button
-                onClick={() => setFilter('moderator')}
-                className={`px-3 py-2 rounded text-sm font-medium transition ${
-                  filter === 'moderator'
-                    ? 'bg-yellow-500 text-black'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                }`}
-              >
-                Moderator
-              </button>
-              <button
-                onClick={() => setFilter('owner')}
-                className={`px-3 py-2 rounded text-sm font-medium transition ${
-                  filter === 'owner'
-                    ? 'bg-yellow-500 text-black'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                }`}
-              >
-                Owner
-              </button>
+            <div className="flex flex-col gap-3">
+              <ToggleSwitch 
+                label="Public" 
+                checked={filters.public} 
+                onChange={() => toggleFilter('public')} 
+              />
+              <ToggleSwitch 
+                label="Private" 
+                checked={filters.private} 
+                onChange={() => toggleFilter('private')} 
+              />
+              <ToggleSwitch 
+                label="Joined" 
+                checked={filters.joined} 
+                onChange={() => toggleFilter('joined')} 
+              />
+              <ToggleSwitch 
+                label="Owner" 
+                checked={filters.owner} 
+                onChange={() => toggleFilter('owner')} 
+              />
+              <ToggleSwitch 
+                label="Moderator" 
+                checked={filters.moderator} 
+                onChange={() => toggleFilter('moderator')} 
+              />
             </div>
           </div>
 
-          {/* Sort */}
-          <div className="bg-slate-900 p-4 rounded-lg border border-slate-800">
+          {/* Sort Box - Wide */}
+          <div className="bg-slate-900 p-4 rounded-lg border border-slate-800 flex-1">
             <div className="flex items-center gap-2 mb-3">
               <ArrowUpDown size={18} className="text-yellow-500" />
               <h3 className="text-white font-semibold">Sort by</h3>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setSort('alpha')}
-                className={`px-3 py-2 rounded text-sm font-medium transition ${
-                  sort === 'alpha'
-                    ? 'bg-yellow-500 text-black'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                }`}
-              >
-                A-Z
-              </button>
-              <button
-                onClick={() => setSort('newest')}
-                className={`px-3 py-2 rounded text-sm font-medium transition ${
-                  sort === 'newest'
-                    ? 'bg-yellow-500 text-black'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                }`}
-              >
-                Newest
-              </button>
-              <button
-                onClick={() => setSort('oldest')}
-                className={`px-3 py-2 rounded text-sm font-medium transition ${
-                  sort === 'oldest'
-                    ? 'bg-yellow-500 text-black'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                }`}
-              >
-                Oldest
-              </button>
-              <button
-                onClick={() => setSort('most-members')}
-                className={`px-3 py-2 rounded text-sm font-medium transition ${
-                  sort === 'most-members'
-                    ? 'bg-yellow-500 text-black'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                }`}
-              >
-                Most Members
-              </button>
-              <button
-                onClick={() => setSort('least-members')}
-                className={`px-3 py-2 rounded text-sm font-medium transition ${
-                  sort === 'least-members'
-                    ? 'bg-yellow-500 text-black'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                }`}
-              >
-                Least Members
-              </button>
-              <button
-                onClick={() => setSort('by-role')}
-                className={`px-3 py-2 rounded text-sm font-medium transition ${
-                  sort === 'by-role'
-                    ? 'bg-yellow-500 text-black'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                }`}
-              >
-                By Role
-              </button>
+              {[
+                ['most-members', 'Most Members'],
+                ['least-members', 'Least Members'],
+                ['alpha', 'A-Z'],
+                ['by-role', 'By Role'],
+                ['newest', 'Newest'],
+                ['oldest', 'Oldest']
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  onClick={() => setSort(value as SortType)}
+                  className={`px-3 py-2 rounded text-sm font-medium transition ${
+                    sort === value
+                      ? 'bg-yellow-500 text-black'
+                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
         </div>

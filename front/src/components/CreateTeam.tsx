@@ -22,131 +22,109 @@ export function CreateTeam({ userName, userId, onUserCreated }: CreateTeamProps)
   const handleCreate = async () => {
     if (!teamName) return;
     setLoading(true);
-    
+
     // Log the global user ID for debugging/tracking
     console.log(`Creating team with global user ID: ${userId}`);
-    
+
     try {
-      const team = await api.teamsApi.create({ 
-        name: teamName, 
+      const team = await api.teamsApi.create({
+        name: teamName,
         isPrivate
       });
-      
-      // Check if user somehow already in team (shouldn't happen, but be safe)
+
       const existingUser = team.users?.find(u => u.name === userName);
-      
+
       if (existingUser) {
         onUserCreated(existingUser);
       } else {
-        // Create new user as Owner (using the name from global user with ID: userId)
-        const user = await api.usersApi.add(team.id, { 
-          name: userName, 
-          score: 0, 
+        const user = await api.usersApi.add(team.id, {
+          name: userName,
+          score: 0,
           isActive: true
         });
         onUserCreated(user);
       }
-      
+
       navigate(`/teams/${team.id}`);
     } catch (error) {
       console.error('Error creating team:', error);
       showToast('Failed to create team', 'error');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Fixed button at the top left */}
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-8 relative overflow-hidden">
+      {/* Back button */}
       <button 
         onClick={() => navigate('/menu')} 
-        className="fixed top-8 left-8 text-slate-400 hover:text-white flex items-center gap-2 z-20"
+        className="absolute top-8 left-8 text-slate-400 hover:text-white flex items-center gap-2 transition"
       >
         <ArrowLeft size={20} />
         Back
       </button>
-      
-      <div className="text-center relative z-10 w-full max-w-sm">
-        <h1 className="text-4xl font-bold text-white mb-8 text-center">
-          Create Team{renderPulsingStar({ className: 'text-yellow-400' })}
+
+      <div className="w-full max-w-md flex flex-col items-center text-center z-10">
+        {/* Title */}
+        <h1 className="text-4xl font-bold text-white mb-6 leading-tight">
+          Create Team {renderPulsingStar({ className: 'text-yellow-400' })}
         </h1>
-        
-        {/* Team name input with settings box */}
-        <div className="relative mb-6">
+
+        {/* Settings card (centered) */}
+        <div className="w-full max-w-md bg-slate-800 rounded-lg p-4 shadow-lg mb-6 border border-slate-700">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-white text-base font-semibold">Settings</h3>
+            <span className="text-slate-400 text-xs">Configure team options</span>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {/* Private toggle */}
+            <div className="flex items-center justify-between">
+              <span className="text-white text-sm">Private Team</span>
+              <button
+                onClick={() => setIsPrivate(!isPrivate)}
+                className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none ${
+                  isPrivate ? 'bg-yellow-500' : 'bg-slate-700'
+                }`}
+                role="switch"
+                aria-checked={isPrivate}
+              >
+                <span className="sr-only">Private team toggle</span>
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    isPrivate ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* (You can add other centered settings here) */}
+          </div>
+        </div>
+
+        {/* Input + Button (centered under settings) */}
+        <div className="w-full max-w-md flex flex-col items-center gap-3">
           <input
             type="text"
             placeholder="Team name"
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && !loading && teamName && handleCreate()}
-            className="w-full px-5 py-4 bg-slate-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-4 py-3 text-base bg-slate-800 text-white rounded-lg border border-slate-700 focus:outline-none"
           />
-          
-          {/* Settings Box - Positioned absolutely to the right */}
-          <div className="absolute -right-44 top-0 w-40 bg-slate-800 rounded-lg p-3 text-left">
-            <h3 className="text-white text-sm font-medium mb-2">Settings</h3>
-            
-            {/* Private Team Toggle */}
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-slate-400 text-xs">Private:</span>
-              <button
-                type="button"
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 ${
-                  isPrivate ? 'bg-yellow-500' : 'bg-slate-700'
-                }`}
-                onClick={() => setIsPrivate(!isPrivate)}
-                role="switch"
-                aria-checked={isPrivate}
-              >
-                <span className="sr-only">Private team toggle</span>
-                <span
-                  className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                    isPrivate ? 'translate-x-5' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-            </div>
-            
-            {/* Placeholder Setting 1 */}
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-slate-400 text-xs">Placeholder:</span>
-              <button
-                type="button"
-                className="relative inline-flex h-5 w-9 items-center rounded-full bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
-                role="switch"
-                aria-checked="false"
-              >
-                <span className="sr-only">Placeholder setting</span>
-                <span className="inline-block h-3 w-3 transform rounded-full bg-white translate-x-1 transition-transform" />
-              </button>
-            </div>
-            
-            {/* Placeholder Setting 2 */}
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400 text-xs">Placeholder:</span>
-              <button
-                type="button"
-                className="relative inline-flex h-5 w-9 items-center rounded-full bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
-                role="switch"
-                aria-checked="false"
-              >
-                <span className="sr-only">Placeholder setting</span>
-                <span className="inline-block h-3 w-3 transform rounded-full bg-white translate-x-1 transition-transform" />
-              </button>
-            </div>
-          </div>
+
+          <button
+            onClick={handleCreate}
+            disabled={loading || !teamName}
+            className="w-full px-4 py-3 text-base font-semibold rounded-lg bg-yellow-500 text-black hover:bg-yellow-400 transition disabled:opacity-50"
+          >
+            {loading ? 'Creating...' : 'Create Team'}
+          </button>
         </div>
-        
-        <button
-          onClick={handleCreate}
-          disabled={loading || !teamName}
-          className="w-full px-5 py-4 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition disabled:opacity-50 font-semibold"
-        >
-          {loading ? 'Creating...' : 'Create Team'}
-        </button>
       </div>
-      
-      {/* Add back the CSS needed for the pulsing star */}
+
+      {/* floating/pulsing CSS */}
       <style>{floatingQuotesCSS}</style>
     </div>
   );

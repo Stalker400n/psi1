@@ -54,7 +54,7 @@ export function MainScreen({ onLogout, profileName }: MainScreenProps) {
         
         <div className="space-y-4">
           <button
-            onClick={() => navigate('/teams/create')}
+            onClick={() => navigate('/create')}
             className="w-80 px-8 py-6 bg-yellow-500 text-black text-xl rounded-lg hover:bg-yellow-400 transition flex items-center justify-center gap-3 font-semibold shadow-xl hover:shadow-2xl"
           >
             <Plus size={28} />
@@ -62,7 +62,7 @@ export function MainScreen({ onLogout, profileName }: MainScreenProps) {
           </button>
           
           <button
-            onClick={() => navigate('/teams/browse')}
+            onClick={() => navigate('/teams')}
             className="w-80 px-8 py-6 bg-slate-800 text-white text-xl rounded-lg hover:bg-slate-700 transition flex items-center justify-center gap-3 font-semibold shadow-xl hover:shadow-2xl"
           >
             <Users size={28} />
@@ -70,7 +70,7 @@ export function MainScreen({ onLogout, profileName }: MainScreenProps) {
           </button>
           
           <button
-            onClick={() => navigate('/teams/join')}
+            onClick={() => navigate('/join')}
             className="w-80 px-8 py-6 bg-slate-800 text-white text-xl rounded-lg hover:bg-slate-700 transition flex items-center justify-center gap-3 font-semibold shadow-xl hover:shadow-2xl"
           >
             <Home size={28} />

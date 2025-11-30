@@ -153,31 +153,92 @@ function AppContent() {
 
   return (
       <Routes>
-        <Route path="/" element={<MainScreen 
-          onLogout={handleLogout} 
-          profileName={globalUser.name}
-        />} />
+        {/* Login screen - always at root */}
         <Route 
-          path="/teams/create" 
-          element={<CreateTeam 
-            userName={globalUser.name} 
-            userId={globalUser.id}
-            onUserCreated={setCurrentUser} 
-          />} 
+          path="/" 
+          element={
+            globalUser ? (
+              <Navigate to="/menu" replace />
+            ) : (
+              <NameEntry onSubmit={handleUserLogin} />
+            )
+          } 
         />
+        
+        {/* Main menu - requires login */}
         <Route 
-          path="/teams/browse" 
-          element={<BrowseTeams userName={globalUser.name} onUserCreated={setCurrentUser} />} 
+          path="/menu" 
+          element={
+            globalUser ? (
+              <MainScreen 
+                onLogout={handleLogout} 
+                profileName={globalUser.name}
+              />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          } 
         />
+        
+        {/* Create team */}
         <Route 
-          path="/teams/join" 
-          element={<JoinTeam userName={globalUser.name} onUserCreated={setCurrentUser} />} 
+          path="/create" 
+          element={
+            globalUser ? (
+              <CreateTeam 
+                userName={globalUser.name}
+                userId={globalUser.id}
+                onUserCreated={setCurrentUser} 
+              />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          } 
         />
+        
+        {/* Browse teams */}
+        <Route 
+          path="/teams" 
+          element={
+            globalUser ? (
+              <BrowseTeams 
+                userName={globalUser.name}
+                userId={globalUser.id}
+                onUserCreated={setCurrentUser} 
+              />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          } 
+        />
+        
+        {/* Join with code */}
+        <Route 
+          path="/join" 
+          element={
+            globalUser ? (
+              <JoinTeam 
+                userName={globalUser.name}
+                onUserCreated={setCurrentUser} 
+              />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          } 
+        />
+        
+        {/* Team view */}
         <Route 
           path="/teams/:teamId" 
           element={
-            // If we have a current user (already in the team), show TeamView
-            currentUser ? (
+            // If no global user but has a team ID, show the special gate
+            !globalUser ? (
+              <TeamJoinGate 
+                teamId={pendingTeamId!}
+                onLogin={handleUserLogin}
+              />
+            ) : currentUser ? (
+              // If we have a current user (already in the team), show TeamView
               <TeamView user={currentUser} onLeave={() => setCurrentUser(null)} />
             ) : globalUser && pendingTeamId ? (
               // If user is authenticated and we have a pending team join,
@@ -190,10 +251,12 @@ function AppContent() {
               </div>
             ) : (
               // Otherwise redirect to main menu
-              <Navigate to="/" replace />
+              <Navigate to="/menu" replace />
             )
           } 
         />
+        
+        {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
   );

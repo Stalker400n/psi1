@@ -8,18 +8,22 @@ import { useToast } from '../contexts/ToastContext';
 
 interface BrowseTeamsProps {
   userName: string;
+  userId: number;
   onUserCreated: (user: User) => void;
 }
 
-export function BrowseTeams({ userName, onUserCreated }: BrowseTeamsProps) {
+export function BrowseTeams({ userName, userId, onUserCreated }: BrowseTeamsProps) {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-
+  
   useEffect(() => {
     fetchTeams();
-  }, []);
+    
+    // Log user activity for analytics
+    console.log(`User ${userName} (ID: ${userId}) browsing public teams`);
+  }, [userName, userId]);
 
   const fetchTeams = async () => {
     try {
@@ -47,8 +51,10 @@ export function BrowseTeams({ userName, onUserCreated }: BrowseTeamsProps) {
       const user = await api.usersApi.add(team.id, { 
         name: userName, 
         score: 0, 
-        isActive: true 
+        isActive: true
       });
+      
+      console.log(`User ${userName} (ID: ${userId}) joined team ${team.name} (ID: ${team.id})`);
       onUserCreated(user);
       navigate(`/teams/${team.id}`);
     } catch (error) {
@@ -60,7 +66,7 @@ export function BrowseTeams({ userName, onUserCreated }: BrowseTeamsProps) {
   return (
     <div className="min-h-screen bg-slate-950 p-8">
       <button 
-        onClick={() => navigate('/')} 
+        onClick={() => navigate('/menu')} 
         className="text-slate-400 hover:text-white mb-8 flex items-center gap-2 transition"
       >
         <ArrowLeft size={20} />

@@ -58,7 +58,7 @@ export function CreateTeam({ userName, userId, onUserCreated }: CreateTeamProps)
   return (
     <div className="min-h-screen bg-slate-950 p-8">
       <button 
-        onClick={() => navigate('/')} 
+        onClick={() => navigate('/menu')} 
         className="text-slate-400 hover:text-white mb-8 flex items-center gap-2"
       >
         <ArrowLeft size={20} />

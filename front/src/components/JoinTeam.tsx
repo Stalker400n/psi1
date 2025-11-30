@@ -51,18 +51,19 @@ export function JoinTeam({ userName, onUserCreated }: JoinTeamProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 p-8">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Fixed button at the top left */}
       <button 
         onClick={() => navigate('/menu')} 
-        className="text-slate-400 hover:text-white mb-8 flex items-center gap-2"
+        className="fixed top-8 left-8 text-slate-400 hover:text-white flex items-center gap-2 z-20"
       >
         <ArrowLeft size={20} />
         Back
       </button>
       
-      <div className="max-w-md mx-auto">
+      <div className="text-center relative z-10 w-full max-w-sm">
         <h1 className="text-4xl font-bold text-white mb-8 text-center">
-          Join Team{renderPulsingStar({ className: 'text-yellow-400' })}
+          Connect with Code{renderPulsingStar({ className: 'text-yellow-400' })}
         </h1>
         
         <input
@@ -70,19 +71,20 @@ export function JoinTeam({ userName, onUserCreated }: JoinTeamProps) {
           placeholder="Enter team code"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          className="w-full px-4 py-3 bg-slate-800 text-white rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="w-full px-5 py-4 bg-slate-800 text-white rounded-lg mb-6 focus:outline-none focus:ring-2 focus:ring-yellow-500"
           onKeyPress={(e) => e.key === 'Enter' && handleJoin()}
         />
         
         <button
           onClick={handleJoin}
           disabled={loading || !code}
-          className="w-full px-6 py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition disabled:opacity-50 font-semibold flex justify-center"
+          className="w-full px-5 py-4 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition disabled:opacity-50 font-semibold flex justify-center"
         >
           {loading ? 'Connecting...' : 'Connect'}
         </button>
       </div>
       
+      {/* Add back the CSS needed for the pulsing star */}
       <style>{floatingQuotesCSS}</style>
     </div>
   );

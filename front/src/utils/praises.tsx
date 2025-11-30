@@ -58,7 +58,7 @@ export const QUOTE_CONFIG = {
 export const ALL_PRAISES = [
   "Eigintas: einu ginti",
   "the idea of komcon. was born on a couch on a wonderful autumn evening",
-  "Iš komandos ‘kom’, iš connect ‘con’, o taškas – nes viskas tuo ir pasakyta",
+  "Iš komandos ‘kom’, iš connect ‘con’, o taškas – nes viskas tuo ir pasakyta. komcon",
   "Nojus meta veipint (nuo naujų metų), bet niekada nemes komcon'o",
   "Ugnius iš Biržų – bringing northern Lithuanian energy since forever",
   "Nojus iš Alytaus – certified heatwave playlist creator",
@@ -69,7 +69,7 @@ export const ALL_PRAISES = [
   "Good music. Good friends. Good vibes. Zero veipas (nuo naujųjų)",
   "Our playlists slap harder than Sel'as Alytuj",
   "We bring people together. Music just helps",
-  "Kasijus: would pilot a planet, but he's too busy leading komcon.",
+  "Kasijus: would pilot a planet, but he's too busy leading komcon",
   "Making collaborative playlists cooler than they have any right to be",
   "Peace, friendship, and mildly questionable song choices",
   "Your friends choose songs, you choose violence (kidding… or?)",

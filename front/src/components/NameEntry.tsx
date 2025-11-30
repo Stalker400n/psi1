@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../services/api.service';
 import type { GlobalUser } from '../services/api.service';
 import { fingerprintService } from '../services/fingerprint.service';
+import { useToast } from '../contexts/ToastContext';
 import { 
   getRandomPraises, 
   generatePraiseStyles, 
@@ -9,6 +10,7 @@ import {
   renderFloatingQuote,
   renderPulsingStar
 } from '../utils/praises';
+import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 
 // Get random praises and generate their styles
 const praises = getRandomPraises();
@@ -18,16 +20,61 @@ interface NameEntryProps {
   onSubmit: (user: GlobalUser) => void;
 }
 
+interface ProfileHistory {
+  name: string;
+  lastUsed: string;
+}
+
 export function NameEntry({ onSubmit }: NameEntryProps) {
+  const { showToast } = useToast();
   const [name, setName] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+  const [showHistory, setShowHistory] = useState<boolean>(false);
+  const [profileHistory, setProfileHistory] = useState<ProfileHistory[]>([]);
 
-  const handleSubmit = async () => {
-    if (!name.trim()) return;
+  // Load profile history from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('profileHistory');
+    if (stored) {
+      try {
+        const history = JSON.parse(stored);
+        setProfileHistory(history);
+      } catch (e) {
+        console.error('Failed to parse profile history:', e);
+        setProfileHistory([]);
+      }
+    }
+  }, []);
+
+  // Save profile to history
+  const addToHistory = (profileName: string) => {
+    const newProfile: ProfileHistory = {
+      name: profileName,
+      lastUsed: new Date().toISOString()
+    };
+
+    // Remove duplicates and add to front
+    const updatedHistory = [
+      newProfile,
+      ...profileHistory.filter(p => p.name !== profileName)
+    ].slice(0, 10); // Keep only last 10 profiles
+
+    setProfileHistory(updatedHistory);
+    localStorage.setItem('profileHistory', JSON.stringify(updatedHistory));
+  };
+
+  // Remove profile from history
+  const removeFromHistory = (profileName: string) => {
+    const updatedHistory = profileHistory.filter(p => p.name !== profileName);
+    setProfileHistory(updatedHistory);
+    localStorage.setItem('profileHistory', JSON.stringify(updatedHistory));
+  };
+
+  const handleSubmit = async (submittedName?: string) => {
+    const nameToUse = submittedName || name;
+    if (!nameToUse.trim()) return;
     
     setIsLoading(true);
-    setError('');
     
     try {
       // Get device fingerprint
@@ -36,19 +83,22 @@ export function NameEntry({ onSubmit }: NameEntryProps) {
       
       // Try to register or login
       const globalUser = await api.globalUsersApi.registerOrLogin({
-        name: name.trim(),
+        name: nameToUse.trim(),
         deviceFingerprint: fingerprint,
         deviceInfo
       });
       
-      // Success - proceed
+      // Success - add to history and proceed
+      addToHistory(nameToUse.trim());
       onSubmit(globalUser);
       
     } catch (err) {
       const errorMessage = err instanceof Error 
         ? err.message 
         : 'Failed to connect';
-      setError(errorMessage);
+      
+      // Use toast for errors instead of inline message
+      showToast(errorMessage, 'error');
       console.error('Failed to login:', err);
     } finally {
       setIsLoading(false);
@@ -69,15 +119,8 @@ export function NameEntry({ onSubmit }: NameEntryProps) {
         </h1>
         <p className="text-slate-400 mb-8">Connect through music!</p>
         
-        {/* Error message */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-900/30 border border-red-600 rounded-lg text-red-300 text-sm">
-            {error}
-          </div>
-        )}
-        
-        {/* Name input */}
-        <div className="space-y-4">
+        {/* Name input - Always visible */}
+        <div className="space-y-4 mb-4">
           <input
             type="text"
             placeholder="Enter your name"
@@ -90,18 +133,64 @@ export function NameEntry({ onSubmit }: NameEntryProps) {
           />
           
           <button
-            onClick={handleSubmit}
+            onClick={() => handleSubmit()}
             disabled={!name.trim() || isLoading}
             className="w-full px-5 py-4 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
           >
             {isLoading ? 'Connecting...' : 'Connect'}
           </button>
         </div>
-        
-        {/* Device info note */}
-        <p className="text-slate-500 text-xs mt-4">
-          Your name will be tied to this device
-        </p>
+
+        {/* Profile History Toggle */}
+        {profileHistory.length > 0 && (
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className="w-full px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 transition flex items-center justify-center gap-2 mb-4"
+          >
+            {showHistory ? (
+              <>
+                <ChevronUp size={18} />
+                Hide Profile History
+              </>
+            ) : (
+              <>
+                <ChevronDown size={18} />
+                View Profile History
+              </>
+            )}
+          </button>
+        )}
+
+        {/* Profile History List */}
+        {showHistory && profileHistory.length > 0 && (
+          <div className="bg-slate-800/50 rounded-lg p-4 space-y-2">
+            <p className="text-slate-400 text-xs mb-3">Recent profiles on this device</p>
+            {profileHistory.map((profile, idx) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between bg-slate-900 p-3 rounded-lg hover:bg-slate-800 transition group"
+              >
+                <button
+                  onClick={() => handleSubmit(profile.name)}
+                  disabled={isLoading}
+                  className="flex-1 text-left"
+                >
+                  <p className="text-white font-medium">{profile.name}</p>
+                  <p className="text-slate-500 text-xs">
+                    Last used: {new Date(profile.lastUsed).toLocaleDateString()}
+                  </p>
+                </button>
+                <button
+                  onClick={() => removeFromHistory(profile.name)}
+                  className="ml-2 p-2 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"
+                  title="Remove from history"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       
       <style>{floatingQuotesCSS}</style>

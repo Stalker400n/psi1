@@ -41,6 +41,7 @@ builder.Services.AddScoped<IRatingsRepository, RatingsRepository>();
 
 // Utils
 builder.Services.AddSingleton<back.Utils.IComparableUtils, back.Utils.ComparableUtils>();
+builder.Services.AddSingleton<back.Cache.ISongQueuesCache, back.Cache.SongQueuesCache>();
 
 // Service registrations
 builder.Services.AddHttpClient();

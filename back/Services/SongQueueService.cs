@@ -1,26 +1,29 @@
 using back.Models;
 using back.Data.Repositories;
 using back.Utils;
+using back.Cache;
 using System.Collections.Concurrent;
 
 namespace back.Services
 {
   public class SongQueueService : ISongQueueService
   {
-    private readonly ConcurrentDictionary<int, SongQueue> _queues = new ConcurrentDictionary<int, SongQueue>();
+    private readonly ISongQueuesCache _queuesCache = new SongQueuesCache();
     private readonly ITeamsRepository _teamsRepository;
     private readonly ISongsRepository _songsRepository;
     private readonly IComparableUtils _comparableUtils;
 
-    public SongQueueService(ITeamsRepository teamsRepository, ISongsRepository songsRepository, IComparableUtils comparableUtils)
+    public SongQueueService(ITeamsRepository teamsRepository, ISongsRepository songsRepository, IComparableUtils comparableUtils, ISongQueuesCache queuesCache)
     {
       if (teamsRepository == null) throw new ArgumentNullException(nameof(teamsRepository));
       if (songsRepository == null) throw new ArgumentNullException(nameof(songsRepository));
       if (comparableUtils == null) throw new ArgumentNullException(nameof(comparableUtils));
+      if (_queuesCache == null) throw new ArgumentNullException(nameof(_queuesCache));
 
       _teamsRepository = teamsRepository;
       _songsRepository = songsRepository;
       _comparableUtils = comparableUtils;
+      _queuesCache = queuesCache;
     }
 
     public async Task InitializeQueueAsync(int teamId)
@@ -143,7 +146,7 @@ namespace back.Services
 
     private SongQueue GetOrCreateQueue(int teamId)
     {
-      return _queues.GetOrAdd(teamId, _ => new SongQueue());
+      return _queuesCache.Queues.GetOrAdd(teamId, _ => new SongQueue());
     }
   }
 }

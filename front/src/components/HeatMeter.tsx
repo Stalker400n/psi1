@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Flame } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
 
 interface HeatMeterProps {
   currentRating: number;
@@ -7,13 +8,34 @@ interface HeatMeterProps {
 }
 
 export function HeatMeter({ currentRating, onSubmit }: HeatMeterProps) {
+  const { showToast } = useToast();
   const [heat, setHeat] = useState(currentRating);
+  const [lastSubmittedHeat, setLastSubmittedHeat] = useState(currentRating);
   const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submissionCount, setSubmissionCount] = useState(0);
+  const [animateButton, setAnimateButton] = useState(false);
+  const [isUserControlled, setIsUserControlled] = useState(false);
+  
+  // Add a ref to track if we're currently in the submission process
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => {
-    setHeat(currentRating);
-  }, [currentRating]);
+    // Only set heat from currentRating when not user-controlled
+    if (!isUserControlled) {
+      setHeat(currentRating);
+    }
+    
+    // Only reset submission states when not actively submitting
+    if (!isSubmittingRef.current) {
+      setLastSubmittedHeat(currentRating);
+      // Only reset isSubmitted if we're getting a new currentRating from parent
+      if (currentRating !== heat && !isUserControlled) {
+        setIsSubmitted(false);
+      }
+    }
+  }, [currentRating, heat, isUserControlled]);
 
   const getColor = (value: number) => {
     const hue = 240 - (value / 100) * 240; // 240 = blue, 0 = red
@@ -22,10 +44,17 @@ export function HeatMeter({ currentRating, onSubmit }: HeatMeterProps) {
 
   const handleMouseDown = () => {
     setIsDragging(true);
+    setIsUserControlled(true);
   };
 
   const handleMouseUp = () => {
     setIsDragging(false);
+  };
+
+  // Helper function to update heat (no longer resets submitted state)
+  const updateHeat = (value: number) => {
+    setHeat(value);
+    setIsUserControlled(true); // Mark that user is controlling the slider
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -34,22 +63,40 @@ export function HeatMeter({ currentRating, onSubmit }: HeatMeterProps) {
     const rect = e.currentTarget.getBoundingClientRect();
     const y = e.clientY - rect.top;
     const percentage = 100 - Math.max(0, Math.min(100, (y / rect.height) * 100));
-    setHeat(Math.round(percentage));
+    updateHeat(Math.round(percentage));
   };
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const y = e.clientY - rect.top;
     const percentage = 100 - Math.max(0, Math.min(100, (y / rect.height) * 100));
-    setHeat(Math.round(percentage));
+    updateHeat(Math.round(percentage));
   };
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
+    isSubmittingRef.current = true; // Mark that we're in submission process
+    
     try {
       await onSubmit(heat);
+      setLastSubmittedHeat(heat); // Track last submitted heat value
+      setIsSubmitted(true); // Mark as successfully submitted
+      setSubmissionCount(prev => prev + 1); // Increment counter to force re-render
+      
+      // Trigger animation effect
+      setAnimateButton(true);
+      setTimeout(() => setAnimateButton(false), 300);
+      
+      showToast('Heat rating submitted successfully!', 'success');
+    } catch {
+      showToast('Failed to submit rating', 'error');
     } finally {
       setIsSubmitting(false);
+      
+      // Reset the ref after a small delay to ensure state updates complete
+      setTimeout(() => {
+        isSubmittingRef.current = false;
+      }, 100);
     }
   };
 
@@ -103,9 +150,15 @@ export function HeatMeter({ currentRating, onSubmit }: HeatMeterProps) {
 
       {/* Submit button - compact */}
       <button
+        key={`submit-button-${submissionCount}`}
         onClick={handleSubmit}
         disabled={isSubmitting}
-        className="w-full px-2 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+        className={`w-full px-2 py-2 text-black rounded-lg hover:opacity-90 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-xs ${
+          isSubmitted ? '' : 'bg-yellow-500 hover:bg-yellow-400'
+        } ${animateButton ? 'animate-pulse' : ''}`}
+        style={{
+          backgroundColor: isSubmitted ? getColor(lastSubmittedHeat) : undefined
+        }}
       >
         {isSubmitting ? '...' : 'Rate'}
       </button>

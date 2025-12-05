@@ -271,11 +271,22 @@ function UsersPanel({ users, teamId, userRole, userId }: {
   const [error, setError] = useState<string | null>(null);
   const [isChangingRole, setIsChangingRole] = useState(false);
   
-  // Find current user and sort other users alphabetically
+  // Find current user and sort other users by role (Owner -> Moderator -> Member) and then alphabetically
   const currentUser = users.find(user => user.id === userId);
   const otherUsers = users
     .filter(user => user.id !== userId)
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => {
+      // Sort by role first: Owner > Moderator > Member
+      const roleOrder = { Owner: 0, Moderator: 1, Member: 2 };
+      const roleComparison = roleOrder[a.role] - roleOrder[b.role];
+      
+      // If roles are the same, sort alphabetically
+      if (roleComparison === 0) {
+        return a.name.localeCompare(b.name);
+      }
+      
+      return roleComparison;
+    });
   
   const handleRoleChange = async (userId: number, newRole: 'Member' | 'Moderator' | 'Owner') => {
     if (isChangingRole) return;

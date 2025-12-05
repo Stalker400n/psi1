@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import api from "../services/api.service";
 import type { Team, User } from "../services/api.service";
 import { PlaylistView } from "./PlaylistView";
@@ -41,9 +41,11 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
     }
   };
 
-  const handleLeave = () => {
+  const handleBack = () => {
+    // Call onLeave to clean up team state when navigating away
     onLeave();
-    navigate("/");
+    // Navigate back to previous page in history
+    navigate(-1);
   };
 
   if (loading) {
@@ -59,10 +61,20 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-slate-950 relative">
+      {/* Back button at top-left corner */}
+      <button 
+        onClick={handleBack} 
+        className="absolute top-8 left-8 text-slate-400 hover:text-white flex items-center gap-2 transition"
+      >
+        <ArrowLeft size={20} />
+        Back
+      </button>
+
       <div className="bg-slate-900 border-b border-slate-800 p-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div>
+        <div className="max-w-7xl mx-auto flex justify-center items-center">
+          {/* Centered team information */}
+          <div className="text-center">
             <h1 className="text-2xl font-bold text-white">
               {team.name}
               {renderPulsingStar({
@@ -71,16 +83,9 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
               })}
             </h1>
             <p className="text-slate-400 text-sm">
-              Code: {team.id} • {user.name}
+              Code: {team.id}
             </p>
           </div>
-          <button
-            onClick={handleLeave}
-            className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition flex items-center gap-2"
-          >
-            <LogOut size={18} />
-            Leave
-          </button>
         </div>
       </div>
 

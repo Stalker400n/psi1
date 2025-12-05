@@ -21,6 +21,15 @@ interface RightPanelProps {
   onRefreshTeam?: () => void;
 }
 
+// Add global style for webkit scrollbars
+const hideScrollbarStyle = `
+  ::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+`;
+
 export function RightPanel({
   teamId,
   userId,
@@ -66,6 +75,8 @@ export function RightPanel({
 
   return (
     <div className="bg-slate-900 rounded-lg p-4 h-full flex flex-col">
+      {/* Add style tag for webkit scrollbar hiding */}
+      <style>{hideScrollbarStyle}</style>
       {/* Tab buttons */}
       <div className="grid grid-cols-4 gap-2 mb-4">
         <button
@@ -131,7 +142,8 @@ export function RightPanel({
           <UsersPanel 
             users={users} 
             teamId={teamId} 
-            userRole={userRole} 
+            userRole={userRole}
+            userId={userId}
           />
         )}
         
@@ -205,7 +217,7 @@ function QueuePanel({ queue, onJumpToSong, onDeleteSong }: {
       <h3 className="text-white font-semibold mb-3 text-sm">
         Queue ({Math.max(0, queue.length - 1)} {queue.length - 1 === 1 ? 'song' : 'songs'})
       </h3>
-      <div className="flex-1 overflow-y-auto space-y-2">
+      <div className="flex-1 overflow-y-auto space-y-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {queue.slice(1).map((song) => (
           <div key={song.id} className="bg-slate-800 p-3 rounded-lg hover:bg-slate-750 transition">
             <div className="flex justify-between items-start">
@@ -238,14 +250,21 @@ function QueuePanel({ queue, onJumpToSong, onDeleteSong }: {
   );
 }
 
-function UsersPanel({ users, teamId, userRole }: { 
+function UsersPanel({ users, teamId, userRole, userId }: { 
   users: User[]; 
   teamId: number; 
-  userRole: 'Member' | 'Moderator' | 'Owner' 
+  userRole: 'Member' | 'Moderator' | 'Owner';
+  userId: number;
 }) {
   const { showToast } = useToast();
   const [error, setError] = useState<string | null>(null);
   const [isChangingRole, setIsChangingRole] = useState(false);
+  
+  // Find current user and sort other users alphabetically
+  const currentUser = users.find(user => user.id === userId);
+  const otherUsers = users
+    .filter(user => user.id !== userId)
+    .sort((a, b) => a.name.localeCompare(b.name));
   
   const handleRoleChange = async (userId: number, newRole: 'Member' | 'Moderator' | 'Owner') => {
     if (isChangingRole) return;
@@ -288,8 +307,56 @@ function UsersPanel({ users, teamId, userRole }: {
         </div>
       )}
       
-      <div className="flex-1 overflow-y-auto space-y-2">
-        {users.map((user) => (
+      <div className="flex-1 overflow-y-auto space-y-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {/* Display current user first */}
+        {currentUser && (
+          <>
+            <div className="bg-yellow-500/20 border border-yellow-500 p-3 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-white font-medium text-sm">{currentUser.name}</p>
+                    <span className="text-yellow-400 text-xs font-bold">(You)</span>
+                  </div>
+                  <p className="text-slate-400 text-xs">
+                    Joined: {new Date(currentUser.joinedAt).toLocaleString()}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    currentUser.role === 'Owner' ? 'bg-yellow-500 text-black' :
+                    currentUser.role === 'Moderator' ? 'bg-indigo-600 text-white' :
+                    'bg-slate-700 text-slate-200'
+                  }`}>
+                    {currentUser.role}
+                  </span>
+                  
+                  {(userRole === 'Owner' || userRole === 'Moderator') && (
+                    <select
+                      value={currentUser.role}
+                      onChange={(e) => {
+                        const newRole = e.target.value as 'Member' | 'Moderator' | 'Owner';
+                        handleRoleChange(currentUser.id, newRole);
+                      }}
+                      disabled={isChangingRole}
+                      className="bg-slate-700 text-white rounded px-2 py-1 text-xs"
+                    >
+                      <option value="Member">Member</option>
+                      <option value="Moderator">Moderator</option>
+                      <option value="Owner">Owner</option>
+                    </select>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Separator line */}
+            <div className="border-t border-slate-700 my-2"></div>
+          </>
+        )}
+        
+        {/* Display other users alphabetically */}
+        {otherUsers.map((user) => (
           <div key={user.id} className="bg-slate-800 p-3 rounded-lg">
             <div className="flex items-center justify-between">
               <div>

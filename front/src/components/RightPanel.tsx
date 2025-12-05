@@ -161,24 +161,35 @@ export function RightPanel({
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-white font-semibold text-sm">Add Song to Queue</h3>
           <div className="flex items-center gap-2">
-            <label className="flex items-center gap-1.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={addToBeginning}
-                onChange={() => {
-                  if (!canAddToBeginning) {
-                    showToast('Only Moderators and Owners can add songs to beginning of queue', 'warning');
-                    return;
-                  }
-                  setAddToBeginning(!addToBeginning);
-                }}
-                className={`h-4 w-4 rounded ${!canAddToBeginning ? 'opacity-50 cursor-not-allowed' : ''}`}
-              />
+            <label className="flex items-center justify-between cursor-pointer gap-3">
               <span className={`text-xs flex items-center gap-1 ${
                 !canAddToBeginning ? 'text-slate-500' : 'text-white'
               }`}>
                 <Zap size={12} /> Play Next
               </span>
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={addToBeginning}
+                  onChange={() => {
+                    if (!canAddToBeginning) {
+                      showToast('Only Moderators and Owners can add songs to beginning of queue', 'warning');
+                      return;
+                    }
+                    setAddToBeginning(!addToBeginning);
+                  }}
+                  className="sr-only"
+                />
+                {/* Toggle background */}
+                <div className={`block w-10 h-6 rounded-full transition-colors ${
+                  addToBeginning ? 'bg-yellow-500' : 'bg-slate-700'
+                } ${!canAddToBeginning ? 'opacity-50 cursor-not-allowed' : ''}`} />
+                
+                {/* Toggle indicator */}
+                <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${
+                  addToBeginning ? 'transform translate-x-4' : ''
+                }`} />
+              </div>
             </label>
           </div>
         </div>

@@ -3,12 +3,12 @@ import { Send } from "lucide-react";
 import api from "../services/api.service";
 import type { ChatMessage, User } from "../services/api.service";
 
-interface ChatViewProps {
+interface ChatProps {
   teamId: number;
   userName: string;
 }
 
-export function ChatView({ teamId, userName }: ChatViewProps) {
+export function Chat({ teamId, userName }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");

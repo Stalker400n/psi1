@@ -7,13 +7,13 @@ import { HeatMeter } from '../components/HeatMeter';
 import { RightPanel } from '../components/RightPanel';
 import { useToast } from '../contexts/ToastContext';
 
-interface PlaylistViewProps {
+interface PlaylistPageProps {
   teamId: number;
   userId: number;
   userName: string;
 }
 
-export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
+export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
   const { showToast } = useToast();
   const [queue, setQueue] = useState<Song[]>([]);
   const [users, setUsers] = useState<User[]>([]);

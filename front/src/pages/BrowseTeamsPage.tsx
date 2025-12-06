@@ -6,7 +6,7 @@ import type { Team, User } from '../services/api.service';
 import { renderPulsingStar, floatingQuotesCSS } from '../utils/praises';
 import { useToast } from '../contexts/ToastContext';
 
-interface BrowseTeamsProps {
+interface BrowseTeamsPageProps {
   userName: string;
   userId: number;
   onUserCreated: (user: User) => void;
@@ -23,7 +23,7 @@ interface FiltersState {
   moderator: boolean;
 }
 
-export function BrowseTeams({ userName, userId, onUserCreated }: BrowseTeamsProps) {
+export function BrowseTeamsPage({ userName, userId, onUserCreated }: BrowseTeamsPageProps) {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [teams, setTeams] = useState<Team[]>([]);

@@ -3,16 +3,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import api from "../services/api.service";
 import type { Team, User } from "../services/api.service";
-import { PlaylistView } from "./PlaylistView";
+import { PlaylistPage } from "./PlaylistPage";
 import { renderPulsingStar, floatingQuotesCSS } from "../utils/praises";
 import { useToast } from "../contexts/ToastContext";
 
-interface TeamViewProps {
+interface TeamPageProps {
   user: User;
   onLeave: () => void;
 }
 
-export function TeamView({ user, onLeave }: TeamViewProps) {
+export function TeamPage({ user, onLeave }: TeamPageProps) {
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -101,7 +101,7 @@ export function TeamView({ user, onLeave }: TeamViewProps) {
             </button>
           </div>
         )}
-        <PlaylistView
+        <PlaylistPage
           teamId={parseInt(teamId)}
           userId={user.id}
           userName={user.name}

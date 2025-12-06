@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Music, Users, MessageSquare, Trophy, Trash2, Plus, Zap } from 'lucide-react';
 import api from '../services/api.service';
 import type { Song, User } from '../services/api.service';
-import { ChatView } from '../views/ChatView';
+import { Chat } from './Chat';
 import { Leaderboard } from './Leaderboard';
 import { useToast } from '../contexts/ToastContext';
 
@@ -499,7 +499,7 @@ function UsersPanel({ users, teamId, userRole, userId }: {
 }
 
 function ChatPanel({ teamId, userName }: { teamId: number; userName: string }) {
-  return <ChatView teamId={teamId} userName={userName} />;
+  return <Chat teamId={teamId} userName={userName} />;
 }
 
 function LeaderboardPanel({ teamId, userId }: { teamId: number; userId: number }) {

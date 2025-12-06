@@ -6,13 +6,13 @@ import type { User } from '../services/api.service';
 import { renderPulsingStar, floatingQuotesCSS } from '../utils/praises';
 import { useToast } from '../contexts/ToastContext';
 
-interface CreateTeamProps {
+interface CreateTeamPageProps {
   userName: string;
   userId: number;
   onUserCreated: (user: User) => void;
 }
 
-export function CreateTeam({ userName, userId, onUserCreated }: CreateTeamProps) {
+export function CreateTeamPage({ userName, userId, onUserCreated }: CreateTeamPageProps) {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [teamName, setTeamName] = useState<string>('');

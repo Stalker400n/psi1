@@ -6,11 +6,11 @@ import { useToast } from './contexts/ToastContext';
 import { ArrowLeft } from 'lucide-react';
 
 import { NameEntry } from './components/NameEntry';
-import { MainScreen } from './components/MainScreen';
-import { CreateTeam } from './components/CreateTeam';
-import { BrowseTeams } from './components/BrowseTeams';
-import { JoinTeam } from './components/JoinTeam';
-import { TeamView } from './views/TeamView';
+import { MainPage } from './pages/MainPage';
+import { CreateTeamPage } from './pages/CreateTeamPage';
+import { BrowseTeamsPage } from './pages/BrowseTeamsPage';
+import { JoinTeamPage } from './pages/JoinTeamPage';
+import { TeamPage } from './pages/TeamPage';
 import { TeamJoinGate } from './components/TeamJoinGate';
 
 // TeamRouteHandler component - extracts team ID from URL params
@@ -49,7 +49,7 @@ function TeamRouteHandler({
   
   // Logged in and in team - show team view
   if (currentUser) {
-    return <TeamView user={currentUser} onLeave={onLeave} />;
+    return <TeamPage user={currentUser} onLeave={onLeave} />;
   }
   
   // Logged in and joining - show loading state
@@ -256,7 +256,7 @@ function AppContent() {
           path="/menu" 
           element={
             globalUser ? (
-              <MainScreen 
+              <MainPage 
                 onLogout={handleLogout} 
                 profileName={globalUser.name}
               />
@@ -271,7 +271,7 @@ function AppContent() {
           path="/create" 
           element={
             globalUser ? (
-              <CreateTeam 
+              <CreateTeamPage 
                 userName={globalUser.name}
                 userId={globalUser.id}
                 onUserCreated={setCurrentUser} 
@@ -287,7 +287,7 @@ function AppContent() {
           path="/teams" 
           element={
             globalUser ? (
-              <BrowseTeams 
+              <BrowseTeamsPage 
                 userName={globalUser.name}
                 userId={globalUser.id}
                 onUserCreated={setCurrentUser} 
@@ -303,7 +303,7 @@ function AppContent() {
           path="/join" 
           element={
             globalUser ? (
-              <JoinTeam 
+              <JoinTeamPage 
                 userName={globalUser.name}
                 onUserCreated={setCurrentUser} 
               />

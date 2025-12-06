@@ -11,12 +11,12 @@ import {
 const praises = getRandomPraises();
 const praiseStyles = generatePraiseStyles(praises);
 
-interface MainScreenProps {
+interface MainPageProps {
   onLogout: () => void;
   profileName: string;
 }
 
-export function MainScreen({ onLogout, profileName }: MainScreenProps) {
+export function MainPage({ onLogout, profileName }: MainPageProps) {
   const navigate = useNavigate();
 
   return (

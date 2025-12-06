@@ -126,6 +126,15 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
   };
 
   const nextSong = async () => {
+    // Check if user has permission (Moderator or Owner)
+    const currentUser = users.find(u => u.id === userId);
+    const canControlPlayback = currentUser?.role === 'Moderator' || currentUser?.role === 'Owner';
+    
+    if (!canControlPlayback) {
+      showToast('Only Moderators and Owners can skip songs', 'warning');
+      return;
+    }
+    
     try {
       await api.songsApi.next(teamId);
       fetchQueueAndCurrent();
@@ -136,6 +145,15 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
   };
 
   const previousSong = async () => {
+    // Check if user has permission (Moderator or Owner)
+    const currentUser = users.find(u => u.id === userId);
+    const canControlPlayback = currentUser?.role === 'Moderator' || currentUser?.role === 'Owner';
+    
+    if (!canControlPlayback) {
+      showToast('Only Moderators and Owners can skip songs', 'warning');
+      return;
+    }
+    
     try {
       await api.songsApi.previous(teamId);
       fetchQueueAndCurrent();

@@ -29,6 +29,8 @@ export interface Song {
   addedByUserName: string;
   addedAt: string;
   index: number;
+  thumbnailUrl?: string;
+  durationSeconds?: number;
 }
 
 export interface SongRating {
@@ -84,6 +86,18 @@ const teamsApi = {
       method: 'GET',
     });
     if (!response.ok) throw new Error('Team not found');
+    return response.json();
+  },
+  
+  getQueueHistory: async (teamId: number): Promise<{
+    currentIndex: number;
+    songs: Song[];
+  }> => {
+    const response = await fetch(`${API_BASE}/teams/${teamId}/queue-history`, {
+      ...fetchOptions,
+      method: 'GET',
+    });
+    if (!response.ok) throw new Error('Failed to fetch queue history');
     return response.json();
   },
 

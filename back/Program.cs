@@ -48,6 +48,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<back.Services.ISongQueueService, back.Services.SongQueueService>();
 builder.Services.AddScoped<back.Services.IDataImportService, back.Services.DataImportService>();
 builder.Services.AddScoped<back.Validators.IYoutubeValidator, back.Validators.YoutubeValidator>();
+builder.Services.AddScoped<back.Services.IYoutubeDataService, back.Services.YoutubeDataService>();
 
 builder.Services.AddCors(options =>
 {

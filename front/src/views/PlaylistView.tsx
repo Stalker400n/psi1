@@ -19,6 +19,7 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [currentRating, setCurrentRating] = useState<number>(0);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
 
   useEffect(() => {
     fetchQueueAndCurrent();
@@ -60,18 +61,19 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
 
   const fetchQueueAndCurrent = async () => {
     try {
-      const queueData = await api.songsApi.getQueue(teamId);
-      setQueue(queueData);
+      // Fetch queue history instead of just current queue
+      const historyData = await api.teamsApi.getQueueHistory(teamId);
+      setQueue(historyData.songs);
+      setCurrentIndex(historyData.currentIndex);
       
-      if (queueData.length > 0) {
-        setCurrentSong(queueData[0]);
-      } else {
-        setCurrentSong(null);
-      }
+      // Find the current song
+      const current = historyData.songs.find(s => s.index === historyData.currentIndex);
+      setCurrentSong(current || null);
     } catch (error) {
-      console.error('Error fetching queue:', error);
+      console.error('Error fetching queue history:', error);
       setQueue([]);
       setCurrentSong(null);
+      setCurrentIndex(0);
     }
   };
 
@@ -143,16 +145,6 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
     }
   };
 
-  const jumpToSong = async (index: number) => {
-    try {
-      await api.songsApi.jumpTo(teamId, index);
-      fetchQueueAndCurrent();
-      showToast('Jumped to song', 'success');
-    } catch (error) {
-      console.error('Error jumping to song:', error);
-      showToast('Failed to jump to song', 'error');
-    }
-  };
 
   return (
     <div className="flex gap-4 h-[calc(100vh-200px)]">
@@ -227,9 +219,9 @@ export function PlaylistView({ teamId, userId, userName }: PlaylistViewProps) {
           userId={userId}
           userName={userName}
           queue={queue}
+          currentIndex={currentIndex}
           users={users}
           userRole={users.find(u => u.id === userId)?.role || 'Member'}
-          onJumpToSong={jumpToSong}
           onDeleteSong={deleteSong}
           onAddSong={addSong}
         />

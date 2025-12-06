@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Music, Users, MessageSquare, Trophy, Trash2, Plus, Zap } from 'lucide-react';
 import api from '../services/api.service';
 import type { Song, User } from '../services/api.service';
-import { Chat } from './Chat';
-import { Leaderboard } from './Leaderboard';
-import { useToast } from '../contexts/ToastContext';
+import { Chat } from './chat.component';
+import { Leaderboard } from './leaderboard.component';
+import { useToast } from '../contexts/toast-context';
 
 type PanelView = 'queue' | 'users' | 'chat' | 'leaderboard';
 

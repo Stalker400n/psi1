@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { CheckCircle, XCircle, Info, AlertTriangle, X } from 'lucide-react';
-import { ToastContext, type ToastType } from './ToastContext';
+import { ToastContext, type ToastType } from './toast-context';
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Array<{

@@ -6,7 +6,7 @@ import {
   floatingQuotesCSS,
   renderFloatingQuote,
   renderPulsingStar
-} from '../utils/praises';
+} from '../utils/praise.util';
 
 const praises = getRandomPraises();
 const praiseStyles = generatePraiseStyles(praises);

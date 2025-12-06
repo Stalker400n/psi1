@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import api from '../services/api.service';
 import type { GlobalUser } from '../services/api.service';
 import { fingerprintService } from '../services/fingerprint.service';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../contexts/toast-context';
 import { 
   getRandomPraises, 
   generatePraiseStyles, 
   floatingQuotesCSS,
   renderFloatingQuote,
   renderPulsingStar
-} from '../utils/praises';
+} from '../utils/praise.util';
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 
 // Get random praises and generate their styles

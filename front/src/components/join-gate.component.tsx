@@ -4,14 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api.service';
 import type { Team, GlobalUser } from '../services/api.service';
 import { fingerprintService } from '../services/fingerprint.service';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../contexts/toast-context';
 import { 
   getRandomPraises, 
   generatePraiseStyles, 
   floatingQuotesCSS,
   renderFloatingQuote,
   renderPulsingStar
-} from '../utils/praises';
+} from '../utils/praise.util';
 
 const praises = getRandomPraises();
 const praiseStyles = generatePraiseStyles(praises);

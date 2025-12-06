@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Flame } from 'lucide-react';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../contexts/toast-context';
 
 interface HeatMeterProps {
   currentRating: number;

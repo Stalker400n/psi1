@@ -2,16 +2,16 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, usePa
 import { useState, useEffect } from 'react';
 import api from './services/api.service';
 import type { User, GlobalUser } from './services/api.service';
-import { useToast } from './contexts/ToastContext';
+import { useToast } from './contexts/toast-context';
 import { ArrowLeft } from 'lucide-react';
 
-import { NameEntry } from './components/NameEntry';
-import { MainPage } from './pages/MainPage';
-import { CreateTeamPage } from './pages/CreateTeamPage';
-import { BrowseTeamsPage } from './pages/BrowseTeamsPage';
-import { JoinTeamPage } from './pages/JoinTeamPage';
-import { TeamPage } from './pages/TeamPage';
-import { TeamJoinGate } from './components/TeamJoinGate';
+import { NameEntry } from './components/name-entry.component';
+import { MainPage } from './pages/main.page';
+import { CreateTeamPage } from './pages/create.page';
+import { BrowseTeamsPage } from './pages/browse.page';
+import { JoinTeamPage } from './pages/join.page';
+import { TeamPage } from './pages/team.page';
+import { TeamJoinGate } from './components/join-gate.component';
 
 // TeamRouteHandler component - extracts team ID from URL params
 interface TeamRouteHandlerProps {

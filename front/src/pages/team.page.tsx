@@ -3,9 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import api from "../services/api.service";
 import type { Team, User } from "../services/api.service";
-import { PlaylistPage } from "./PlaylistPage";
-import { renderPulsingStar, floatingQuotesCSS } from "../utils/praises";
-import { useToast } from "../contexts/ToastContext";
+import { PlaylistPage } from "./playlist.page";
+import { renderPulsingStar, floatingQuotesCSS } from "../utils/praise.util";
+import { useToast } from "../contexts/toast-context";
 
 interface TeamPageProps {
   user: User;

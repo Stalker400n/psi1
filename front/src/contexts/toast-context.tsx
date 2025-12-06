@@ -1,6 +1,5 @@
 import { createContext, useContext } from 'react';
 
-// Toast Types and Interfaces
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
 export interface Toast {
@@ -13,10 +12,8 @@ export interface ToastContextType {
   showToast: (message: string, type: ToastType) => void;
 }
 
-// Create Context
 export const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
-// Custom Hook
 export function useToast() {
   const context = useContext(ToastContext);
   if (!context) {

@@ -24,18 +24,15 @@ export function JoinTeamPage({ userName, onUserCreated }: JoinTeamPageProps) {
     try {
       const team = await api.teamsApi.getById(parseInt(code));
       
-      // Check if user already in team
       const existingUser = team.users?.find(u => u.name === userName);
       
       if (existingUser) {
-        // User already exists - use existing user
         onUserCreated(existingUser);
         navigate(`/teams/${team.id}`);
         setLoading(false);
         return;
       }
       
-      // User doesn't exist - create new
       const user = await api.usersApi.add(team.id, { 
         name: userName, 
         score: 0, 
@@ -52,7 +49,6 @@ export function JoinTeamPage({ userName, onUserCreated }: JoinTeamPageProps) {
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Fixed button at the top left */}
       <button 
         onClick={() => navigate('/menu')} 
         className="fixed top-8 left-8 text-slate-400 hover:text-white flex items-center gap-2 z-20"
@@ -84,7 +80,6 @@ export function JoinTeamPage({ userName, onUserCreated }: JoinTeamPageProps) {
         </button>
       </div>
       
-      {/* Add back the CSS needed for the pulsing star */}
       <style>{floatingQuotesCSS}</style>
     </div>
   );

@@ -23,13 +23,13 @@ export function Leaderboard({ teamId, userId }: LeaderboardProps) {
     fetchLeaderboard();
     const interval = setInterval(fetchLeaderboard, 5000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId, userId, view]);
 
   const fetchLeaderboard = async () => {
     try {
       const data = await api.songsApi.getAll(teamId);
       
-      // Fetch ratings for all songs
       const songsWithRatings = await Promise.all(
         data.map(async (song) => {
           try {
@@ -57,10 +57,7 @@ export function Leaderboard({ teamId, userId }: LeaderboardProps) {
         })
       );
 
-      // Sort by the appropriate rating
       const sorted = songsWithRatings.sort((a, b) => {
-        // For average view, use team average ratings
-        // For personal view, use user's personal ratings
         const ratingA = view === 'personal' ? (a.userRating || 0) : (a.averageRating || 0);
         const ratingB = view === 'personal' ? (b.userRating || 0) : (b.averageRating || 0);
         return ratingB - ratingA;
@@ -81,7 +78,6 @@ export function Leaderboard({ teamId, userId }: LeaderboardProps) {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header with filter buttons */}
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-white font-semibold text-sm">Leaderboard</h3>
         
@@ -116,7 +112,6 @@ export function Leaderboard({ teamId, userId }: LeaderboardProps) {
         </div>
       </div>
 
-      {/* Content area */}
       {loading ? (
         <div className="text-slate-400 text-sm text-center py-8">Loading leaderboard...</div>
       ) : songs.length === 0 ? (
@@ -133,7 +128,6 @@ export function Leaderboard({ teamId, userId }: LeaderboardProps) {
                 className="bg-slate-800 p-3 rounded-lg"
               >
                 <div className="flex items-center gap-3">
-                  {/* Rank indicator */}
                   <div className="flex-shrink-0 w-8 text-center">
                     {index === 0 && <Trophy className="text-yellow-500" size={20} />}
                     {index === 1 && <Trophy className="text-slate-400" size={18} />}
@@ -143,14 +137,12 @@ export function Leaderboard({ teamId, userId }: LeaderboardProps) {
                     )}
                   </div>
 
-                  {/* Song info */}
                   <div className="flex-1 min-w-0">
                     <h4 className="text-white font-semibold text-sm truncate">{song.title}</h4>
                     <p className="text-slate-400 text-xs">{song.artist}</p>
                     <p className="text-slate-500 text-xs">Added by {song.addedByUserName}</p>
                   </div>
 
-                  {/* Heat display */}
                   <div className="flex flex-col items-end gap-1">
                     <span
                       className="text-lg font-bold"

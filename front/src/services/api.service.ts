@@ -326,7 +326,6 @@ const songsApi = {
     });
 
     if (!response.ok) {
-      // Try to parse JSON response for structured error message
       const text = await response.text();
       let errorMessage = 'Failed to add song';
       
@@ -336,7 +335,6 @@ const songsApi = {
           errorMessage = errorData.message;
         }
       } catch {
-        // If not valid JSON, use the text as error message if it's not empty
         if (text.trim()) {
           errorMessage = text;
         }
@@ -384,7 +382,6 @@ const songsApi = {
 };
 
 const ratingsApi = {
-  // Get all ratings for a specific song
   getSongRatings: async (
     teamId: number,
     songId: number
@@ -400,7 +397,6 @@ const ratingsApi = {
     return response.json();
   },
 
-  // Submit or update a rating
   submitRating: async (
     teamId: number,
     songId: number,
@@ -419,7 +415,6 @@ const ratingsApi = {
     return response.json();
   },
 
-  // Get user's rating for a specific song
   getUserRating: async (
     teamId: number,
     songId: number,

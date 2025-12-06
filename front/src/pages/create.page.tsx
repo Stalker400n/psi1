@@ -23,7 +23,6 @@ export function CreateTeamPage({ userName, userId, onUserCreated }: CreateTeamPa
     if (!teamName) return;
     setLoading(true);
 
-    // Log the global user ID for debugging/tracking
     console.log(`Creating team with global user ID: ${userId}`);
 
     try {
@@ -56,7 +55,6 @@ export function CreateTeamPage({ userName, userId, onUserCreated }: CreateTeamPa
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-8 relative overflow-hidden">
-      {/* Back button */}
       <button 
         onClick={() => navigate('/menu')} 
         className="absolute top-8 left-8 text-slate-400 hover:text-white flex items-center gap-2 transition"
@@ -66,12 +64,10 @@ export function CreateTeamPage({ userName, userId, onUserCreated }: CreateTeamPa
       </button>
 
       <div className="w-full max-w-md flex flex-col items-center text-center z-10">
-        {/* Title */}
         <h1 className="text-4xl font-bold text-white mb-6 leading-tight">
           Create Team {renderPulsingStar({ className: 'text-yellow-400' })}
         </h1>
 
-        {/* Settings card (centered) */}
         <div className="w-full max-w-md bg-slate-800 rounded-lg p-4 shadow-lg mb-6 border border-slate-700">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-white text-base font-semibold">Settings</h3>
@@ -79,7 +75,6 @@ export function CreateTeamPage({ userName, userId, onUserCreated }: CreateTeamPa
           </div>
 
           <div className="flex flex-col gap-3">
-            {/* Private toggle */}
             <div className="flex items-center justify-between">
               <span className="text-white text-sm">Private Team</span>
               <button
@@ -99,11 +94,9 @@ export function CreateTeamPage({ userName, userId, onUserCreated }: CreateTeamPa
               </button>
             </div>
 
-            {/* (You can add other centered settings here) */}
           </div>
         </div>
 
-        {/* Input + Button (centered under settings) */}
         <div className="w-full max-w-md flex flex-col items-center gap-3">
           <input
             type="text"
@@ -124,7 +117,6 @@ export function CreateTeamPage({ userName, userId, onUserCreated }: CreateTeamPa
         </div>
       </div>
 
-      {/* floating/pulsing CSS */}
       <style>{floatingQuotesCSS}</style>
     </div>
   );

@@ -33,7 +33,6 @@ export function Chat({ teamId, userName }: ChatProps) {
     try {
       const data = await api.chatsApi.getAll(teamId);
       setMessages(data);
-      // also refresh users so we can display role badges
       try {
         const u = await api.usersApi.getAll(teamId);
         setUsers(u);

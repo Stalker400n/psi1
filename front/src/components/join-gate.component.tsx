@@ -31,6 +31,7 @@ export function TeamJoinGate({ teamId, onLogin }: TeamJoinGateProps) {
 
   useEffect(() => {
     fetchTeamInfo();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
 
   const fetchTeamInfo = async () => {
@@ -52,18 +53,15 @@ export function TeamJoinGate({ teamId, onLogin }: TeamJoinGateProps) {
     setIsLoading(true);
     
     try {
-      // Get device fingerprint
       const fingerprint = await fingerprintService.getFingerprint();
       const deviceInfo = fingerprintService.getDeviceInfo();
       
-      // Authenticate user
       const globalUser = await api.globalUsersApi.registerOrLogin({
         name: name.trim(),
         deviceFingerprint: fingerprint,
         deviceInfo
       });
       
-      // Pass to parent - parent will handle team join
       onLogin(globalUser);
       
     } catch (err) {
@@ -79,7 +77,6 @@ export function TeamJoinGate({ teamId, onLogin }: TeamJoinGateProps) {
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Back button */}
       <button 
         onClick={() => navigate('/menu')}
         className="absolute top-8 right-8 text-slate-400 hover:text-white flex items-center gap-2 transition"
@@ -88,19 +85,16 @@ export function TeamJoinGate({ teamId, onLogin }: TeamJoinGateProps) {
         Back
       </button>
 
-      {/* Praises background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {praises.map((praise, idx) => renderFloatingQuote(praise, praiseStyles[idx], idx))}
       </div>
       
-      {/* Main content */}
       <div className="text-center relative z-10 w-full max-w-sm">
         <h1 className="text-6xl font-bold text-white mb-2">
           komcon{renderPulsingStar({ className: 'text-yellow-400' })}
         </h1>
         <p className="text-slate-400 mb-8">Connect through music!</p>
         
-        {/* Team preview card */}
         {teamLoading ? (
           <div className="mb-6 p-6 bg-slate-900 rounded-lg border border-slate-800">
             <div className="animate-pulse">
@@ -129,7 +123,6 @@ export function TeamJoinGate({ teamId, onLogin }: TeamJoinGateProps) {
           </div>
         )}
         
-        {/* Name input - only show if team exists */}
         {team && (
           <div className="space-y-4">
             <input

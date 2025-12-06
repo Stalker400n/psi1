@@ -17,5 +17,5 @@ export function TeamIdCapture({ onCapture }: TeamIdCaptureProps) {
     }
   }, [params.teamId, onCapture]);
   
-  return null; // This component doesn't render anything
+  return null;
 }

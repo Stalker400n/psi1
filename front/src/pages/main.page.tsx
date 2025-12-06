@@ -22,12 +22,10 @@ export function MainPage({ onLogout, profileName }: MainPageProps) {
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
       
-      {/* Praises */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {praises.map((praise, idx) => renderFloatingQuote(praise, praiseStyles[idx], idx))}
       </div>
 
-      {/* Profile in top left corner */}
       <div className="absolute top-4 left-4 z-10">
         <div className="flex items-center gap-3 px-4 py-2 bg-slate-800 rounded-lg border border-slate-700 hover:border-slate-600 transition">
           <div className="flex items-center gap-2">
@@ -44,7 +42,6 @@ export function MainPage({ onLogout, profileName }: MainPageProps) {
         </div>
       </div>
 
-      {/* Main content */}
       <div className="text-center relative z-10">
         <h1 className="text-6xl font-bold text-white mb-2 drop-shadow-2xl">
           komcon{renderPulsingStar({ className: 'text-yellow-400' })}

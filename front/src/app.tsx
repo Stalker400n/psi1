@@ -13,7 +13,6 @@ import { JoinTeamPage } from './pages/join.page';
 import { TeamPage } from './pages/team.page';
 import { TeamJoinGate } from './components/join-gate.component';
 
-// TeamRouteHandler component - extracts team ID from URL params
 interface TeamRouteHandlerProps {
   globalUser: GlobalUser | null;
   currentUser: User | null;
@@ -34,12 +33,10 @@ function TeamRouteHandler({
   const params = useParams<{ teamId: string }>();
   const teamId = params.teamId ? parseInt(params.teamId, 10) : null;
   
-  // Invalid team ID - redirect to menu
   if (!teamId || isNaN(teamId)) {
     return <Navigate to="/menu" replace />;
   }
   
-  // Not logged in - show join gate with direct team ID from URL
   if (!globalUser) {
     return <TeamJoinGate 
       teamId={teamId} 
@@ -47,12 +44,10 @@ function TeamRouteHandler({
     />;
   }
   
-  // Logged in and in team - show team view
   if (currentUser) {
     return <TeamPage user={currentUser} onLeave={onLeave} />;
   }
   
-  // Logged in and joining - show loading state
   if (isJoiningTeam) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-slate-950 relative">
@@ -71,11 +66,9 @@ function TeamRouteHandler({
     );
   }
   
-  // Fallback - redirect to menu
   return <Navigate to="/menu" replace />;
 }
 
-// App.tsx - Main application component
 export default function App() {
   return (
     <BrowserRouter>
@@ -89,7 +82,6 @@ function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Global user data (from fingerprint authentication)
   const [globalUser, setGlobalUser] = useState<GlobalUser | null>(() => {
     const savedId = sessionStorage.getItem('globalUserId');
     const savedName = sessionStorage.getItem('globalUserName');
@@ -104,22 +96,16 @@ function AppContent() {
     return null;
   });
   
-  // Current active user in a team
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     const savedUser = sessionStorage.getItem('currentUser');
     return savedUser ? JSON.parse(savedUser) : null;
   });
   
-  // Track pending team join
   const [pendingTeamId, setPendingTeamId] = useState<number | null>(null);
-  
-  // Track team join loading state
   const [isJoiningTeam, setIsJoiningTeam] = useState<boolean>(false);
   
-  // Extract team ID from URL when component mounts or URL changes
   useEffect(() => {
-    // Check if we're on a team page and not already in a team
-    if (location.pathname.startsWith('/teams/') && !currentUser) {
+      if (location.pathname.startsWith('/teams/') && !currentUser) {
       const pathSegments = location.pathname.split('/');
       if (pathSegments.length >= 3) {
         const teamIdString = pathSegments[2];
@@ -127,20 +113,18 @@ function AppContent() {
         if (!isNaN(teamId)) {
           console.log('Setting pending team ID from URL:', teamId);
           setPendingTeamId(teamId);
-          return; // Early return - we're done
+          return;
         }
       }
     }
     
-    // If we're NOT on a team page, clear pending team ID and loading state
     if (!location.pathname.startsWith('/teams/')) {
       console.log('Clearing pending team ID - not on team page');
       setPendingTeamId(null);
-      setIsJoiningTeam(false);  // Also clear loading state
+      setIsJoiningTeam(false);
     }
   }, [location.pathname, currentUser]);
 
-  // Save currentUser to sessionStorage whenever it changes
   useEffect(() => {
     if (currentUser) {
       sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -149,7 +133,6 @@ function AppContent() {
     }
   }, [currentUser]);
 
-  // Clear loading state when currentUser is set (team join completed)
   useEffect(() => {
     if (currentUser && isJoiningTeam) {
       console.log('Current user set, clearing loading state');
@@ -157,20 +140,14 @@ function AppContent() {
     }
   }, [currentUser, isJoiningTeam]);
 
-  // Auto-join team when authenticated user navigates to team URL
   useEffect(() => {
-    // Only run if:
-    // 1. User is authenticated (globalUser exists)
-    // 2. We have a pending team ID
-    // 3. User is not already in a team (currentUser is null)
-    // 4. Not already processing a join (isJoiningTeam is false)
     if (globalUser && pendingTeamId && !currentUser && !isJoiningTeam) {
       console.log('Auto-joining team for authenticated user');
       handleTeamJoin(globalUser, pendingTeamId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [globalUser, pendingTeamId, currentUser, isJoiningTeam]);
 
-  // Handle team join logic (extracted from handleUserLogin)
   const handleTeamJoin = async (user: GlobalUser, teamId: number) => {
     setIsJoiningTeam(true);
     console.log('Joining team ID:', teamId);
@@ -202,20 +179,17 @@ function AppContent() {
     }
   };
 
-  // Handle user login with fingerprinting
   const handleUserLogin = async (user: GlobalUser) => {
     console.log('User logged in:', user.name);
     setGlobalUser(user);
     sessionStorage.setItem('globalUserId', user.id.toString());
     sessionStorage.setItem('globalUserName', user.name);
     
-    // If there's a pending team join, handle it
     if (pendingTeamId) {
       await handleTeamJoin(user, pendingTeamId);
     }
   };
 
-  // Handle logout
   const handleLogout = () => {
     setGlobalUser(null);
     setCurrentUser(null);
@@ -224,22 +198,18 @@ function AppContent() {
     sessionStorage.removeItem('currentUser');
   };
   
-  // Clear loading state when navigating away from team route
   useEffect(() => {
     if (!location.pathname.startsWith('/teams/')) {
       setIsJoiningTeam(false);
     }
   }, [location.pathname]);
   
-  // If no global user, show the name entry screen 
-  // We'll handle team join gate within the Routes component
   if (!globalUser) {
     return <NameEntry onSubmit={handleUserLogin} />;
   }
 
   return (
       <Routes>
-        {/* Login screen - always at root */}
         <Route 
           path="/" 
           element={
@@ -251,7 +221,6 @@ function AppContent() {
           } 
         />
         
-        {/* Main menu - requires login */}
         <Route 
           path="/menu" 
           element={
@@ -266,7 +235,6 @@ function AppContent() {
           } 
         />
         
-        {/* Create team */}
         <Route 
           path="/create" 
           element={
@@ -282,7 +250,6 @@ function AppContent() {
           } 
         />
         
-        {/* Browse teams */}
         <Route 
           path="/teams" 
           element={
@@ -298,7 +265,6 @@ function AppContent() {
           } 
         />
         
-        {/* Join with code */}
         <Route 
           path="/join" 
           element={
@@ -313,7 +279,6 @@ function AppContent() {
           } 
         />
         
-        {/* Team view */}
         <Route 
           path="/teams/:teamId" 
           element={<TeamRouteHandler 
@@ -330,7 +295,6 @@ function AppContent() {
           />}
         />
         
-        {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
   );

@@ -18,19 +18,15 @@ export function HeatMeter({ currentRating, onSubmit }: HeatMeterProps) {
   const [animateButton, setAnimateButton] = useState(false);
   const [isUserControlled, setIsUserControlled] = useState(false);
   
-  // Add a ref to track if we're currently in the submission process
   const isSubmittingRef = useRef(false);
 
   useEffect(() => {
-    // Only set heat from currentRating when not user-controlled
     if (!isUserControlled) {
       setHeat(currentRating);
     }
     
-    // Only reset submission states when not actively submitting
     if (!isSubmittingRef.current) {
       setLastSubmittedHeat(currentRating);
-      // Only reset isSubmitted if we're getting a new currentRating from parent
       if (currentRating !== heat && !isUserControlled) {
         setIsSubmitted(false);
       }
@@ -51,10 +47,9 @@ export function HeatMeter({ currentRating, onSubmit }: HeatMeterProps) {
     setIsDragging(false);
   };
 
-  // Helper function to update heat (no longer resets submitted state)
   const updateHeat = (value: number) => {
     setHeat(value);
-    setIsUserControlled(true); // Mark that user is controlling the slider
+    setIsUserControlled(true);
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -75,15 +70,14 @@ export function HeatMeter({ currentRating, onSubmit }: HeatMeterProps) {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    isSubmittingRef.current = true; // Mark that we're in submission process
+    isSubmittingRef.current = true;
     
     try {
       await onSubmit(heat);
-      setLastSubmittedHeat(heat); // Track last submitted heat value
-      setIsSubmitted(true); // Mark as successfully submitted
-      setSubmissionCount(prev => prev + 1); // Increment counter to force re-render
+      setLastSubmittedHeat(heat);
+      setIsSubmitted(true);
+      setSubmissionCount(prev => prev + 1);
       
-      // Trigger animation effect
       setAnimateButton(true);
       setTimeout(() => setAnimateButton(false), 300);
       
@@ -93,7 +87,6 @@ export function HeatMeter({ currentRating, onSubmit }: HeatMeterProps) {
     } finally {
       setIsSubmitting(false);
       
-      // Reset the ref after a small delay to ensure state updates complete
       setTimeout(() => {
         isSubmittingRef.current = false;
       }, 100);
@@ -102,13 +95,11 @@ export function HeatMeter({ currentRating, onSubmit }: HeatMeterProps) {
 
   return (
     <div className="flex flex-col items-center gap-3 bg-slate-900 p-3 rounded-lg h-full">
-      {/* Compact title */}
       <div className="flex flex-col items-center gap-1">
         <Flame className="text-orange-500" size={20} />
         <h3 className="text-white font-semibold text-xs text-center">HEAT</h3>
       </div>
 
-      {/* Meter - taller */}
       <div
         className="relative w-12 h-full min-h-[500px] bg-slate-800 rounded-full cursor-pointer select-none"
         onMouseDown={handleMouseDown}
@@ -117,7 +108,6 @@ export function HeatMeter({ currentRating, onSubmit }: HeatMeterProps) {
         onMouseLeave={handleMouseUp}
         onClick={handleClick}
       >
-        {/* Heat fill */}
         <div
           className="absolute bottom-0 left-0 right-0 rounded-full transition-all"
           style={{
@@ -126,7 +116,6 @@ export function HeatMeter({ currentRating, onSubmit }: HeatMeterProps) {
           }}
         />
 
-        {/* Slider thumb */}
         <div
           className="absolute left-1/2 -translate-x-1/2 w-16 h-5 rounded-full border-2 border-white shadow-lg transition-all"
           style={{
@@ -136,7 +125,6 @@ export function HeatMeter({ currentRating, onSubmit }: HeatMeterProps) {
           }}
         />
 
-        {/* Gradient markers */}
         <div className="absolute inset-0 pointer-events-none">
           {[0, 25, 50, 75, 100].map((mark) => (
             <div
@@ -148,7 +136,6 @@ export function HeatMeter({ currentRating, onSubmit }: HeatMeterProps) {
         </div>
       </div>
 
-      {/* Submit button - compact */}
       <button
         key={`submit-button-${submissionCount}`}
         onClick={handleSubmit}

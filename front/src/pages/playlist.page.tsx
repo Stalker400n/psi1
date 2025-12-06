@@ -29,12 +29,14 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
       fetchUsers();
     }, 3000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
 
   useEffect(() => {
     if (currentSong) {
       fetchCurrentRating();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSong?.id, userId]);
 
   const fetchCurrentRating = async () => {
@@ -61,12 +63,10 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
 
   const fetchQueueAndCurrent = async () => {
     try {
-      // Fetch queue history instead of just current queue
       const historyData = await api.teamsApi.getQueueHistory(teamId);
       setQueue(historyData.songs);
       setCurrentIndex(historyData.currentIndex);
       
-      // Find the current song
       const current = historyData.songs.find(s => s.index === historyData.currentIndex);
       setCurrentSong(current || null);
     } catch (error) {
@@ -83,7 +83,6 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
     try {
       await api.ratingsApi.submitRating(teamId, currentSong.id, userId, rating);
       setCurrentRating(rating);
-      // Remove success alert - rating update is visible in the heat meter
     } catch (error) {
       console.error('Error submitting rating:', error);
       showToast('Failed to submit rating', 'error');
@@ -126,7 +125,6 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
   };
 
   const nextSong = async () => {
-    // Check if user has permission (Moderator or Owner)
     const currentUser = users.find(u => u.id === userId);
     const canControlPlayback = currentUser?.role === 'Moderator' || currentUser?.role === 'Owner';
     
@@ -145,7 +143,6 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
   };
 
   const previousSong = async () => {
-    // Check if user has permission (Moderator or Owner)
     const currentUser = users.find(u => u.id === userId);
     const canControlPlayback = currentUser?.role === 'Moderator' || currentUser?.role === 'Owner';
     
@@ -166,7 +163,6 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
 
   return (
     <div className="flex gap-4 h-[calc(100vh-200px)]">
-      {/* Left: Slim Heat Meter */}
       <div className="w-20 flex-shrink-0">
         {currentSong && (
           <HeatMeter 
@@ -176,14 +172,11 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
         )}
       </div>
 
-      {/* Center: Player - Large */}
       <div className="flex-1 flex flex-col gap-4">
-        {/* Now Playing */}
         <div className="bg-slate-900 rounded-lg p-6 flex-1">
           <h2 className="text-xl font-semibold text-white mb-4">Now Playing</h2>
           {currentSong ? (
             <div className="h-full flex flex-col">
-              {/* Video player */}
               <div className="bg-black aspect-video rounded mb-4 flex items-center justify-center flex-shrink-0">
                 <iframe
                   width="100%"
@@ -196,7 +189,6 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
                 />
               </div>
               
-              {/* Song info */}
               <div className="mb-4">
                 <h3 className="text-white font-semibold text-lg">{currentSong.title}</h3>
                 <p className="text-slate-400">{currentSong.artist}</p>
@@ -204,7 +196,6 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
                 <p className="text-yellow-400 text-xs mt-1">Position: #{currentSong.index + 1}</p>
               </div>
               
-              {/* Controls */}
               <div className="flex gap-2 mt-auto">
                 <button
                   onClick={previousSong}
@@ -230,7 +221,6 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
         </div>
       </div>
 
-      {/* Right: Tabbed Panel */}
       <div className="w-96 flex-shrink-0">
         <RightPanel
           teamId={teamId}

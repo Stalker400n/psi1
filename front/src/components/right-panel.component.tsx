@@ -21,7 +21,6 @@ interface RightPanelProps {
   onRefreshTeam?: () => void;
 }
 
-// Add global style for webkit scrollbars
 const hideScrollbarStyle = `
   ::-webkit-scrollbar {
     display: none;
@@ -75,9 +74,7 @@ export function RightPanel({
 
   return (
     <div className="bg-slate-900 rounded-lg p-4 h-full flex flex-col">
-      {/* Add style tag for webkit scrollbar hiding */}
       <style>{hideScrollbarStyle}</style>
-      {/* Tab buttons */}
       <div className="grid grid-cols-4 gap-2 mb-4">
         <button
           onClick={() => setView('queue')}
@@ -128,7 +125,6 @@ export function RightPanel({
         </button>
       </div>
 
-      {/* Content area */}
       <div className="flex-1 overflow-hidden">
         {view === 'queue' && (
           <QueuePanel 
@@ -156,7 +152,6 @@ export function RightPanel({
         )}
       </div>
 
-      {/* Add Song - Always visible at bottom */}
       <div className="pt-4 mt-3 border-t border-slate-700">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-white font-semibold text-sm">Add Song to Queue</h3>
@@ -180,12 +175,10 @@ export function RightPanel({
                   }}
                   className="sr-only"
                 />
-                {/* Toggle background */}
                 <div className={`block w-10 h-6 rounded-full transition-colors ${
                   addToBeginning ? 'bg-yellow-500' : 'bg-slate-700'
                 } ${!canAddToBeginning ? 'opacity-50 cursor-not-allowed' : ''}`} />
                 
-                {/* Toggle indicator */}
                 <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${
                   addToBeginning ? 'transform translate-x-4' : ''
                 }`} />
@@ -217,7 +210,6 @@ export function RightPanel({
   );
 }
 
-// Sub-components
 function QueuePanel({ queue, currentIndex, onDeleteSong }: {
   queue: Song[];
   currentIndex: number;
@@ -225,12 +217,10 @@ function QueuePanel({ queue, currentIndex, onDeleteSong }: {
 }) {
   const [showHistory, setShowHistory] = useState<boolean>(false);
   
-  // Split queue into played, current, and upcoming
   const playedSongs = queue.filter(song => song.index < currentIndex);
   const currentSong = queue.find(song => song.index === currentIndex);
   const upcomingSongs = queue.filter(song => song.index > currentIndex);
   
-  // Render a single song item
   const renderSongItem = (song: Song, status: 'played' | 'current' | 'upcoming') => {
     return (
       <div 
@@ -245,7 +235,6 @@ function QueuePanel({ queue, currentIndex, onDeleteSong }: {
       >
         <div className="flex flex-col">
           <div className="flex gap-3">
-            {/* Thumbnail */}
             {song.thumbnailUrl && (
               <img 
                 src={song.thumbnailUrl} 
@@ -254,7 +243,6 @@ function QueuePanel({ queue, currentIndex, onDeleteSong }: {
               />
             )}
             
-            {/* Song info */}
             <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <p className="text-yellow-400 text-xs font-semibold">
@@ -272,7 +260,6 @@ function QueuePanel({ queue, currentIndex, onDeleteSong }: {
             <p className="text-slate-400 text-xs truncate">{song.artist}</p>
           </div>
           
-            {/* Delete button - only for upcoming songs */}
             {status === 'upcoming' && (
               <button
                 onClick={() => onDeleteSong(song.id)}
@@ -283,7 +270,6 @@ function QueuePanel({ queue, currentIndex, onDeleteSong }: {
             )}
           </div>
           
-          {/* Added by - bottom right */}
           <div className="flex justify-end mt-1.5">
             <p className="text-slate-500 text-xs">Added by {song.addedByUserName}</p>
           </div>
@@ -299,15 +285,12 @@ function QueuePanel({ queue, currentIndex, onDeleteSong }: {
       </h3>
       
       <div className="flex-1 overflow-y-auto space-y-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        {/* Current song */}
         {currentSong && renderSongItem(currentSong, 'current')}
         
-        {/* Divider if we have a current song */}
         {currentSong && upcomingSongs.length > 0 && (
           <div className="border-t border-slate-700 my-2"></div>
         )}
         
-        {/* Upcoming songs */}
         {upcomingSongs.length > 0 ? (
           upcomingSongs.map(song => renderSongItem(song, 'upcoming'))
         ) : (
@@ -316,7 +299,6 @@ function QueuePanel({ queue, currentIndex, onDeleteSong }: {
           </p>
         )}
         
-        {/* Show history button */}
         {playedSongs.length > 0 && (
           <button
             onClick={() => setShowHistory(!showHistory)}
@@ -326,7 +308,6 @@ function QueuePanel({ queue, currentIndex, onDeleteSong }: {
           </button>
         )}
         
-        {/* History */}
         {showHistory && playedSongs.length > 0 && (
           <>
             <div className="border-t border-slate-700 my-2"></div>
@@ -349,7 +330,6 @@ function UsersPanel({ users, teamId, userRole, userId }: {
   const [error, setError] = useState<string | null>(null);
   const [isChangingRole, setIsChangingRole] = useState(false);
   
-  // Find current user and sort other users by role (Owner -> Moderator -> Member) and then alphabetically
   const currentUser = users.find(user => user.id === userId);
   const otherUsers = users
     .filter(user => user.id !== userId)
@@ -408,8 +388,7 @@ function UsersPanel({ users, teamId, userRole, userId }: {
       )}
       
       <div className="flex-1 overflow-y-auto space-y-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        {/* Display current user first */}
-        {currentUser && (
+          {currentUser && (
           <>
             <div className="bg-yellow-500/20 border border-yellow-500 p-3 rounded-lg">
               <div className="flex items-center justify-between">
@@ -450,12 +429,10 @@ function UsersPanel({ users, teamId, userRole, userId }: {
               </div>
             </div>
 
-            {/* Separator line */}
             <div className="border-t border-slate-700 my-2"></div>
           </>
         )}
         
-        {/* Display other users alphabetically */}
         {otherUsers.map((user) => (
           <div key={user.id} className="bg-slate-800 p-3 rounded-lg">
             <div className="flex items-center justify-between">

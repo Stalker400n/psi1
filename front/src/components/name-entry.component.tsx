@@ -12,7 +12,6 @@ import {
 } from '../utils/praise.util';
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 
-// Get random praises and generate their styles
 const praises = getRandomPraises();
 const praiseStyles = generatePraiseStyles(praises);
 
@@ -32,7 +31,6 @@ export function NameEntry({ onSubmit }: NameEntryProps) {
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [profileHistory, setProfileHistory] = useState<ProfileHistory[]>([]);
 
-  // Load profile history from localStorage on mount
   useEffect(() => {
     const stored = localStorage.getItem('profileHistory');
     if (stored) {
@@ -46,24 +44,21 @@ export function NameEntry({ onSubmit }: NameEntryProps) {
     }
   }, []);
 
-  // Save profile to history
   const addToHistory = (profileName: string) => {
     const newProfile: ProfileHistory = {
       name: profileName,
       lastUsed: new Date().toISOString()
     };
 
-    // Remove duplicates and add to front
     const updatedHistory = [
       newProfile,
       ...profileHistory.filter(p => p.name !== profileName)
-    ].slice(0, 10); // Keep only last 10 profiles
+    ].slice(0, 10);
 
     setProfileHistory(updatedHistory);
     localStorage.setItem('profileHistory', JSON.stringify(updatedHistory));
   };
 
-  // Remove profile from history
   const removeFromHistory = (profileName: string) => {
     const updatedHistory = profileHistory.filter(p => p.name !== profileName);
     setProfileHistory(updatedHistory);
@@ -77,18 +72,15 @@ export function NameEntry({ onSubmit }: NameEntryProps) {
     setIsLoading(true);
     
     try {
-      // Get device fingerprint
       const fingerprint = await fingerprintService.getFingerprint();
       const deviceInfo = fingerprintService.getDeviceInfo();
       
-      // Try to register or login
       const globalUser = await api.globalUsersApi.registerOrLogin({
         name: nameToUse.trim(),
         deviceFingerprint: fingerprint,
         deviceInfo
       });
       
-      // Success - add to history and proceed
       addToHistory(nameToUse.trim());
       onSubmit(globalUser);
       
@@ -97,7 +89,6 @@ export function NameEntry({ onSubmit }: NameEntryProps) {
         ? err.message 
         : 'Failed to connect';
       
-      // Use toast for errors instead of inline message
       showToast(errorMessage, 'error');
       console.error('Failed to login:', err);
     } finally {
@@ -107,19 +98,16 @@ export function NameEntry({ onSubmit }: NameEntryProps) {
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Praises background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {praises.map((praise, idx) => renderFloatingQuote(praise, praiseStyles[idx], idx))}
       </div>
       
-      {/* Main content */}
       <div className="text-center relative z-10 w-full max-w-sm">
         <h1 className="text-6xl font-bold text-white mb-2">
           komcon{renderPulsingStar({ className: 'text-yellow-400' })}
         </h1>
         <p className="text-slate-400 mb-8">Connect through music!</p>
         
-        {/* Name input - Always visible */}
         <div className="space-y-4 mb-4">
           <input
             type="text"
@@ -141,7 +129,6 @@ export function NameEntry({ onSubmit }: NameEntryProps) {
           </button>
         </div>
 
-        {/* Profile History Toggle */}
         {profileHistory.length > 0 && (
           <button
             onClick={() => setShowHistory(!showHistory)}
@@ -161,7 +148,6 @@ export function NameEntry({ onSubmit }: NameEntryProps) {
           </button>
         )}
 
-        {/* Profile History List */}
         {showHistory && profileHistory.length > 0 && (
           <div className="bg-slate-800/50 rounded-lg p-4 space-y-2">
             <p className="text-slate-400 text-xs mb-3">Recent profiles on this device</p>

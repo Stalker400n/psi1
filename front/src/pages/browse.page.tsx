@@ -14,7 +14,6 @@ interface BrowseTeamsPageProps {
 
 type SortType = 'most-members' | 'least-members' | 'alpha' | 'by-role' | 'newest' | 'oldest';
 
-// Define filter types for the multi-select filtering
 interface FiltersState {
   public: boolean;
   private: boolean;
@@ -29,7 +28,6 @@ export function BrowseTeamsPage({ userName, userId, onUserCreated }: BrowseTeams
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   
-  // New filters state with all options enabled by default
   const [filters, setFilters] = useState<FiltersState>({
     public: true,
     private: true,
@@ -43,8 +41,8 @@ export function BrowseTeamsPage({ userName, userId, onUserCreated }: BrowseTeams
   useEffect(() => {
     fetchTeams();
     
-    // Log user activity for analytics
     console.log(`User ${userName} (ID: ${userId}) browsing teams`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userName, userId]);
 
   const fetchTeams = async () => {
@@ -58,7 +56,6 @@ export function BrowseTeamsPage({ userName, userId, onUserCreated }: BrowseTeams
     setLoading(false);
   };
 
-  // Toggle a specific filter
   const toggleFilter = (filterName: keyof FiltersState) => {
     setFilters(prevFilters => ({
       ...prevFilters,
@@ -68,17 +65,14 @@ export function BrowseTeamsPage({ userName, userId, onUserCreated }: BrowseTeams
 
   const handleJoin = async (team: Team) => {
     try {
-      // Check if user already in team
       const existingUser = team.users?.find(u => u.name === userName);
       
       if (existingUser) {
-        // User already exists - use existing user
         onUserCreated(existingUser);
         navigate(`/teams/${team.id}`);
         return;
       }
       
-      // User doesn't exist - create new
       const user = await api.usersApi.add(team.id, { 
         name: userName, 
         score: 0, 
@@ -94,7 +88,6 @@ export function BrowseTeamsPage({ userName, userId, onUserCreated }: BrowseTeams
     }
   };
 
-  // Get user's role in a team
   const getUserRole = (team: Team): 'owner' | 'moderator' | 'member' | null => {
     const user = team.users?.find(u => u.name === userName);
     if (!user) return null;
@@ -108,45 +101,37 @@ export function BrowseTeamsPage({ userName, userId, onUserCreated }: BrowseTeams
     return team.users?.some(u => u.name === userName) || false;
   };
   
-  // Get priority number for role-based sorting
   const getRolePriority = (team: Team): number => {
     const role = getUserRole(team);
     
-    if (role === 'owner') return 1;      // Owner (highest priority)
-    if (role === 'moderator') return 2;  // Moderator
-    if (role === 'member') return 3;     // Member
-    return 4;                            // Not joined (lowest priority)
+    if (role === 'owner') return 1;
+    if (role === 'moderator') return 2;
+    if (role === 'member') return 3;
+    return 4;
   };
 
-  // Updated filter teams logic to support multiple filters
   const getFilteredTeams = (): Team[] => {
-    // If all filters are disabled, show no teams
     if (!Object.values(filters).some(value => value)) {
       return [];
     }
 
     return teams.filter(team => {
-      // Public teams filter
       if (filters.public && !team.isPrivate) {
         return true;
       }
       
-      // Private teams filter (only if user is a member)
       if (filters.private && team.isPrivate && isUserInTeam(team)) {
         return true;
       }
       
-      // Joined teams filter
       if (filters.joined && isUserInTeam(team)) {
         return true;
       }
       
-      // Owner teams filter
       if (filters.owner && getUserRole(team) === 'owner') {
         return true;
       }
       
-      // Moderator teams filter
       if (filters.moderator && getUserRole(team) === 'moderator') {
         return true;
       }
@@ -155,46 +140,36 @@ export function BrowseTeamsPage({ userName, userId, onUserCreated }: BrowseTeams
     });
   };
 
-  // Simplified sorting function with a clear approach
   const sortTeams = (teams: Team[]): Team[] => {
     const teamsToSort = [...teams];
     
-    // Determine if we need to split teams by role first
     const splitByRoleFirst = sort === 'by-role';
     
-    // If using role-based sort, first group teams by role
     if (splitByRoleFirst) {
-      // First sort by role
       return teamsToSort.sort((a, b) => {
-        // Primary sort by role
         const roleA = getRolePriority(a);
         const roleB = getRolePriority(b);
         if (roleA !== roleB) {
           return roleA - roleB;
         }
         
-        // When roles are the same, sort alphabetically
         const nameComparison = a.name.localeCompare(b.name);
         if (nameComparison !== 0) {
           return nameComparison;
         }
         
-        // If names are also the same, sort by newest first
         const dateComparison = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         if (dateComparison !== 0) {
           return dateComparison;
         }
         
-        // Final tie-breaker: most members first
         return (b.users?.length || 0) - (a.users?.length || 0);
       });
     }
     
-    // For other sort types, use simpler logic
     return teamsToSort.sort((a, b) => {
       let result = 0;
       
-      // First apply the selected sort method
       switch (sort) {
         case 'alpha':
           result = a.name.localeCompare(b.name);
@@ -213,21 +188,16 @@ export function BrowseTeamsPage({ userName, userId, onUserCreated }: BrowseTeams
           break;
       }
       
-      // If primary sort yields a difference, use it
       if (result !== 0) {
         return result;
       }
       
-      // For ties, apply secondary sorting in a consistent order
-      
-      // First by role
       const roleA = getRolePriority(a);
       const roleB = getRolePriority(b);
       if (roleA !== roleB) {
         return roleA - roleB;
       }
       
-      // Then alphabetically (if not already sorted by name)
       if (sort !== 'alpha') {
         const nameComparison = a.name.localeCompare(b.name);
         if (nameComparison !== 0) {
@@ -235,7 +205,6 @@ export function BrowseTeamsPage({ userName, userId, onUserCreated }: BrowseTeams
         }
       }
       
-      // Then by date (if not already sorted by date)
       if (sort !== 'newest' && sort !== 'oldest') {
         const dateComparison = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         if (dateComparison !== 0) {
@@ -243,7 +212,6 @@ export function BrowseTeamsPage({ userName, userId, onUserCreated }: BrowseTeams
         }
       }
       
-      // Finally by member count (if not already sorted by members)
       if (sort !== 'most-members' && sort !== 'least-members') {
         const memberComparison = (b.users?.length || 0) - (a.users?.length || 0);
         if (memberComparison !== 0) {
@@ -251,19 +219,16 @@ export function BrowseTeamsPage({ userName, userId, onUserCreated }: BrowseTeams
         }
       }
       
-      // Use team ID as final deterministic tie-breaker
       return a.id - b.id;
     });
   };
   
-  // Sort teams
   const getSortedTeams = (filtered: Team[]): Team[] => {
     return sortTeams(filtered);
   };
 
   const displayTeams = getSortedTeams(getFilteredTeams());
 
-  // Get button styling based on role
   const getTeamButtonStyle = (team: Team): string => {
     if (!isUserInTeam(team)) {
       return 'bg-yellow-500 text-black hover:bg-yellow-400';
@@ -283,7 +248,6 @@ export function BrowseTeamsPage({ userName, userId, onUserCreated }: BrowseTeams
     return 'Connect';
   };
 
-  // Custom switch component for filter toggles
   const ToggleSwitch = ({ 
     label, 
     checked, 
@@ -326,10 +290,8 @@ export function BrowseTeamsPage({ userName, userId, onUserCreated }: BrowseTeams
         Browse Teams{renderPulsingStar({ className: 'text-yellow-400' })}
       </h1>
       
-      {/* Redesigned Filter and Sort Controls */}
       <div className="max-w-6xl mx-auto mb-6">
         <div className="flex flex-col md:flex-row gap-4">
-          {/* Filter Box - Narrow */}
           <div className="bg-slate-900 p-4 rounded-lg border border-slate-800 md:w-64">
             <div className="flex items-center gap-2 mb-3">
               <Filter size={18} className="text-yellow-500" />
@@ -364,7 +326,6 @@ export function BrowseTeamsPage({ userName, userId, onUserCreated }: BrowseTeams
             </div>
           </div>
 
-          {/* Sort Box - Wide */}
           <div className="bg-slate-900 p-4 rounded-lg border border-slate-800 flex-1">
             <div className="flex items-center gap-2 mb-3">
               <ArrowUpDown size={18} className="text-yellow-500" />
@@ -396,12 +357,10 @@ export function BrowseTeamsPage({ userName, userId, onUserCreated }: BrowseTeams
         </div>
       </div>
 
-      {/* Results count */}
       <p className="text-slate-400 text-center mb-8">
         {loading ? 'Loading...' : `${displayTeams.length} ${displayTeams.length === 1 ? 'team' : 'teams'}`}
       </p>
       
-      {/* Teams grid */}
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? (
@@ -448,7 +407,6 @@ export function BrowseTeamsPage({ userName, userId, onUserCreated }: BrowseTeams
                       <span>{team.users?.length || 0} {team.users?.length === 1 ? 'member' : 'members'}</span>
                     </div>
 
-                    {/* Role badge */}
                     <div className="flex items-center gap-1 mt-2">
                       {role === 'owner' && (
                         <>

@@ -24,6 +24,7 @@ export function TeamPage({ user, onLeave }: TeamPageProps) {
     if (teamId) {
       fetchTeam();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
 
   const fetchTeam = async () => {
@@ -42,9 +43,7 @@ export function TeamPage({ user, onLeave }: TeamPageProps) {
   };
 
   const handleBack = () => {
-    // Call onLeave to clean up team state when navigating away
     onLeave();
-    // Navigate back to previous page in history
     navigate(-1);
   };
 
@@ -62,7 +61,6 @@ export function TeamPage({ user, onLeave }: TeamPageProps) {
 
   return (
     <div className="min-h-screen bg-slate-950 relative">
-      {/* Back button at top-left corner */}
       <button 
         onClick={handleBack} 
         className="absolute top-8 left-8 text-slate-400 hover:text-white flex items-center gap-2 transition"
@@ -73,7 +71,6 @@ export function TeamPage({ user, onLeave }: TeamPageProps) {
 
       <div className="bg-slate-900 border-b border-slate-800 p-4">
         <div className="max-w-7xl mx-auto flex justify-center items-center">
-          {/* Centered team information */}
           <div className="text-center">
             <h1 className="text-2xl font-bold text-white">
               {team.name}

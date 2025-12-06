@@ -65,13 +65,9 @@ namespace back.Controllers
     {
       try
       {
-        // Validate the YouTube link
         await _youtubeValidator.ValidateLink(song.Link);
-        
-        // Extract video metadata
         var videoData = await _youtubeDataService.GetVideoDataAsync(song.Link);
         
-        // Update song with real metadata
         song = song with 
         {
           Title = videoData.Title,

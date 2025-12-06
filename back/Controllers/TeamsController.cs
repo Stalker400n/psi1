@@ -68,7 +68,6 @@ namespace back.Controllers;
       var team = await _teamsRepository.GetByIdAsync(id);
       if (team == null) return NotFound(new { message = "Team not found" });
       
-      // Return all songs in order by index along with the current index
       var allSongs = team.Songs.OrderBy(s => s.Index).ToList();
       
       return Ok(new

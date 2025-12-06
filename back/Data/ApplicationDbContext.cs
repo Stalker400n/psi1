@@ -19,7 +19,6 @@ namespace back.Data
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-      // Enforce unique constraint on GlobalUser.Name
       modelBuilder.Entity<GlobalUser>()
           .HasIndex(u => u.Name)
           .IsUnique();

@@ -22,7 +22,6 @@ namespace back.Services
         {
             try
             {
-                // Use oEmbed API
                 var client = _httpClientFactory.CreateClient();
                 var oEmbedUrl = $"https://www.youtube.com/oembed?url={Uri.EscapeDataString(videoUrl)}&format=json";
                 
@@ -45,7 +44,9 @@ namespace back.Services
                     Title = data.Title ?? "Unknown Title",
                     Author = data.AuthorName ?? "Unknown Artist",
                     ThumbnailUrl = data.ThumbnailUrl ?? string.Empty,
-                    DurationSeconds = 0  // oEmbed doesn't provide duration
+                    
+                    // oEmbed doesn't provide duration -> if we want this we should think about using different API
+                    DurationSeconds = 0
                 };
             }
             catch (HttpRequestException ex)

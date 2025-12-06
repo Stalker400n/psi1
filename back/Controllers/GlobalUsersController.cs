@@ -29,15 +29,12 @@ public class GlobalUsersController : ControllerBase
     if (string.IsNullOrWhiteSpace(request.DeviceFingerprint))
       return BadRequest(new { message = "Device fingerprint is required" });
 
-    // Try to find existing user with this name
     var existingUser = await _globalUsersRepository.GetByNameAsync(request.Name);
 
     if (existingUser != null)
     {
-      // Name exists - check if fingerprint matches
       if (existingUser.DeviceFingerprint == request.DeviceFingerprint)
       {
-        // MATCH! User is authenticated from their device
         existingUser.LastSeenAt = DateTime.UtcNow;
         await _globalUsersRepository.UpdateAsync(existingUser.Id, existingUser);
 
@@ -54,7 +51,6 @@ public class GlobalUsersController : ControllerBase
       }
       else
       {
-        // NO MATCH! Name taken from different device
         _logger.LogWarning(
           "Authentication failed: Name {Name} attempted from different device",
           request.Name);
@@ -66,7 +62,6 @@ public class GlobalUsersController : ControllerBase
       }
     }
 
-    // Name doesn't exist - create new user
     var newUser = await _globalUsersRepository.CreateAsync(new GlobalUser
     {
       Name = request.Name,

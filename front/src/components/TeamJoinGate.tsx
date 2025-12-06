@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Users } from 'lucide-react';
+import { Users, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api.service';
 import type { Team, GlobalUser } from '../services/api.service';
 import { fingerprintService } from '../services/fingerprint.service';
@@ -22,6 +23,7 @@ interface TeamJoinGateProps {
 
 export function TeamJoinGate({ teamId, onLogin }: TeamJoinGateProps) {
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [team, setTeam] = useState<Team | null>(null);
   const [name, setName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
@@ -77,6 +79,15 @@ export function TeamJoinGate({ teamId, onLogin }: TeamJoinGateProps) {
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Back button */}
+      <button 
+        onClick={() => navigate('/menu')}
+        className="absolute top-8 right-8 text-slate-400 hover:text-white flex items-center gap-2 transition"
+      >
+        <ArrowLeft size={20} />
+        Back
+      </button>
+
       {/* Praises background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {praises.map((praise, idx) => renderFloatingQuote(praise, praiseStyles[idx], idx))}

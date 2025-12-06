@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import api from './services/api.service';
 import type { User, GlobalUser } from './services/api.service';
@@ -13,8 +13,69 @@ import { JoinTeam } from './components/JoinTeam';
 import { TeamView } from './views/TeamView';
 import { TeamJoinGate } from './components/TeamJoinGate';
 
-// App.tsx - Main application component
+// TeamRouteHandler component - extracts team ID from URL params
+interface TeamRouteHandlerProps {
+  globalUser: GlobalUser | null;
+  currentUser: User | null;
+  isJoiningTeam: boolean;
+  onLogin: (user: GlobalUser) => void;
+  onLeave: () => void;
+  onNavigateBack: () => void;
+}
 
+function TeamRouteHandler({ 
+  globalUser, 
+  currentUser, 
+  isJoiningTeam, 
+  onLogin,
+  onLeave,
+  onNavigateBack
+}: TeamRouteHandlerProps) {
+  const params = useParams<{ teamId: string }>();
+  const teamId = params.teamId ? parseInt(params.teamId, 10) : null;
+  
+  // Invalid team ID - redirect to menu
+  if (!teamId || isNaN(teamId)) {
+    return <Navigate to="/menu" replace />;
+  }
+  
+  // Not logged in - show join gate with direct team ID from URL
+  if (!globalUser) {
+    return <TeamJoinGate 
+      teamId={teamId} 
+      onLogin={onLogin}
+    />;
+  }
+  
+  // Logged in and in team - show team view
+  if (currentUser) {
+    return <TeamView user={currentUser} onLeave={onLeave} />;
+  }
+  
+  // Logged in and joining - show loading state
+  if (isJoiningTeam) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-slate-950 relative">
+        <button 
+          onClick={onNavigateBack}
+          className="absolute top-8 right-8 text-slate-400 hover:text-white flex items-center gap-2 transition"
+        >
+          <ArrowLeft size={20} />
+          Back
+        </button>
+        <div className="text-white text-center">
+          <div className="animate-pulse mb-3">Joining team...</div>
+          <div className="text-sm text-slate-400">Please wait</div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Fallback - redirect to menu
+  return <Navigate to="/menu" replace />;
+}
+
+// App.tsx - Main application component
 export default function App() {
   return (
     <BrowserRouter>
@@ -170,17 +231,8 @@ function AppContent() {
     }
   }, [location.pathname]);
   
-  // If no global user AND we have a pending team join, show special gate
-  if (!globalUser && pendingTeamId) {
-    return (
-      <TeamJoinGate 
-        teamId={pendingTeamId}
-        onLogin={handleUserLogin}
-      />
-    );
-  }
-
-  // If no global user, show the name entry screen
+  // If no global user, show the name entry screen 
+  // We'll handle team join gate within the Routes component
   if (!globalUser) {
     return <NameEntry onSubmit={handleUserLogin} />;
   }
@@ -264,40 +316,18 @@ function AppContent() {
         {/* Team view */}
         <Route 
           path="/teams/:teamId" 
-          element={
-            // If no global user but has a team ID, show the special gate
-            !globalUser ? (
-              <TeamJoinGate 
-                teamId={pendingTeamId!}
-                onLogin={handleUserLogin}
-              />
-            ) : currentUser ? (
-              // If we have a current user (already in the team), show TeamView
-              <TeamView user={currentUser} onLeave={() => setCurrentUser(null)} />
-            ) : isJoiningTeam ? (
-              // Currently processing team join - show loading with back button
-              <div className="h-screen w-screen flex items-center justify-center bg-slate-950 relative">
-                <button 
-                  onClick={() => {
-                    setIsJoiningTeam(false);
-                    setPendingTeamId(null);
-                    navigate('/menu');
-                  }}
-                  className="absolute top-8 right-8 text-slate-400 hover:text-white flex items-center gap-2 transition"
-                >
-                  <ArrowLeft size={20} />
-                  Back
-                </button>
-                <div className="text-white text-center">
-                  <div className="animate-pulse mb-3">Joining team...</div>
-                  <div className="text-sm text-slate-400">Please wait</div>
-                </div>
-              </div>
-            ) : (
-              // Otherwise redirect to main menu
-              <Navigate to="/menu" replace />
-            )
-          } 
+          element={<TeamRouteHandler 
+            globalUser={globalUser}
+            currentUser={currentUser}
+            isJoiningTeam={isJoiningTeam}
+            onLogin={handleUserLogin}
+            onLeave={() => setCurrentUser(null)}
+            onNavigateBack={() => {
+              setIsJoiningTeam(false);
+              setPendingTeamId(null);
+              navigate('/menu');
+            }}
+          />}
         />
         
         {/* Catch-all redirect */}

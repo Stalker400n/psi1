@@ -327,7 +327,6 @@ function UsersPanel({ users, teamId, userRole, userId }: {
   userId: number;
 }) {
   const { showToast } = useToast();
-  const [error, setError] = useState<string | null>(null);
   const [isChangingRole, setIsChangingRole] = useState(false);
   
   const currentUser = users.find(user => user.id === userId);
@@ -346,25 +345,23 @@ function UsersPanel({ users, teamId, userRole, userId }: {
       return roleComparison;
     });
   
-  const handleRoleChange = async (userId: number, newRole: 'Member' | 'Moderator' | 'Owner') => {
+  const handleRoleChange = async (targetUserId: number, newRole: 'Member' | 'Moderator' | 'Owner') => {
     if (isChangingRole) return;
     
     try {
       setIsChangingRole(true);
-      setError(null);
       
       await api.usersApi.changeRole(
         teamId,
-        userId,
+        targetUserId,
         newRole,
-        userId // Current user's ID as the requesting user
+        userId
       );
       
       showToast(`Role updated to ${newRole}`, 'success');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to change role';
       console.error('Failed to change role', err);
-      setError(errorMessage);
       showToast(`Error: ${errorMessage}`, 'error');
     } finally {
       setIsChangingRole(false);
@@ -374,18 +371,6 @@ function UsersPanel({ users, teamId, userRole, userId }: {
   return (
     <div className="h-full flex flex-col">
       <h3 className="text-white font-semibold mb-3 text-sm">Team Members ({users.length})</h3>
-      
-      {error && (
-        <div className="mb-3 p-2 bg-red-900/30 border border-red-600 rounded-lg text-red-300 text-xs">
-          {error}
-          <button
-            onClick={() => setError(null)}
-            className="ml-2 underline hover:text-red-200"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
       
       <div className="flex-1 overflow-y-auto space-y-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {currentUser && (

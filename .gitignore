@@ -519,3 +519,12 @@ dist-ssr
 
 # coverage report
 api_test/back.UnitTests/coveragereport/*
+
+# SSL Certificates
+*.pem
+*.key
+*.crt
+*.cer
+*.der
+*.priv
+front/cert/

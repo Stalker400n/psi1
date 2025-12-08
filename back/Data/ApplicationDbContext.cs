@@ -15,9 +15,14 @@ namespace back.Data
     public DbSet<Song> Songs { get; set; }
     public DbSet<ChatMessage> ChatMessages { get; set; }
     public DbSet<SongRating> SongRatings { get; set; }
+    public DbSet<GlobalUser> GlobalUsers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+      modelBuilder.Entity<GlobalUser>()
+          .HasIndex(u => u.Name)
+          .IsUnique();
+      
       base.OnModelCreating(modelBuilder);
 
       modelBuilder.Entity<Team>()

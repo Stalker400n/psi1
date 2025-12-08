@@ -15,6 +15,7 @@ namespace back.Controllers
     private readonly ITeamsRepository _teamsRepository;
     private readonly ISongQueueService _queueService;
     private readonly IYoutubeValidator _youtubeValidator;
+    private readonly IYoutubeDataService _youtubeDataService;
     private readonly ILogger<SongsController> _logger;
 
     public SongsController(
@@ -22,18 +23,21 @@ namespace back.Controllers
       ITeamsRepository teamsRepository,
       ISongQueueService queueService,
       IYoutubeValidator youtubeValidator,
+      IYoutubeDataService youtubeDataService,
       ILogger<SongsController> logger)
     {
       if (songsRepository == null) throw new ArgumentNullException(nameof(songsRepository));
       if (teamsRepository == null) throw new ArgumentNullException(nameof(teamsRepository));
       if (queueService == null) throw new ArgumentNullException(nameof(queueService));
       if (youtubeValidator == null) throw new ArgumentNullException(nameof(youtubeValidator));
+      if (youtubeDataService == null) throw new ArgumentNullException(nameof(youtubeDataService));
       if (logger == null) throw new ArgumentNullException(nameof(logger));
       
       _songsRepository = songsRepository;
       _teamsRepository = teamsRepository;
       _queueService = queueService;
       _youtubeValidator = youtubeValidator;
+      _youtubeDataService = youtubeDataService;
       _logger = logger;
     }
 
@@ -62,11 +66,25 @@ namespace back.Controllers
       try
       {
         await _youtubeValidator.ValidateLink(song.Link);
+        var videoData = await _youtubeDataService.GetVideoDataAsync(song.Link);
+        
+        song = song with 
+        {
+          Title = videoData.Title,
+          Artist = videoData.Author,
+          ThumbnailUrl = videoData.ThumbnailUrl,
+          DurationSeconds = videoData.DurationSeconds
+        };
       }
       catch (YoutubeValidationException ex)
       {
         _logger.LogWarning(ex, "YouTube validation failed for link: {Link}", song.Link);
         return BadRequest(new { message = ex.Message });
+      }
+      catch (Exception ex)
+      {
+        _logger.LogError(ex, "Failed to extract YouTube data for link: {Link}", song.Link);
+        return BadRequest(new { message = "Failed to extract video information. Please check the URL and try again." });
       }
 
       var team = await _teamsRepository.GetByIdAsync(teamId);

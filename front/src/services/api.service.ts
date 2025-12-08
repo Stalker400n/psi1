@@ -7,6 +7,18 @@ export interface User {
   role: 'Member' | 'Moderator' | 'Owner';
 }
 
+export interface GlobalUser {
+  id: number;
+  name: string;
+  isNew: boolean;
+}
+
+export interface LoginRequest {
+  name: string;
+  deviceFingerprint: string;
+  deviceInfo?: string;
+}
+
 export interface Song {
   id: number;
   link: string;
@@ -17,6 +29,8 @@ export interface Song {
   addedByUserName: string;
   addedAt: string;
   index: number;
+  thumbnailUrl?: string;
+  durationSeconds?: number;
 }
 
 export interface SongRating {
@@ -72,6 +86,20 @@ const teamsApi = {
       method: 'GET',
     });
     if (!response.ok) throw new Error('Team not found');
+    return response.json();
+  },
+
+  getQueueHistory: async (
+    teamId: number
+  ): Promise<{
+    currentIndex: number;
+    songs: Song[];
+  }> => {
+    const response = await fetch(`${API_BASE}/teams/${teamId}/queue-history`, {
+      ...fetchOptions,
+      method: 'GET',
+    });
+    if (!response.ok) throw new Error('Failed to fetch queue history');
     return response.json();
   },
 
@@ -192,7 +220,9 @@ const usersApi = {
       }
     );
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to change role' }));
+      const error = await response
+        .json()
+        .catch(() => ({ message: 'Failed to change role' }));
       throw new Error(error.message || 'Failed to change role');
     }
     return response.json();
@@ -300,9 +330,21 @@ const songsApi = {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Failed to add song:', errorText);
-      throw new Error('Failed to add song');
+      const text = await response.text();
+      let errorMessage = 'Failed to add song';
+
+      try {
+        const errorData = JSON.parse(text);
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch {
+        if (text.trim()) {
+          errorMessage = text;
+        }
+      }
+
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -344,7 +386,6 @@ const songsApi = {
 };
 
 const ratingsApi = {
-  // Get all ratings for a specific song
   getSongRatings: async (
     teamId: number,
     songId: number
@@ -360,7 +401,6 @@ const ratingsApi = {
     return response.json();
   },
 
-  // Submit or update a rating
   submitRating: async (
     teamId: number,
     songId: number,
@@ -379,7 +419,6 @@ const ratingsApi = {
     return response.json();
   },
 
-  // Get user's rating for a specific song
   getUserRating: async (
     teamId: number,
     songId: number,
@@ -459,12 +498,42 @@ const chatsApi = {
   },
 };
 
+const globalUsersApi = {
+  registerOrLogin: async (request: LoginRequest): Promise<GlobalUser> => {
+    const response = await fetch(`${API_BASE}/users/register-or-login`, {
+      ...fetchOptions,
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({
+        message: 'Failed to authenticate',
+      }));
+      throw new Error(error.message || 'Failed to authenticate');
+    }
+
+    return response.json();
+  },
+
+  getById: async (id: number): Promise<GlobalUser> => {
+    const response = await fetch(`${API_BASE}/users/${id}`, {
+      ...fetchOptions,
+      method: 'GET',
+    });
+
+    if (!response.ok) throw new Error('User not found');
+    return response.json();
+  },
+};
+
 const api = {
   teamsApi,
   usersApi,
   songsApi,
   ratingsApi,
   chatsApi,
+  globalUsersApi,
   API_BASE,
 };
 

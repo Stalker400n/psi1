@@ -3,12 +3,12 @@ import { Send } from "lucide-react";
 import api from "../services/api.service";
 import type { ChatMessage, User } from "../services/api.service";
 
-interface ChatViewProps {
+interface ChatProps {
   teamId: number;
   userName: string;
 }
 
-export function ChatView({ teamId, userName }: ChatViewProps) {
+export function ChatPanel({ teamId, userName }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
@@ -33,7 +33,6 @@ export function ChatView({ teamId, userName }: ChatViewProps) {
     try {
       const data = await api.chatsApi.getAll(teamId);
       setMessages(data);
-      // also refresh users so we can display role badges
       try {
         const u = await api.usersApi.getAll(teamId);
         setUsers(u);
@@ -58,10 +57,10 @@ export function ChatView({ teamId, userName }: ChatViewProps) {
   };
 
   return (
-    <div className="bg-slate-900 rounded-lg p-6 h-[600px] flex flex-col">
-      <h2 className="text-xl font-semibold text-white mb-4">Chat</h2>
+    <div className="h-full flex flex-col">
+      <h3 className="text-white font-semibold mb-3 text-sm">Chat</h3>
 
-      <div className="flex-1 overflow-y-auto space-y-3 mb-4">
+      <div className="flex-1 overflow-y-auto space-y-3 mb-6">
         {messages.map((msg) => {
           const sender = users.find((u) => u.name === msg.userName);
           const role = sender?.role ?? null;
@@ -95,20 +94,20 @@ export function ChatView({ teamId, userName }: ChatViewProps) {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 relative z-10 pb-2 px-1">
         <input
           type="text"
           placeholder="Type a message..."
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-          className="flex-1 px-4 py-2 bg-slate-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="flex-1 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg focus:outline-none focus:ring-1 focus:ring-yellow-500"
         />
         <button
           onClick={sendMessage}
-          className="px-6 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition font-semibold"
+          className="px-3 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition font-medium text-sm"
         >
-          <Send size={20} />
+          <Send size={16} />
         </button>
       </div>
     </div>

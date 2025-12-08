@@ -23,6 +23,10 @@ public record Song : IComparable<Song>
 
   public int Index { get; set; } = 0;
 
+  public string ThumbnailUrl { get; init; } = string.Empty;
+
+  public int DurationSeconds { get; init; } = 0;
+
   public int CompareTo(Song? other)
   {
     if (other == null) return 1;

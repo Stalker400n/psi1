@@ -38,6 +38,7 @@ builder.Services.AddScoped<IChatsRepository, ChatsRepository>();
 builder.Services.AddScoped<ISongsRepository, SongsRepository>();
 builder.Services.AddScoped<IUsersRepository, UsersRepository>();
 builder.Services.AddScoped<IRatingsRepository, RatingsRepository>();
+builder.Services.AddScoped<IGlobalUsersRepository, GlobalUsersRepository>();
 
 // Utils
 builder.Services.AddSingleton<back.Utils.IComparableUtils, back.Utils.ComparableUtils>();
@@ -47,6 +48,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<back.Services.ISongQueueService, back.Services.SongQueueService>();
 builder.Services.AddScoped<back.Services.IDataImportService, back.Services.DataImportService>();
 builder.Services.AddScoped<back.Validators.IYoutubeValidator, back.Validators.YoutubeValidator>();
+builder.Services.AddScoped<back.Services.IYoutubeDataService, back.Services.YoutubeDataService>();
 
 builder.Services.AddCors(options =>
 {

@@ -53,30 +53,31 @@ export const QUOTE_CONFIG = {
   MAX_PLACEMENT_ATTEMPTS: 50,  // Maximum attempts to find non-overlapping position (increased)
 };
 
-// Full list of praises
+// All praises - please add more
+// I think it would be fun if these reflected our life during developement - something to remember in the future
 export const ALL_PRAISES = [
   "Eigintas: einu ginti",
-  "Revolutionary music sharing platform",
-  "Connect with friends through sound",
-  "The future of collaborative listening",
-  "Where music meets community",
-  "Seamless song queue management",
-  "Real-time chat integration",
-  "Discover new music together",
-  "Built with cutting-edge technology",
-  "Intuitive user experience",
-  "Team-based music exploration",
-  "YouTube integration done right",
-  "Next-generation playlist sharing",
-  "Connect through music",
-  "Share the rhythm, share the moment",
-  "Music that brings people together",
-  "The social music experience",
-  "Queue up the good vibes",
-  "Your soundtrack, our platform",
-  "Collaboration meets melody",
-  "Modern music, modern connections",
+  "the idea of komcon. was born on a couch on a wonderful autumn evening",
+  "Iš komandos ‘kom’, iš connect ‘con’, o taškas – nes viskas tuo ir pasakyta. komcon",
+  "Nojus meta veipint (nuo naujų metų), bet niekada nemes komcon'o",
+  "Ugnius iš Biržų – bringing northern Lithuanian energy since forever",
+  "Nojus iš Alytaus – certified heatwave playlist creator",
+  "Uniting friends faster than your Wi-Fi finds ‘Kaimynas_5G’",
+  "Where melodies meet komanda spirit",
+  "Ugnius gavo 69 iš lietuvių ir fizikos VBE",
+  "Alytiškis + Vilnietis + Biržietis + Sofa = ultimate startup formula",
+  "Good music. Good friends. Good vibes. Zero veipas (nuo naujųjų)",
+  "Our playlists slap harder than Sel'as Alytuj",
+  "We bring people together. Music just helps",
+  "Kasijus: would pilot a planet, but he's too busy leading komcon",
+  "Making collaborative playlists cooler than they have any right to be",
+  "Peace, friendship, and mildly questionable song choices",
+  "Your friends choose songs, you choose violence (kidding… or?)",
+  "North meets South. Beats meet hearts. Biržai meets Alytus",
+  "Net Spotify'us komcon backend'ą svajoja pasisavinti",
+  "komcon.: the most iconic sofa-born idea since pillows",
 ];
+
 
 // Types for quote styles
 export interface QuotePosition {

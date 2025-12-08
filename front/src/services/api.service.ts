@@ -88,8 +88,10 @@ const teamsApi = {
     if (!response.ok) throw new Error('Team not found');
     return response.json();
   },
-  
-  getQueueHistory: async (teamId: number): Promise<{
+
+  getQueueHistory: async (
+    teamId: number
+  ): Promise<{
     currentIndex: number;
     songs: Song[];
   }> => {
@@ -218,7 +220,9 @@ const usersApi = {
       }
     );
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to change role' }));
+      const error = await response
+        .json()
+        .catch(() => ({ message: 'Failed to change role' }));
       throw new Error(error.message || 'Failed to change role');
     }
     return response.json();
@@ -328,7 +332,7 @@ const songsApi = {
     if (!response.ok) {
       const text = await response.text();
       let errorMessage = 'Failed to add song';
-      
+
       try {
         const errorData = JSON.parse(text);
         if (errorData.message) {
@@ -339,7 +343,7 @@ const songsApi = {
           errorMessage = text;
         }
       }
-      
+
       throw new Error(errorMessage);
     }
 
@@ -503,8 +507,8 @@ const globalUsersApi = {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ 
-        message: 'Failed to authenticate' 
+      const error = await response.json().catch(() => ({
+        message: 'Failed to authenticate',
       }));
       throw new Error(error.message || 'Failed to authenticate');
     }

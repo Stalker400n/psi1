@@ -147,7 +147,7 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
     const canControlPlayback = currentUser?.role === 'Moderator' || currentUser?.role === 'Owner';
     
     if (!canControlPlayback) {
-      showToast('Only Moderators and Owners can skip songs', 'warning');
+      showToast('Only Moderators and Owners can play previous songs', 'warning');
       return;
     }
     

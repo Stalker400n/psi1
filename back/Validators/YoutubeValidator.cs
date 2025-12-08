@@ -39,7 +39,7 @@ namespace back.Validators
                 if (videoId == null)
                 {
                     _logger.LogWarning("Invalid YouTube link format: {Link}", link);
-                    throw new YoutubeValidationException(link, "Invalid YouTube link format. Could not extract video ID.");
+                    throw new YoutubeValidationException(link, "Invalid YouTube link format.");
                 }
 
                 await ValidateVideoAccessibility(videoId, link);

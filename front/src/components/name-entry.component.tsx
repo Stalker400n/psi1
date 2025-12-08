@@ -9,7 +9,7 @@ import {
   floatingQuotesCSS,
   renderFloatingQuote,
   renderPulsingStar
-} from '../utils/praise.util';
+} from '../utils/praise.utils';
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 
 const praises = getRandomPraises();

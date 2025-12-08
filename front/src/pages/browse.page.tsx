@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, Lock, Crown, Shield, Filter, ArrowUpDown, User as UserIcon, UserPlus } from 'lucide-react';
 import api from '../services/api.service';
 import type { Team, User } from '../services/api.service';
-import { renderPulsingStar, floatingQuotesCSS } from '../utils/praise.util';
+import { renderPulsingStar, floatingQuotesCSS } from '../utils/praise.utils';
 import { useToast } from '../contexts/toast-context';
 
 interface BrowseTeamsPageProps {

@@ -14,7 +14,7 @@ interface SongWithRating extends Song {
   ratingCount?: number;
 }
 
-export function Leaderboard({ teamId, userId }: LeaderboardProps) {
+export function LeaderboardPanel({ teamId, userId }: LeaderboardProps) {
   const [songs, setSongs] = useState<SongWithRating[]>([]);
   const [view, setView] = useState<'average' | 'personal'>('average');
   const [loading, setLoading] = useState(true);

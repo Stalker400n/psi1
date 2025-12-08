@@ -8,7 +8,7 @@ interface ChatProps {
   userName: string;
 }
 
-export function Chat({ teamId, userName }: ChatProps) {
+export function ChatPanel({ teamId, userName }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");

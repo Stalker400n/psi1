@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { SkipForward, SkipBack } from 'lucide-react';
 import api from '../services/api.service';
 import type { Song, User } from '../services/api.service';
-import { extractYoutubeId } from '../utils/youtube.util';
+import { extractYoutubeId } from '../utils/youtube.utils';
 import { HeatMeter } from '../components/heat-meter.component';
 import { RightPanel } from '../components/right-panel.component';
 import { useToast } from '../contexts/toast-context';

@@ -383,6 +383,25 @@ const songsApi = {
     if (!response.ok) throw new Error('Failed to delete song');
     return true;
   },
+
+  setPlayState: async (teamId: number, isPlaying: boolean): Promise<boolean> => {
+    const response = await fetch(`${API_BASE}/teams/${teamId}/songs/play-state`, {
+      ...fetchOptions,
+      method: 'POST',
+      body: JSON.stringify(isPlaying),
+    });
+    if (!response.ok) throw new Error('Failed to set play state');
+    return response.json();
+  },
+
+  getPlayState: async (teamId: number): Promise<boolean> => {
+    const response = await fetch(`${API_BASE}/teams/${teamId}/songs/play-state?t=${Date.now()}`, {
+      ...fetchOptions,
+      method: 'GET',
+    });
+    if (!response.ok) throw new Error('Failed to get play state');
+    return response.json();
+  },
 };
 
 const ratingsApi = {

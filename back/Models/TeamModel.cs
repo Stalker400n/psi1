@@ -19,6 +19,8 @@ public class Team
 
   public int CurrentSongIndex { get; set; } = 0;
 
+  public bool IsPlaying { get; set; } = true;
+
   public List<Song> Songs { get; set; } = new List<Song>();
 
   public List<User> Users { get; set; } = new List<User>();

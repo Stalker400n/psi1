@@ -200,19 +200,20 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
           <h2 className="text-xl font-semibold text-white mb-4">Now Playing</h2>
           {currentSong ? (
             <div className="h-full flex flex-col">
-              <div className="bg-black aspect-video rounded mb-4 flex items-center justify-center flex-shrink-0">
+              <div className="bg-black aspect-video rounded mb-4 flex items-center justify-center flex-shrink-0 relative">
                 <iframe
                   ref={iframeRef}
                   width="100%"
                   height="100%"
                   src={`https://www.youtube.com/embed/${extractYoutubeId(
                     currentSong.link
-                  )}?enablejsapi=1`}
+                  )}?enablejsapi=1&controls=0&modestbranding=1`}
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                   className="rounded"
                 />
+                <div className="absolute inset-0 rounded pointer-events-auto" />
               </div>
 
               <div className="mb-4">

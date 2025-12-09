@@ -175,6 +175,18 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
   };
 
   const togglePlayPause = () => {
+    const currentUser = users.find((u) => u.id === userId);
+    const canControlPlayback =
+      currentUser?.role === "Moderator" || currentUser?.role === "Owner";
+
+    if (!canControlPlayback) {
+      showToast(
+        "Only Moderators and Owners can pause/play the video",
+        "warning"
+      );
+      return;
+    }
+
     if (iframeRef.current) {
       iframeRef.current.style.pointerEvents = "auto";
       const func = isPlaying ? "pauseVideo" : "playVideo";
@@ -239,7 +251,11 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
                 </button>
                 <button
                   onClick={togglePlayPause}
-                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition flex items-center justify-center gap-2 font-semibold"
+                  disabled={
+                    users.find((u) => u.id === userId)?.role !== "Moderator" &&
+                    users.find((u) => u.id === userId)?.role !== "Owner"
+                  }
+                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:bg-slate-500 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 font-semibold"
                 >
                   {isPlaying ? <Pause size={18} /> : <Play size={18} />}
                   {isPlaying ? "Pause" : "Play"}

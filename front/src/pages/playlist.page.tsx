@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { SkipForward, SkipBack } from 'lucide-react';
-import api from '../services/api.service';
-import type { Song, User } from '../services/api.service';
-import { extractYoutubeId } from '../utils/youtube.utils';
-import { HeatMeter } from '../components/heat-meter.component';
-import { RightPanel } from '../components/right-panel.component';
-import { useToast } from '../contexts/toast-context';
+import { useState, useEffect, useRef } from "react";
+import { SkipForward, SkipBack, Pause, Play } from "lucide-react";
+import api from "../services/api.service";
+import type { Song, User } from "../services/api.service";
+import { extractYoutubeId } from "../utils/youtube.utils";
+import { HeatMeter } from "../components/heat-meter.component";
+import { RightPanel } from "../components/right-panel.component";
+import { useToast } from "../contexts/toast-context";
 
 interface PlaylistPageProps {
   teamId: number;
@@ -15,11 +15,13 @@ interface PlaylistPageProps {
 
 export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
   const { showToast } = useToast();
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [queue, setQueue] = useState<Song[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [currentRating, setCurrentRating] = useState<number>(0);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [isPlaying, setIsPlaying] = useState<boolean>(true);
 
   useEffect(() => {
     fetchQueueAndCurrent();
@@ -41,12 +43,16 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
 
   const fetchCurrentRating = async () => {
     if (!currentSong) return;
-    
+
     try {
-      const userRating = await api.ratingsApi.getUserRating(teamId, currentSong.id, userId);
+      const userRating = await api.ratingsApi.getUserRating(
+        teamId,
+        currentSong.id,
+        userId
+      );
       setCurrentRating(userRating?.rating || 0);
     } catch (error) {
-      console.error('Error fetching current rating:', error);
+      console.error("Error fetching current rating:", error);
       setCurrentRating(0);
     }
   };
@@ -56,7 +62,7 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
       const userData = await api.usersApi.getAll(teamId);
       setUsers(userData);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error("Error fetching users:", error);
       setUsers([]);
     }
   };
@@ -66,11 +72,13 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
       const historyData = await api.teamsApi.getQueueHistory(teamId);
       setQueue(historyData.songs);
       setCurrentIndex(historyData.currentIndex);
-      
-      const current = historyData.songs.find(s => s.index === historyData.currentIndex);
+
+      const current = historyData.songs.find(
+        (s) => s.index === historyData.currentIndex
+      );
       setCurrentSong(current || null);
     } catch (error) {
-      console.error('Error fetching queue history:', error);
+      console.error("Error fetching queue history:", error);
       setQueue([]);
       setCurrentSong(null);
       setCurrentIndex(0);
@@ -84,8 +92,8 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
       await api.ratingsApi.submitRating(teamId, currentSong.id, userId, rating);
       setCurrentRating(rating);
     } catch (error) {
-      console.error('Error submitting rating:', error);
-      showToast('Failed to submit rating', 'error');
+      console.error("Error submitting rating:", error);
+      showToast("Failed to submit rating", "error");
     }
   };
 
@@ -94,21 +102,22 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
 
     try {
       await api.songsApi.add(
-        teamId, 
-        { 
+        teamId,
+        {
           link: url,
-          title: 'Song Name',
-          artist: 'Artist',
+          title: "Song Name",
+          artist: "Artist",
           rating: 0,
           addedByUserId: userId,
-          addedByUserName: userName
+          addedByUserName: userName,
         },
         addToBeginning
       );
       fetchQueueAndCurrent();
     } catch (error) {
-      console.error('Error adding song:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to add song';
+      console.error("Error adding song:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to add song";
       throw new Error(errorMessage);
     }
   };
@@ -117,55 +126,69 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
     try {
       await api.songsApi.delete(teamId, songId);
       fetchQueueAndCurrent();
-      showToast('Song removed from queue', 'success');
+      showToast("Song removed from queue", "success");
     } catch (error) {
-      console.error('Error deleting song:', error);
-      showToast('Failed to remove song', 'error');
+      console.error("Error deleting song:", error);
+      showToast("Failed to remove song", "error");
     }
   };
 
   const nextSong = async () => {
-    const currentUser = users.find(u => u.id === userId);
-    const canControlPlayback = currentUser?.role === 'Moderator' || currentUser?.role === 'Owner';
-    
+    const currentUser = users.find((u) => u.id === userId);
+    const canControlPlayback =
+      currentUser?.role === "Moderator" || currentUser?.role === "Owner";
+
     if (!canControlPlayback) {
-      showToast('Only Moderators and Owners can skip songs', 'warning');
+      showToast("Only Moderators and Owners can skip songs", "warning");
       return;
     }
-    
+
     try {
       await api.songsApi.next(teamId);
       fetchQueueAndCurrent();
     } catch (error) {
-      console.error('Error skipping to next song:', error);
-      showToast('No more songs in queue', 'info');
+      console.error("Error skipping to next song:", error);
+      showToast("No more songs in queue", "info");
     }
   };
 
   const previousSong = async () => {
-    const currentUser = users.find(u => u.id === userId);
-    const canControlPlayback = currentUser?.role === 'Moderator' || currentUser?.role === 'Owner';
-    
+    const currentUser = users.find((u) => u.id === userId);
+    const canControlPlayback =
+      currentUser?.role === "Moderator" || currentUser?.role === "Owner";
+
     if (!canControlPlayback) {
-      showToast('Only Moderators and Owners can play previous songs', 'warning');
+      showToast(
+        "Only Moderators and Owners can play previous songs",
+        "warning"
+      );
       return;
     }
-    
+
     try {
       await api.songsApi.previous(teamId);
       fetchQueueAndCurrent();
     } catch (error) {
-      console.error('Error going to previous song:', error);
-      showToast('Already at first song', 'info');
+      console.error("Error going to previous song:", error);
+      showToast("Already at first song", "info");
     }
   };
 
+  const togglePlayPause = () => {
+    if (iframeRef.current) {
+      iframeRef.current.style.pointerEvents = "auto";
+      const func = isPlaying ? "pauseVideo" : "playVideo";
+      const command = JSON.stringify({ event: "command", func });
+      iframeRef.current.contentWindow?.postMessage(command, "*");
+      setIsPlaying(!isPlaying);
+    }
+  };
 
   return (
     <div className="flex gap-4 h-[calc(100vh-200px)]">
       <div className="w-20 flex-shrink-0">
         {currentSong && (
-          <HeatMeter 
+          <HeatMeter
             currentRating={currentRating}
             onSubmit={handleRatingSubmit}
           />
@@ -179,23 +202,32 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
             <div className="h-full flex flex-col">
               <div className="bg-black aspect-video rounded mb-4 flex items-center justify-center flex-shrink-0">
                 <iframe
+                  ref={iframeRef}
                   width="100%"
                   height="100%"
-                  src={`https://www.youtube.com/embed/${extractYoutubeId(currentSong.link)}`}
+                  src={`https://www.youtube.com/embed/${extractYoutubeId(
+                    currentSong.link
+                  )}?enablejsapi=1`}
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                   className="rounded"
                 />
               </div>
-              
+
               <div className="mb-4">
-                <h3 className="text-white font-semibold text-lg">{currentSong.title}</h3>
+                <h3 className="text-white font-semibold text-lg">
+                  {currentSong.title}
+                </h3>
                 <p className="text-slate-400">{currentSong.artist}</p>
-                <p className="text-slate-500 text-sm">Added by {currentSong.addedByUserName}</p>
-                <p className="text-yellow-400 text-xs mt-1">Position: #{currentSong.index + 1}</p>
+                <p className="text-slate-500 text-sm">
+                  Added by {currentSong.addedByUserName}
+                </p>
+                <p className="text-yellow-400 text-xs mt-1">
+                  Position: #{currentSong.index + 1}
+                </p>
               </div>
-              
+
               <div className="flex gap-2 mt-auto">
                 <button
                   onClick={previousSong}
@@ -203,6 +235,13 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
                 >
                   <SkipBack size={18} />
                   Previous
+                </button>
+                <button
+                  onClick={togglePlayPause}
+                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition flex items-center justify-center gap-2 font-semibold"
+                >
+                  {isPlaying ? <Pause size={18} /> : <Play size={18} />}
+                  {isPlaying ? "Pause" : "Play"}
                 </button>
                 <button
                   onClick={nextSong}
@@ -229,7 +268,7 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
           queue={queue}
           currentIndex={currentIndex}
           users={users}
-          userRole={users.find(u => u.id === userId)?.role || 'Member'}
+          userRole={users.find((u) => u.id === userId)?.role || "Member"}
           onDeleteSong={deleteSong}
           onAddSong={addSong}
         />

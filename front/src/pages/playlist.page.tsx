@@ -26,10 +26,12 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
   useEffect(() => {
     fetchQueueAndCurrent();
     fetchUsers();
+    fetchPlayState();
     const interval = setInterval(() => {
       fetchQueueAndCurrent();
       fetchUsers();
-    }, 3000);
+      fetchPlayState();
+    }, 1000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
@@ -82,6 +84,20 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
       setQueue([]);
       setCurrentSong(null);
       setCurrentIndex(0);
+    }
+  };
+
+  const fetchPlayState = async () => {
+    try {
+      const state = await api.songsApi.getPlayState(teamId);
+      setIsPlaying(state);
+      if (iframeRef.current) {
+        const func = state ? "playVideo" : "pauseVideo";
+        const command = JSON.stringify({ event: "command", func });
+        iframeRef.current.contentWindow?.postMessage(command, "*");
+      }
+    } catch (error) {
+      console.error("Error fetching play state:", error);
     }
   };
 
@@ -187,13 +203,20 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
       return;
     }
 
+    const newIsPlaying = !isPlaying;
+
     if (iframeRef.current) {
       iframeRef.current.style.pointerEvents = "auto";
-      const func = isPlaying ? "pauseVideo" : "playVideo";
+      const func = newIsPlaying ? "playVideo" : "pauseVideo";
       const command = JSON.stringify({ event: "command", func });
       iframeRef.current.contentWindow?.postMessage(command, "*");
-      setIsPlaying(!isPlaying);
     }
+
+    // Save play state to backend
+    api.songsApi.setPlayState(teamId, newIsPlaying).catch((error) => {
+      console.error("Error setting play state:", error);
+      showToast("Failed to sync play state", "error");
+    });
   };
 
   return (

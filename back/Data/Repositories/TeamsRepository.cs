@@ -58,6 +58,8 @@ public class TeamsRepository : ITeamsRepository
 
 		current.Name = team.Name;
 		current.IsPrivate = team.IsPrivate;
+		current.IsPlaying = team.IsPlaying;
+		current.CurrentSongIndex = team.CurrentSongIndex;
 
 		_context.Entry(current).State = EntityState.Modified;
 		await _context.SaveChangesAsync();

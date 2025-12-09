@@ -32,7 +32,7 @@ namespace back.Controllers
       if (youtubeValidator == null) throw new ArgumentNullException(nameof(youtubeValidator));
       if (youtubeDataService == null) throw new ArgumentNullException(nameof(youtubeDataService));
       if (logger == null) throw new ArgumentNullException(nameof(logger));
-      
+
       _songsRepository = songsRepository;
       _teamsRepository = teamsRepository;
       _queueService = queueService;
@@ -67,8 +67,8 @@ namespace back.Controllers
       {
         await _youtubeValidator.ValidateLink(song.Link);
         var videoData = await _youtubeDataService.GetVideoDataAsync(song.Link);
-        
-        song = song with 
+
+        song = song with
         {
           Title = videoData.Title,
           Artist = videoData.Author,
@@ -211,6 +211,27 @@ namespace back.Controllers
         return NotFound(new { message = "Song at specified index not found" });
 
       return Ok(targetSong);
+    }
+
+    [HttpPost("play-state")]
+    public async Task<ActionResult<bool>> SetPlayState(int teamId, [FromBody] bool isPlaying)
+    {
+      var team = await _teamsRepository.GetByIdAsync(teamId);
+      if (team == null) return NotFound(new { message = "Team not found" });
+
+      team.IsPlaying = isPlaying;
+      await _teamsRepository.UpdateAsync(teamId, team);
+
+      return Ok(isPlaying);
+    }
+
+    [HttpGet("play-state")]
+    public async Task<ActionResult<bool>> GetPlayState(int teamId)
+    {
+      var team = await _teamsRepository.GetByIdAsync(teamId);
+      if (team == null) return NotFound(new { message = "Team not found" });
+
+      return Ok(team.IsPlaying);
     }
   }
 }

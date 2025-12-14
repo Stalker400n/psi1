@@ -21,6 +21,8 @@ public class Team
 
   public bool IsPlaying { get; set; } = true;
 
+  public double PlaybackPosition { get; set; } = 0;
+
   public List<Song> Songs { get; set; } = new List<Song>();
 
   public List<User> Users { get; set; } = new List<User>();

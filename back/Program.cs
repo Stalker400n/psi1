@@ -80,12 +80,13 @@ using (var scope = app.Services.CreateScope())
   try
   {
     var context = services.GetRequiredService<ApplicationDbContext>();
-    context.Database.EnsureCreated();
-    Console.WriteLine("Database created successfully.");
+    // Apply any pending migrations automatically
+    context.Database.Migrate();
+    Console.WriteLine("Migrations applied successfully.");
   }
   catch (Exception ex)
   {
-    Console.WriteLine($"An error occurred while creating the database: {ex.Message}");
+    Console.WriteLine($"An error occurred while applying migrations: {ex.Message}");
   }
 
   var importer = scope.ServiceProvider.GetRequiredService<IDataImportService>();

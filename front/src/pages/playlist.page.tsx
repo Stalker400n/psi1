@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { SkipForward, SkipBack, Pause, Play } from "lucide-react";
 import api from "../services/api.service";
 import type { Song, User } from "../services/api.service";
@@ -14,6 +14,12 @@ interface PlaylistPageProps {
   userName: string;
 }
 
+interface PlaybackState {
+  isPlaying: boolean;
+  elapsedSeconds: number;
+  startedAtUtc?: string;
+}
+
 export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
   const { showToast } = useToast();
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -24,7 +30,32 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [playerReady, setPlayerReady] = useState<boolean>(false);
+  const [lastState, setLastState] = useState<PlaybackState | null>(null);
+  const [currentTime, setCurrentTime] = useState<number>(0);
   const hubConnection = useRef<signalR.HubConnection | null>(null);
+
+  // Post messages to YouTube iframe
+  const post = useCallback((func: string, args: any[] = []) => {
+    iframeRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: "command", func, args }),
+      "*"
+    );
+  }, []);
+
+  // Get current time from player
+  const getCurrentTime = useCallback(() => {
+    return currentTime;
+  }, [currentTime]);
+
+  // Compute expected playback position
+  const computeExpected = useCallback((state: PlaybackState) => {
+    return (
+      state.elapsedSeconds +
+      (state.startedAtUtc
+        ? (Date.now() - new Date(state.startedAtUtc).getTime()) / 1000
+        : 0)
+    );
+  }, []);
 
   useEffect(() => {
     fetchQueueAndCurrent();
@@ -36,10 +67,34 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
       .withAutomaticReconnect()
       .build();
 
-    hubConnection.current.start().then(() => {
-      console.log("SignalR connected");
-      hubConnection.current?.invoke("JoinTeam", teamId.toString());
-    }).catch(err => console.error("SignalR connection error: ", err));
+    hubConnection.current
+      .start()
+      .then(() => {
+        console.log("SignalR connected");
+        hubConnection.current?.invoke("JoinTeam", teamId.toString());
+      })
+      .catch((err) => console.error("SignalR connection error: ", err));
+
+    hubConnection.current.on("PlaybackState", (state: PlaybackState) => {
+      const player = iframeRef.current;
+      if (!player || !playerReady) return;
+
+      setLastState(state);
+      setIsPlaying(state.isPlaying);
+
+      const expected = computeExpected(state);
+
+      if (state.isPlaying) {
+        post("playVideo");
+
+        const actual = getCurrentTime();
+        if (Math.abs(actual - expected) > 2) {
+          post("seekTo", [expected]);
+        }
+      } else {
+        post("pauseVideo");
+      }
+    });
 
     const handleMessage = (event: MessageEvent) => {
       if (event.origin !== "https://www.youtube.com") return;
@@ -50,11 +105,10 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
           console.log("YouTube player ready");
           setPlayerReady(true);
         } else if (data.info && data.info.currentTime !== undefined) {
-          // Received current time
-          const currentTime = data.info.currentTime;
-          console.log("Parsed currentTime:", currentTime);
-          // Send position updates from ALL users to ensure sync every 2 seconds
-          console.log("Sending position:", currentTime);
+          // Update current time from YouTube player
+          const time = data.info.currentTime;
+          console.log("Parsed currentTime:", time);
+          setCurrentTime(time);
         }
       } catch (e) {
         // Ignore non-JSON messages
@@ -65,12 +119,42 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
 
     return () => {
       window.removeEventListener("message", handleMessage);
-      hubConnection.current?.invoke("LeaveTeam", teamId.toString()).then(() => {
-        hubConnection.current?.stop();
-      });
+      hubConnection.current
+        ?.invoke("LeaveTeam", teamId.toString())
+        .then(() => {
+          hubConnection.current?.stop();
+        });
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamId]);
+  }, [teamId, playerReady, post, getCurrentTime, computeExpected]);
+
+  // Periodic sync check
+  useEffect(() => {
+    if (!playerReady || !lastState) return;
+
+    const interval = setInterval(() => {
+      if (!lastState?.isPlaying) return;
+
+      const expected = computeExpected(lastState);
+      const actual = getCurrentTime();
+
+      if (Math.abs(actual - expected) > 2) {
+        post("seekTo", [expected]);
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [playerReady, lastState, post, getCurrentTime, computeExpected]);
+
+  // Request current time periodically
+  useEffect(() => {
+    if (!playerReady) return;
+
+    const interval = setInterval(() => {
+      post("getCurrentTime");
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [playerReady, post]);
 
   useEffect(() => {
     if (currentSong) {
@@ -122,7 +206,6 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
       setCurrentIndex(0);
     }
   };
-
 
   const handleRatingSubmit = async (rating: number) => {
     if (!currentSong) return;
@@ -225,6 +308,11 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
       );
       return;
     }
+
+    hubConnection.current?.invoke(
+      isPlaying ? "Pause" : "Play",
+      teamId.toString()
+    );
   };
 
   return (
@@ -250,13 +338,15 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
                   height="100%"
                   src={`https://www.youtube.com/embed/${extractYoutubeId(
                     currentSong.link
-                  )}?enablejsapi=1&controls=0&modestbranding=1&origin=${window.location.origin}`}
+                  )}?enablejsapi=1&controls=0&modestbranding=1&origin=${
+                    window.location.origin
+                  }`}
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                   className="rounded"
                 />
-                <div className="absolute inset-0 rounded pointer-events-auto" />
+                <div className="absolute inset-0 rounded pointer-events-none" />
               </div>
 
               <div className="mb-4">

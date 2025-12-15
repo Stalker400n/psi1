@@ -232,25 +232,30 @@ namespace back.Controllers
       var team = await _teamsRepository.GetByIdAsync(teamId);
       if (team == null) return NotFound(new { message = "Team not found" });
 
-      team.IsPlaying = request.IsPlaying;
-      team.PlaybackPosition = request.Position;
+      if (request.IsPlaying && !team.IsPlaying)
+      {
+        team.IsPlaying = true;
+        team.StartedAtUtc = DateTime.UtcNow;
+      }
+      else if (!request.IsPlaying && team.IsPlaying)
+      {
+        team.IsPlaying = false;
+        team.StartedAtUtc = null;
+      }
+
       await _teamsRepository.UpdateAsync(teamId, team);
 
-      await _hubContext.Clients.Group(teamId.ToString()).SendAsync("ReceivePlayState", request.IsPlaying, request.Position);
+      await _hubContext.Clients
+            .Group(teamId.ToString())
+            .SendAsync("ReceivePlayState", new
+            {
+              isPlaying = team.IsPlaying,
+              startedAtUtc = team.StartedAtUtc
+            });
 
-      return Ok(request.IsPlaying);
-    }
-    public async Task<ActionResult<double>> SetPlaybackPosition(int teamId, [FromBody] double position)
-    {
-      var team = await _teamsRepository.GetByIdAsync(teamId);
-      if (team == null) return NotFound(new { message = "Team not found" });
+      
+      return Ok();
 
-      team.PlaybackPosition = position;
-      await _teamsRepository.UpdateAsync(teamId, team);
-
-      await _hubContext.Clients.Group(teamId.ToString()).SendAsync("ReceiveSeek", position);
-
-      return Ok(position);
     }
     [HttpGet("play-state")]
     public async Task<ActionResult<object>> GetPlayState(int teamId)
@@ -261,7 +266,8 @@ namespace back.Controllers
       return Ok(new
       {
         isPlaying = team.IsPlaying,
-        playbackPosition = team.PlaybackPosition
+        startedAtUtc = team.StartedAtUtc,
+        ElapsedSeconds = team.ElapsedSeconds
       });
     }
   }

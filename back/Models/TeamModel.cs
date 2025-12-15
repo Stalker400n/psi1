@@ -21,7 +21,9 @@ public class Team
 
   public bool IsPlaying { get; set; } = true;
 
-  public double PlaybackPosition { get; set; } = 0;
+  public double ElapsedSeconds {get; set; } = 0;
+
+  public DateTime? StartedAtUtc { get; set; }
 
   public List<Song> Songs { get; set; } = new List<Song>();
 

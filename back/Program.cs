@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using back.Data;
 using back.Services;
 using back.Data.Repositories;
+using back.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,8 @@ builder.Services.AddControllers()
       options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
       options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+
+builder.Services.AddSignalR();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -55,9 +58,10 @@ builder.Services.AddCors(options =>
 {
   options.AddPolicy("AllowAll", builder =>
   {
-    builder.AllowAnyOrigin()
-             .AllowAnyMethod()
-             .AllowAnyHeader();
+    builder.WithOrigins("http://localhost:5173", "https://localhost:5173")
+           .AllowAnyMethod()
+           .AllowAnyHeader()
+           .AllowCredentials();
   });
 });
 
@@ -73,6 +77,7 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<TeamHub>("/teamHub");
 
 using (var scope = app.Services.CreateScope())
 {

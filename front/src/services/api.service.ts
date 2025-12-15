@@ -67,7 +67,7 @@ const API_BASE = 'https://localhost:7130';
 const fetchOptions = {
   headers: { 'Content-Type': 'application/json' },
   mode: 'cors' as RequestMode,
-  credentials: 'omit' as RequestCredentials,
+  credentials: 'include' as RequestCredentials,
 };
 
 const teamsApi = {
@@ -384,22 +384,32 @@ const songsApi = {
     return true;
   },
 
-  setPlayState: async (teamId: number, isPlaying: boolean): Promise<boolean> => {
+  setPlayState: async (teamId: number, isPlaying: boolean, position: number): Promise<boolean> => {
     const response = await fetch(`${API_BASE}/teams/${teamId}/songs/play-state`, {
       ...fetchOptions,
       method: 'POST',
-      body: JSON.stringify(isPlaying),
+      body: JSON.stringify({ isPlaying, position }),
     });
     if (!response.ok) throw new Error('Failed to set play state');
     return response.json();
   },
 
-  getPlayState: async (teamId: number): Promise<boolean> => {
+  getPlayState: async (teamId: number): Promise<{ isPlaying: boolean; playbackPosition: number }> => {
     const response = await fetch(`${API_BASE}/teams/${teamId}/songs/play-state?t=${Date.now()}`, {
       ...fetchOptions,
       method: 'GET',
     });
     if (!response.ok) throw new Error('Failed to get play state');
+    return response.json();
+  },
+
+  setPlaybackPosition: async (teamId: number, position: number): Promise<number> => {
+    const response = await fetch(`${API_BASE}/teams/${teamId}/songs/playback-position`, {
+      ...fetchOptions,
+      method: 'POST',
+      body: JSON.stringify(position),
+    });
+    if (!response.ok) throw new Error('Failed to set playback position');
     return response.json();
   },
 };

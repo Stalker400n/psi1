@@ -6,6 +6,7 @@ import { extractYoutubeId } from "../utils/youtube.utils";
 import { HeatMeter } from "../components/heat-meter.component";
 import { RightPanel } from "../components/right-panel.component";
 import { useToast } from "../contexts/toast-context";
+import * as signalR from "@microsoft/signalr";
 
 interface PlaylistPageProps {
   teamId: number;
@@ -22,17 +23,89 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
   const [currentRating, setCurrentRating] = useState<number>(0);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
+  const [playbackPosition, setPlaybackPosition] = useState<number>(0);
+  const [targetPlaybackPosition, setTargetPlaybackPosition] = useState<number>(0);
+  const [playerReady, setPlayerReady] = useState<boolean>(false);
+  const hubConnection = useRef<signalR.HubConnection | null>(null);
 
   useEffect(() => {
     fetchQueueAndCurrent();
     fetchUsers();
-    fetchPlayState();
+
+    // Setup SignalR
+    hubConnection.current = new signalR.HubConnectionBuilder()
+      .withUrl("https://localhost:7130/teamHub", { withCredentials: true })
+      .withAutomaticReconnect()
+      .build();
+
+    hubConnection.current.start().then(() => {
+      console.log("SignalR connected");
+      hubConnection.current?.invoke("JoinTeam", teamId.toString());
+    }).catch(err => console.error("SignalR connection error: ", err));
+
+    hubConnection.current.on("ReceivePlayState", (isPlaying: boolean, position: number) => {
+      console.log("Received play state:", isPlaying, position);
+      setIsPlaying(isPlaying);
+      setPlaybackPosition(position);
+      setTargetPlaybackPosition(position);
+      if (iframeRef.current) {
+        iframeRef.current.style.pointerEvents = "auto";
+        const func = isPlaying ? "playVideo" : "pauseVideo";
+        const command = JSON.stringify({ event: "command", func });
+        iframeRef.current.contentWindow?.postMessage(command, "*");
+        // Removed seek on play/pause to prevent seeking to 0
+      }
+    });
+
+    hubConnection.current.on("ReceiveSeek", (position: number) => {
+      console.log("Received seek:", position, "current:", playbackPosition);
+      setTargetPlaybackPosition(position);
+      // Always seek to sync
+      console.log("Seeking to:", position);
+      setPlaybackPosition(position);
+      if (iframeRef.current) {
+        const seekCommand = JSON.stringify({ event: "command", func: "seekTo", args: [position] });
+        iframeRef.current.contentWindow?.postMessage(seekCommand, "*");
+      }
+    });
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== "https://www.youtube.com") return;
+      console.log("Received message from YouTube:", event.data);
+      try {
+        const data = JSON.parse(event.data);
+        if (data.event === "onReady") {
+          console.log("YouTube player ready");
+          setPlayerReady(true);
+        } else if (data.info && data.info.currentTime !== undefined) {
+          // Received current time
+          const currentTime = data.info.currentTime;
+          console.log("Parsed currentTime:", currentTime);
+          setPlaybackPosition(currentTime);
+          // Send position updates from ALL users to ensure sync every 2 seconds
+          console.log("Sending position:", currentTime);
+          api.songsApi.setPlaybackPosition(teamId, currentTime);
+        }
+      } catch (e) {
+        // Ignore non-JSON messages
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
     const interval = setInterval(() => {
       fetchQueueAndCurrent();
       fetchUsers();
       fetchPlayState();
     }, 1000);
-    return () => clearInterval(interval);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("message", handleMessage);
+      hubConnection.current?.invoke("LeaveTeam", teamId.toString()).then(() => {
+        hubConnection.current?.stop();
+      });
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
 
@@ -90,16 +163,43 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
   const fetchPlayState = async () => {
     try {
       const state = await api.songsApi.getPlayState(teamId);
-      setIsPlaying(state);
-      if (iframeRef.current) {
-        const func = state ? "playVideo" : "pauseVideo";
+      setIsPlaying(state.isPlaying);
+      setPlaybackPosition(state.playbackPosition);
+      setTargetPlaybackPosition(state.playbackPosition);
+      if (iframeRef.current && playerReady) {
+        const func = state.isPlaying ? "playVideo" : "pauseVideo";
         const command = JSON.stringify({ event: "command", func });
         iframeRef.current.contentWindow?.postMessage(command, "*");
+        // Seek to saved position if > 0
+        if (state.playbackPosition > 0) {
+          const seekCommand = JSON.stringify({ event: "command", func: "seekTo", args: [state.playbackPosition] });
+          iframeRef.current.contentWindow?.postMessage(seekCommand, "*");
+        }
       }
     } catch (error) {
       console.error("Error fetching play state:", error);
     }
   };
+
+  const updatePlaybackPosition = async () => {
+    if (iframeRef.current) {
+      try {
+        // Get current time from YouTube player (always, even when paused)
+        console.log("Requesting current time from YouTube");
+        const getTimeCommand = JSON.stringify({ event: "command", func: "getCurrentTime" });
+        iframeRef.current.contentWindow?.postMessage(getTimeCommand, "*");
+      } catch (error) {
+        console.error("Error updating playback position:", error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (playerReady) {
+      const interval = setInterval(updatePlaybackPosition, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [playerReady]);
 
   const handleRatingSubmit = async (rating: number) => {
     if (!currentSong) return;
@@ -205,15 +305,17 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
 
     const newIsPlaying = !isPlaying;
 
-    if (iframeRef.current) {
-      iframeRef.current.style.pointerEvents = "auto";
-      const func = newIsPlaying ? "playVideo" : "pauseVideo";
-      const command = JSON.stringify({ event: "command", func });
-      iframeRef.current.contentWindow?.postMessage(command, "*");
-    }
+    // Don't send to iframe here - wait for SignalR sync
+    // if (iframeRef.current) {
+    //   iframeRef.current.style.pointerEvents = "auto";
+    //   const func = newIsPlaying ? "playVideo" : "pauseVideo";
+    //   const command = JSON.stringify({ event: "command", func });
+    //   iframeRef.current.contentWindow?.postMessage(command, "*");
+    // }
 
     // Save play state to backend
-    api.songsApi.setPlayState(teamId, newIsPlaying).catch((error) => {
+    console.log("Sending play state:", newIsPlaying, "position:", playbackPosition);
+    api.songsApi.setPlayState(teamId, newIsPlaying, playbackPosition).catch((error) => {
       console.error("Error setting play state:", error);
       showToast("Failed to sync play state", "error");
     });
@@ -242,7 +344,7 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
                   height="100%"
                   src={`https://www.youtube.com/embed/${extractYoutubeId(
                     currentSong.link
-                  )}?enablejsapi=1&controls=0&modestbranding=1`}
+                  )}?enablejsapi=1&controls=0&modestbranding=1&origin=${window.location.origin}`}
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen

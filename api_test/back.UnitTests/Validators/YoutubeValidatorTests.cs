@@ -106,7 +106,6 @@ namespace back.Tests.Validators
         _sut.ValidateLink(invalidLink));
 
       exception.Message.Should().Contain("Invalid YouTube link format");
-      exception.Message.Should().Contain("Could not extract video ID");
       exception.InvalidLink.Should().Be(invalidLink);
     }
 

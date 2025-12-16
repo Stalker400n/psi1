@@ -4,6 +4,8 @@ using back.Services;
 using back.Models;
 using back.Data.Repositories;
 using back.Utils;
+using back.Cache;
+using System.Collections.Concurrent;
 
 namespace back.Tests.Services
 {
@@ -12,6 +14,7 @@ namespace back.Tests.Services
     private readonly Mock<ITeamsRepository> _teamsRepositoryMock;
     private readonly Mock<ISongsRepository> _songsRepositoryMock;
     private readonly Mock<IComparableUtils> _comparableUtilsMock;
+    private readonly Mock<ISongQueuesCache> _queuesCacheMock;
     private readonly SongQueueService _sut;
 
     public SongQueueServiceTests()
@@ -19,10 +22,16 @@ namespace back.Tests.Services
       _teamsRepositoryMock = new Mock<ITeamsRepository>();
       _songsRepositoryMock = new Mock<ISongsRepository>();
       _comparableUtilsMock = new Mock<IComparableUtils>();
+      _queuesCacheMock = new Mock<ISongQueuesCache>();
+
+      var queuesDictionary = new ConcurrentDictionary<int, SongQueue>();
+      _queuesCacheMock.SetupGet(x => x.Queues).Returns(queuesDictionary);
+
       _sut = new SongQueueService(
-        _teamsRepositoryMock.Object,
-        _songsRepositoryMock.Object,
-        _comparableUtilsMock.Object
+          _teamsRepositoryMock.Object,
+          _songsRepositoryMock.Object,
+          _comparableUtilsMock.Object,
+          _queuesCacheMock.Object
       );
     }
 
@@ -32,24 +41,32 @@ namespace back.Tests.Services
     public void Constructor_WhenTeamsRepositoryIsNull_ShouldThrowArgumentNullException()
     {
       // Act & Assert
-      Assert.Throws<ArgumentNullException>(() => 
-        new SongQueueService(null!, _songsRepositoryMock.Object, _comparableUtilsMock.Object));
+      Assert.Throws<ArgumentNullException>(() =>
+        new SongQueueService(null!, _songsRepositoryMock.Object, _comparableUtilsMock.Object, _queuesCacheMock.Object));
     }
 
     [Fact]
     public void Constructor_WhenSongsRepositoryIsNull_ShouldThrowArgumentNullException()
     {
       // Act & Assert
-      Assert.Throws<ArgumentNullException>(() => 
-        new SongQueueService(_teamsRepositoryMock.Object, null!, _comparableUtilsMock.Object));
+      Assert.Throws<ArgumentNullException>(() =>
+        new SongQueueService(_teamsRepositoryMock.Object, null!, _comparableUtilsMock.Object, _queuesCacheMock.Object));
     }
 
     [Fact]
     public void Constructor_WhenComparableUtilsIsNull_ShouldThrowArgumentNullException()
     {
       // Act & Assert
-      Assert.Throws<ArgumentNullException>(() => 
-        new SongQueueService(_teamsRepositoryMock.Object, _songsRepositoryMock.Object, null!));
+      Assert.Throws<ArgumentNullException>(() =>
+        new SongQueueService(_teamsRepositoryMock.Object, _songsRepositoryMock.Object, null!, _queuesCacheMock.Object));
+    }
+
+    [Fact]
+    public void Constructor_WhenQueuesCacheIsNull_ShouldThrowArgumentNullException()
+    {
+      // Act & Assert
+      Assert.Throws<ArgumentNullException>(() =>
+        new SongQueueService(_teamsRepositoryMock.Object, _songsRepositoryMock.Object, _comparableUtilsMock.Object, null!));
     }
 
     #endregion

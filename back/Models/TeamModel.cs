@@ -19,7 +19,7 @@ public class Team
 
   public int CurrentSongIndex { get; set; } = 0;
 
-  public bool IsPlaying { get; set; } = true;
+  public bool IsPlaying { get; set; } = false;
 
   public double ElapsedSeconds {get; set; } = 0;
 

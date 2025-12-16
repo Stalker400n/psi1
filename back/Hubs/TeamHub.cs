@@ -50,9 +50,8 @@ public class TeamHub : Hub
     var team = await _teamsRepository.GetByIdAsync(int.Parse(teamId));
     Console.WriteLine($"Team current state - IsPlaying: {team.IsPlaying}");
     
-    // TEMPORARILY REMOVE THIS CHECK
-    // if(team.IsPlaying)
-    //     return; 
+    if(team.IsPlaying)
+        return; 
     
     team.IsPlaying = true;
     team.StartedAtUtc = DateTime.UtcNow;
@@ -85,9 +84,8 @@ public async Task Pause(string teamId)
     var team = await _teamsRepository.GetByIdAsync(int.Parse(teamId));
     Console.WriteLine($"Team current state - IsPlaying: {team.IsPlaying}, StartedAt: {team.StartedAtUtc}");
     
-    // TEMPORARILY REMOVE THIS CHECK
-    // if(!team.IsPlaying || team.StartedAtUtc == null)
-    //     return;
+    if(!team.IsPlaying || team.StartedAtUtc == null)
+        return;
     
     if (team.StartedAtUtc != null)
     {

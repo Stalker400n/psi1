@@ -15,9 +15,10 @@ interface PlaylistPageProps {
 }
 
 interface PlaybackState {
-  isPlaying: boolean;
-  elapsedSeconds: number;
-  startedAtUtc?: string;
+  CurrentSongIndex: number;     
+  IsPlaying: boolean;           
+  StartedAtUtc?: string;        
+  ElapsedSeconds: number;       
 }
 
 export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
@@ -33,6 +34,17 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
   const [lastState, setLastState] = useState<PlaybackState | null>(null);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const hubConnection = useRef<signalR.HubConnection | null>(null);
+  const currentTimeRef = useRef<number>(0);
+  const playerReadyRef = useRef<boolean>(false);
+
+  // Update refs when state changes
+  useEffect(() => {
+    currentTimeRef.current = currentTime;
+  }, [currentTime]);
+
+  useEffect(() => {
+    playerReadyRef.current = playerReady;
+  }, [playerReady]);
 
   // Post messages to YouTube iframe
   const post = useCallback((func: string, args: any[] = []) => {
@@ -44,15 +56,15 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
 
   // Get current time from player
   const getCurrentTime = useCallback(() => {
-    return currentTime;
-  }, [currentTime]);
+    return currentTimeRef.current;
+  }, []);
 
   // Compute expected playback position
   const computeExpected = useCallback((state: PlaybackState) => {
     return (
-      state.elapsedSeconds +
-      (state.startedAtUtc
-        ? (Date.now() - new Date(state.startedAtUtc).getTime()) / 1000
+      state.ElapsedSeconds +
+      (state.StartedAtUtc
+        ? (Date.now() - new Date(state.StartedAtUtc).getTime()) / 1000
         : 0)
     );
   }, []);
@@ -65,53 +77,90 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
     hubConnection.current = new signalR.HubConnectionBuilder()
       .withUrl("https://localhost:7130/teamHub", { withCredentials: true })
       .withAutomaticReconnect()
+      .configureLogging(signalR.LogLevel.Debug)
       .build();
 
     hubConnection.current
       .start()
       .then(() => {
-        console.log("SignalR connected");
-        hubConnection.current?.invoke("JoinTeam", teamId.toString());
+        console.log("✅ SignalR connected. Connection ID:", hubConnection.current?.connectionId);
+        console.log("Connection State:", hubConnection.current?.state);
+        return hubConnection.current?.invoke("JoinTeam", teamId.toString());
       })
-      .catch((err) => console.error("SignalR connection error: ", err));
+      .then(() => {
+        console.log("✅ JoinTeam invoked successfully");
+      })
+      .catch((err) => console.error("❌ SignalR connection error: ", err));
 
-    hubConnection.current.on("PlaybackState", (state: PlaybackState) => {
+    hubConnection.current.on("PlaybackState", (state: any) => {
+      const timestamp = new Date().toISOString();
+      console.log(`[${timestamp}] 🎯 Received PlaybackState (RAW):`, JSON.stringify(state, null, 2));
+      console.log("State keys:", Object.keys(state));
+      console.log("State values:", Object.values(state));
+      
+      // Handle both camelCase (from SignalR conversion) and PascalCase
+      const normalizedState: PlaybackState = {
+        CurrentSongIndex: state.currentSongIndex ?? state.CurrentSongIndex ?? 0,
+        IsPlaying: state.isPlaying ?? state.IsPlaying ?? false,
+        StartedAtUtc: state.startedAtUtc ?? state.StartedAtUtc,
+        ElapsedSeconds: state.elapsedSeconds ?? state.ElapsedSeconds ?? 0
+      };
+      
+      console.log("✅ Normalized state:", JSON.stringify(normalizedState, null, 2));
+      console.log("IsPlaying value:", normalizedState.IsPlaying, "type:", typeof normalizedState.IsPlaying);
+      
+      setLastState(normalizedState);
+      setIsPlaying(normalizedState.IsPlaying);
+      console.log("State set in React - isPlaying now:", normalizedState.IsPlaying);
+      
       const player = iframeRef.current;
-      if (!player || !playerReady) return;
 
-      setLastState(state);
-      setIsPlaying(state.isPlaying);
+      if (!player || !playerReadyRef.current) {
+        console.log("⏸️ Player not ready yet, skipping playback control");
+        return;
+      }
 
-      const expected = computeExpected(state);
+      const expected = computeExpected(normalizedState);
 
-      if (state.isPlaying) {
+      if (normalizedState.IsPlaying) {
+        console.log("▶️ Sending playVideo command to YouTube");
         post("playVideo");
-
+        
         const actual = getCurrentTime();
+        console.log("Current time:", actual, "Expected:", expected, "Diff:", Math.abs(actual - expected));
         if (Math.abs(actual - expected) > 2) {
+          console.log("⏩ Seeking to", expected);
           post("seekTo", [expected]);
         }
       } else {
+        console.log("⏸️ Sending pauseVideo command to YouTube");
         post("pauseVideo");
       }
     });
 
     const handleMessage = (event: MessageEvent) => {
-      if (event.origin !== "https://www.youtube.com") return;
-      console.log("Received message from YouTube:", event.data);
+      if (event.origin !== "https://www.youtube.com") {
+        // console.log("Ignoring message from:", event.origin);
+        return;
+      }
+      
+      console.log("📩 Message from YouTube:", event.data);
+      
       try {
         const data = JSON.parse(event.data);
+        console.log("Parsed YouTube data:", data);
+        
         if (data.event === "onReady") {
-          console.log("YouTube player ready");
+          console.log("🎬 YouTube player ready!");
           setPlayerReady(true);
+          playerReadyRef.current = true;
         } else if (data.info && data.info.currentTime !== undefined) {
-          // Update current time from YouTube player
           const time = data.info.currentTime;
-          console.log("Parsed currentTime:", time);
           setCurrentTime(time);
+          currentTimeRef.current = time;
         }
       } catch (e) {
-        // Ignore non-JSON messages
+        console.log("Non-JSON message from YouTube, ignoring");
       }
     };
 
@@ -125,14 +174,14 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
           hubConnection.current?.stop();
         });
     };
-  }, [teamId, playerReady, post, getCurrentTime, computeExpected]);
+  }, [teamId]);
 
   // Periodic sync check
   useEffect(() => {
     if (!playerReady || !lastState) return;
 
     const interval = setInterval(() => {
-      if (!lastState?.isPlaying) return;
+      if (!lastState?.IsPlaying) return;
 
       const expected = computeExpected(lastState);
       const actual = getCurrentTime();
@@ -296,23 +345,49 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
     }
   };
 
-  const togglePlayPause = () => {
+  const togglePlayPause = async () => {
     const currentUser = users.find((u) => u.id === userId);
-    const canControlPlayback =
+    const canControlPlayback = 
       currentUser?.role === "Moderator" || currentUser?.role === "Owner";
 
     if (!canControlPlayback) {
-      showToast(
-        "Only Moderators and Owners can pause/play the video",
-        "warning"
-      );
+      showToast("Only Moderators and Owners can pause/play the video", "warning");
       return;
     }
 
-    hubConnection.current?.invoke(
-      isPlaying ? "Pause" : "Play",
-      teamId.toString()
-    );
+    console.log("=== TOGGLE PLAY/PAUSE DEBUG ===");
+    console.log("Hub connection exists:", !!hubConnection.current);
+    console.log("Connection state:", hubConnection.current?.state);
+    console.log("Connection ID:", hubConnection.current?.connectionId);
+    console.log("Team ID:", teamId.toString());
+    console.log("Is playing:", isPlaying);
+    console.log("Last state:", lastState);
+
+    if (!hubConnection.current) {
+      console.error("❌ Hub connection is null!");
+      return;
+    }
+
+    if (hubConnection.current.state !== signalR.HubConnectionState.Connected) {
+      console.error("❌ Connection not in Connected state:", hubConnection.current.state);
+      showToast("Connection error. Please refresh.", "error");
+      return;
+    }
+
+    const newPlayingState = !isPlaying;
+    const methodName = newPlayingState ? "Play" : "Pause";
+
+    console.log(`🎬 Invoking ${methodName} for team ${teamId}...`);
+
+    try {
+      const result = await hubConnection.current.invoke(methodName, teamId.toString());
+      console.log(`✅ ${methodName} invoke returned:`, result);
+    } catch (error) {
+      console.error(`❌ ${methodName} failed:`, error);
+      console.error("Error type:", error?.constructor?.name);
+      console.error("Error message:", error?.message);
+      showToast("Warning: Playback not synced with other users", "warning");
+    }
   };
 
   return (
@@ -338,13 +413,25 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
                   height="100%"
                   src={`https://www.youtube.com/embed/${extractYoutubeId(
                     currentSong.link
-                  )}?enablejsapi=1&controls=0&modestbranding=1&origin=${
+                  )}?enablejsapi=1&controls=0&modestbranding=1&rel=0&origin=${
                     window.location.origin
                   }`}
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                   className="rounded"
+                  onLoad={() => {
+                    console.log("🎥 iFrame loaded, requesting YouTube API ready state");
+                    // Give YouTube a moment to initialize, then check if player is ready
+                    setTimeout(() => {
+                      if (iframeRef.current) {
+                        iframeRef.current.contentWindow?.postMessage(
+                          '{"event":"listening"}',
+                          "*"
+                        );
+                      }
+                    }, 100);
+                  }}
                 />
                 <div className="absolute inset-0 rounded pointer-events-none" />
               </div>

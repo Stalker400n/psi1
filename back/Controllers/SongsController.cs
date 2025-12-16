@@ -13,13 +13,6 @@ namespace back.Controllers
   [Route("teams/{teamId}/songs")]
   public class SongsController : ControllerBase
   {
-    // ... existing code
-
-    public class PlayStateRequest
-    {
-      public bool IsPlaying { get; set; }
-      public double Position { get; set; }
-    }
     private readonly ISongsRepository _songsRepository;
     private readonly ITeamsRepository _teamsRepository;
     private readonly ISongQueueService _queueService;
@@ -269,6 +262,12 @@ namespace back.Controllers
         startedAtUtc = team.StartedAtUtc,
         ElapsedSeconds = team.ElapsedSeconds
       });
+    }
+
+    public class PlayStateRequest
+    {
+      public bool IsPlaying { get; set; }
+      public double Position { get; set; }
     }
   }
 }

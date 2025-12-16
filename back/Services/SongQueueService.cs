@@ -18,7 +18,7 @@ namespace back.Services
       if (teamsRepository == null) throw new ArgumentNullException(nameof(teamsRepository));
       if (songsRepository == null) throw new ArgumentNullException(nameof(songsRepository));
       if (comparableUtils == null) throw new ArgumentNullException(nameof(comparableUtils));
-      if (_queuesCache == null) throw new ArgumentNullException(nameof(_queuesCache));
+      if (queuesCache == null) throw new ArgumentNullException(nameof(queuesCache));
 
       _teamsRepository = teamsRepository;
       _songsRepository = songsRepository;

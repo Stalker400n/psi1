@@ -60,6 +60,8 @@ public class TeamsRepository : ITeamsRepository
 		current.IsPrivate = team.IsPrivate;
 		current.IsPlaying = team.IsPlaying;
 		current.CurrentSongIndex = team.CurrentSongIndex;
+		current.ElapsedSeconds = team.ElapsedSeconds;
+		current.StartedAtUtc = team.StartedAtUtc;
 
 		_context.Entry(current).State = EntityState.Modified;
 		await _context.SaveChangesAsync();

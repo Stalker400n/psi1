@@ -4,6 +4,8 @@ using back.Data.Repositories;
 using back.Services;
 using back.Exceptions;
 using back.Validators;
+using Microsoft.AspNetCore.SignalR;
+using back.Hubs;
 
 namespace back.Controllers
 {
@@ -17,6 +19,7 @@ namespace back.Controllers
     private readonly IYoutubeValidator _youtubeValidator;
     private readonly IYoutubeDataService _youtubeDataService;
     private readonly ILogger<SongsController> _logger;
+    private readonly IHubContext<TeamHub> _hubContext;
 
     public SongsController(
       ISongsRepository songsRepository,
@@ -24,7 +27,8 @@ namespace back.Controllers
       ISongQueueService queueService,
       IYoutubeValidator youtubeValidator,
       IYoutubeDataService youtubeDataService,
-      ILogger<SongsController> logger)
+      ILogger<SongsController> logger,
+      IHubContext<TeamHub> hubContext)
     {
       if (songsRepository == null) throw new ArgumentNullException(nameof(songsRepository));
       if (teamsRepository == null) throw new ArgumentNullException(nameof(teamsRepository));
@@ -32,6 +36,7 @@ namespace back.Controllers
       if (youtubeValidator == null) throw new ArgumentNullException(nameof(youtubeValidator));
       if (youtubeDataService == null) throw new ArgumentNullException(nameof(youtubeDataService));
       if (logger == null) throw new ArgumentNullException(nameof(logger));
+      if (hubContext == null) throw new ArgumentNullException(nameof(hubContext));
 
       _songsRepository = songsRepository;
       _teamsRepository = teamsRepository;
@@ -39,6 +44,7 @@ namespace back.Controllers
       _youtubeValidator = youtubeValidator;
       _youtubeDataService = youtubeDataService;
       _logger = logger;
+      _hubContext = hubContext;
     }
 
     [HttpGet]
@@ -214,24 +220,54 @@ namespace back.Controllers
     }
 
     [HttpPost("play-state")]
-    public async Task<ActionResult<bool>> SetPlayState(int teamId, [FromBody] bool isPlaying)
+    public async Task<ActionResult<bool>> SetPlayState(int teamId, [FromBody] PlayStateRequest request)
     {
       var team = await _teamsRepository.GetByIdAsync(teamId);
       if (team == null) return NotFound(new { message = "Team not found" });
 
-      team.IsPlaying = isPlaying;
+      if (request.IsPlaying && !team.IsPlaying)
+      {
+        team.IsPlaying = true;
+        team.StartedAtUtc = DateTime.UtcNow;
+      }
+      else if (!request.IsPlaying && team.IsPlaying)
+      {
+        team.IsPlaying = false;
+        team.StartedAtUtc = null;
+      }
+
       await _teamsRepository.UpdateAsync(teamId, team);
 
-      return Ok(isPlaying);
-    }
+      await _hubContext.Clients
+            .Group(teamId.ToString())
+            .SendAsync("ReceivePlayState", new
+            {
+              isPlaying = team.IsPlaying,
+              startedAtUtc = team.StartedAtUtc
+            });
 
+      
+      return Ok();
+
+    }
     [HttpGet("play-state")]
-    public async Task<ActionResult<bool>> GetPlayState(int teamId)
+    public async Task<ActionResult<object>> GetPlayState(int teamId)
     {
       var team = await _teamsRepository.GetByIdAsync(teamId);
       if (team == null) return NotFound(new { message = "Team not found" });
 
-      return Ok(team.IsPlaying);
+      return Ok(new
+      {
+        isPlaying = team.IsPlaying,
+        startedAtUtc = team.StartedAtUtc,
+        ElapsedSeconds = team.ElapsedSeconds
+      });
+    }
+
+    public class PlayStateRequest
+    {
+      public bool IsPlaying { get; set; }
+      public double Position { get; set; }
     }
   }
 }

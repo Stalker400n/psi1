@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { SkipForward, SkipBack, Pause, Play } from "lucide-react";
 import api from "../services/api.service";
 import type { Song, User } from "../services/api.service";
@@ -6,11 +6,19 @@ import { extractYoutubeId } from "../utils/youtube.utils";
 import { HeatMeter } from "../components/heat-meter.component";
 import { RightPanel } from "../components/right-panel.component";
 import { useToast } from "../contexts/toast-context";
+import * as signalR from "@microsoft/signalr";
 
 interface PlaylistPageProps {
   teamId: number;
   userId: number;
   userName: string;
+}
+
+interface PlaybackState {
+  CurrentSongIndex: number;     
+  IsPlaying: boolean;           
+  StartedAtUtc?: string;        
+  ElapsedSeconds: number;       
 }
 
 export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
@@ -21,20 +29,184 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [currentRating, setCurrentRating] = useState<number>(0);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [isPlaying, setIsPlaying] = useState<boolean>(true);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [playerReady, setPlayerReady] = useState<boolean>(false);
+  const [lastState, setLastState] = useState<PlaybackState | null>(null);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const hubConnection = useRef<signalR.HubConnection | null>(null);
+  const currentTimeRef = useRef<number>(0);
+  const playerReadyRef = useRef<boolean>(false);
+
+  // Update refs when state changes
+  useEffect(() => {
+    currentTimeRef.current = currentTime;
+  }, [currentTime]);
+
+  useEffect(() => {
+    playerReadyRef.current = playerReady;
+  }, [playerReady]);
+
+  // Post messages to YouTube iframe
+  const post = useCallback((func: string, args: any[] = []) => {
+    iframeRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: "command", func, args }),
+      "*"
+    );
+  }, []);
+
+  // Get current time from player
+  const getCurrentTime = useCallback(() => {
+    return currentTimeRef.current;
+  }, []);
+
+  // Compute expected playback position
+  const computeExpected = useCallback((state: PlaybackState) => {
+    return (
+      state.ElapsedSeconds +
+      (state.StartedAtUtc
+        ? (Date.now() - new Date(state.StartedAtUtc).getTime()) / 1000
+        : 0)
+    );
+  }, []);
 
   useEffect(() => {
     fetchQueueAndCurrent();
     fetchUsers();
-    fetchPlayState();
-    const interval = setInterval(() => {
-      fetchQueueAndCurrent();
-      fetchUsers();
-      fetchPlayState();
-    }, 1000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    // Setup SignalR
+    hubConnection.current = new signalR.HubConnectionBuilder()
+      .withUrl("https://localhost:7130/teamHub", { withCredentials: true })
+      .withAutomaticReconnect()
+      .configureLogging(signalR.LogLevel.Debug)
+      .build();
+
+    hubConnection.current
+      .start()
+      .then(() => {
+        return hubConnection.current?.invoke("JoinTeam", teamId.toString());
+      })
+      .then(() => {
+        console.log("JoinTeam invoked successfully");
+      })
+      .catch((err) => console.error("SignalR connection error: ", err));
+
+    hubConnection.current.on("PlaybackState", (state: any) => {
+      
+      // Handle both camelCase (from SignalR conversion) and PascalCase
+      const normalizedState: PlaybackState = {
+        CurrentSongIndex: state.currentSongIndex ?? state.CurrentSongIndex ?? 0,
+        IsPlaying: state.isPlaying ?? state.IsPlaying ?? false,
+        StartedAtUtc: state.startedAtUtc ?? state.StartedAtUtc,
+        ElapsedSeconds: state.elapsedSeconds ?? state.ElapsedSeconds ?? 0
+      };
+      
+      // Always update the state
+      setLastState(normalizedState);
+      setIsPlaying(normalizedState.IsPlaying);
+      
+      // If player is ready, apply the state immediately
+      if (!iframeRef.current || !playerReadyRef.current) {
+        return;
+      }
+
+      const expected = computeExpected(normalizedState);
+
+      if (normalizedState.IsPlaying) {
+        post("playVideo");
+        
+        const actual = getCurrentTime();
+        if (Math.abs(actual - expected) > 2) {
+          post("seekTo", [expected, true]);
+        }
+      } else {
+        post("pauseVideo");
+      }
+    });
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== "https://www.youtube.com") {
+        // console.log("Ignoring message from:", event.origin);
+        return;
+      }
+      
+      try {
+        const data = JSON.parse(event.data);
+        
+        if (data.event === "onReady") {
+          setPlayerReady(true);
+          playerReadyRef.current = true;
+        } else if (data.info && data.info.currentTime !== undefined) {
+          const time = data.info.currentTime;
+          setCurrentTime(time);
+          currentTimeRef.current = time;
+        }
+      } catch (e) {
+        console.log("Non-JSON message from YouTube, ignoring");
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+      hubConnection.current
+        ?.invoke("LeaveTeam", teamId.toString())
+        .then(() => {
+          hubConnection.current?.stop();
+        });
+    };
   }, [teamId]);
+
+  // Effect to apply lastState when player becomes ready
+  useEffect(() => {
+    if (!playerReady || !lastState) return;
+    
+    const expected = computeExpected(lastState);
+
+    if (lastState.IsPlaying) {
+      post("playVideo");
+      
+      // Seek to the correct position
+      if (expected > 0) {
+        post("seekTo", [expected, true]); // true = allow seeking ahead
+      }
+    } else {
+      post("pauseVideo");
+      
+      // Seek to the paused position
+      if (expected > 0) {
+        post("seekTo", [expected, true]);
+      }
+    }
+  }, [playerReady]); // Only run when playerReady changes to true
+  
+  useEffect(() => {
+    if (!playerReady || !lastState) return;
+
+    const interval = setInterval(() => {
+      if (!lastState?.IsPlaying) return;
+
+      const expected = computeExpected(lastState);
+      const actual = getCurrentTime();
+
+      if (Math.abs(actual - expected) > 2) {
+        post("seekTo", [expected]);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [playerReady, lastState, post, getCurrentTime, computeExpected]);
+
+  // Request current time periodically
+  useEffect(() => {
+    if (!playerReady) return;
+
+    const interval = setInterval(() => {
+      post("getCurrentTime");
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [playerReady, post]);
 
   useEffect(() => {
     if (currentSong) {
@@ -42,6 +214,18 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSong?.id, userId]);
+
+
+  useEffect(() => {
+    fetchQueueAndCurrent();
+    fetchUsers();
+    const interval = setInterval(() => {
+      fetchQueueAndCurrent();
+      fetchUsers();
+    }, 1000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamId]);
 
   const fetchCurrentRating = async () => {
     if (!currentSong) return;
@@ -73,31 +257,22 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
     try {
       const historyData = await api.teamsApi.getQueueHistory(teamId);
       setQueue(historyData.songs);
-      setCurrentIndex(historyData.currentIndex);
-
-      const current = historyData.songs.find(
+      if (historyData.currentIndex !== currentIndex || currentIndex === 0) {
+        setCurrentIndex(historyData.currentIndex);
+        
+        const current = historyData.songs.find(
         (s) => s.index === historyData.currentIndex
-      );
-      setCurrentSong(current || null);
+        );
+
+        setCurrentSong(current || null);
+      }
+
+      
     } catch (error) {
       console.error("Error fetching queue history:", error);
       setQueue([]);
       setCurrentSong(null);
       setCurrentIndex(0);
-    }
-  };
-
-  const fetchPlayState = async () => {
-    try {
-      const state = await api.songsApi.getPlayState(teamId);
-      setIsPlaying(state);
-      if (iframeRef.current) {
-        const func = state ? "playVideo" : "pauseVideo";
-        const command = JSON.stringify({ event: "command", func });
-        iframeRef.current.contentWindow?.postMessage(command, "*");
-      }
-    } catch (error) {
-      console.error("Error fetching play state:", error);
     }
   };
 
@@ -159,9 +334,21 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
       return;
     }
 
+    if (!hubConnection.current) {
+      console.error("Hub connection is null!");
+      return;
+    }
+
+    if (hubConnection.current.state !== signalR.HubConnectionState.Connected) {
+      console.error("Connection not in Connected state:", hubConnection.current.state);
+      showToast("Connection error. Please refresh.", "error");
+      return;
+    }
+
     try {
       await api.songsApi.next(teamId);
       fetchQueueAndCurrent();
+      await hubConnection.current.invoke("Next", teamId.toString());
     } catch (error) {
       console.error("Error skipping to next song:", error);
       showToast("No more songs in queue", "info");
@@ -181,42 +368,62 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
       return;
     }
 
+
+    if (!hubConnection.current) {
+      console.error("Hub connection is null!");
+      return;
+    }
+
+    if (hubConnection.current.state !== signalR.HubConnectionState.Connected) {
+      console.error("Connection not in Connected state:", hubConnection.current.state);
+      showToast("Connection error. Please refresh.", "error");
+      return;
+    }
+
+
+
     try {
       await api.songsApi.previous(teamId);
       fetchQueueAndCurrent();
+      await hubConnection.current.invoke("Next", teamId.toString());
     } catch (error) {
       console.error("Error going to previous song:", error);
       showToast("Already at first song", "info");
     }
   };
 
-  const togglePlayPause = () => {
+  const togglePlayPause = async () => {
     const currentUser = users.find((u) => u.id === userId);
-    const canControlPlayback =
+    const canControlPlayback = 
       currentUser?.role === "Moderator" || currentUser?.role === "Owner";
 
     if (!canControlPlayback) {
-      showToast(
-        "Only Moderators and Owners can pause/play the video",
-        "warning"
-      );
+      showToast("Only Moderators and Owners can pause/play the video", "warning");
       return;
     }
 
-    const newIsPlaying = !isPlaying;
-
-    if (iframeRef.current) {
-      iframeRef.current.style.pointerEvents = "auto";
-      const func = newIsPlaying ? "playVideo" : "pauseVideo";
-      const command = JSON.stringify({ event: "command", func });
-      iframeRef.current.contentWindow?.postMessage(command, "*");
+    if (!hubConnection.current) {
+      console.error("Hub connection is null!");
+      return;
     }
 
-    // Save play state to backend
-    api.songsApi.setPlayState(teamId, newIsPlaying).catch((error) => {
-      console.error("Error setting play state:", error);
-      showToast("Failed to sync play state", "error");
-    });
+    if (hubConnection.current.state !== signalR.HubConnectionState.Connected) {
+      console.error("Connection not in Connected state:", hubConnection.current.state);
+      showToast("Connection error. Please refresh.", "error");
+      return;
+    }
+
+    const newPlayingState = !isPlaying;
+    const methodName = newPlayingState ? "Play" : "Pause";
+
+    try {
+      await hubConnection.current.invoke(methodName, teamId.toString());
+    } catch (error) {
+      console.error(`${methodName} failed:`, error);
+      console.error("Error type:", error?.constructor?.name);
+      console.error("Error message:", error?.message);
+      showToast("Warning: Playback not synced with other users", "warning");
+    }
   };
 
   return (
@@ -242,13 +449,34 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
                   height="100%"
                   src={`https://www.youtube.com/embed/${extractYoutubeId(
                     currentSong.link
-                  )}?enablejsapi=1&controls=0&modestbranding=1`}
+                  )}?enablejsapi=1&controls=0&modestbranding=1&autoplay=0`}
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
-                  className="rounded"
+                  className="rounded pointer-events-none"
+                  onLoad={() => {
+                    console.log("🎥 iFrame loaded, initializing YouTube API");
+                    setTimeout(() => {
+                      if (iframeRef.current) {
+                        // Tell YouTube we're listening for events
+                        iframeRef.current.contentWindow?.postMessage(
+                          '{"event":"listening","id":1,"channel":"widget"}',
+                          "*"
+                        );
+                        console.log("📡 Sent listening event to YouTube");
+                        
+                        // Mark player as ready after a short delay to allow YouTube to initialize
+                        setTimeout(() => {
+                          console.log("🎬 Marking player as ready");
+                          setPlayerReady(true);
+                          playerReadyRef.current = true;
+                        }, 500);
+                      }
+                    }, 100);
+                  }}
                 />
-                <div className="absolute inset-0 rounded pointer-events-auto" />
+                {/* Overlay to prevent user interaction with iframe */}
+                <div className="absolute inset-0 rounded bg-transparent cursor-default" style={{ pointerEvents: 'all' }} />
               </div>
 
               <div className="mb-4">

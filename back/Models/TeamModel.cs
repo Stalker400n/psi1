@@ -19,9 +19,11 @@ public class Team
 
   public int CurrentSongIndex { get; set; } = 0;
 
-  public bool IsPlaying { get; set; } = true;
+  public bool IsPlaying { get; set; } = false;
 
-  public double PlaybackPosition { get; set; } = 0;
+  public double ElapsedSeconds {get; set; } = 0;
+
+  public DateTime? StartedAtUtc { get; set; }
 
   public List<Song> Songs { get; set; } = new List<Song>();
 

@@ -211,7 +211,7 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
       if (Math.abs(actual - expected) > 2) {
         post("seekTo", [expected]);
       }
-    }, 10000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [playerReady, lastState, post, getCurrentTime, computeExpected]);
@@ -233,6 +233,18 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSong?.id, userId]);
+
+
+  useEffect(() => {
+    fetchQueueAndCurrent();
+    fetchUsers();
+    const interval = setInterval(() => {
+      fetchQueueAndCurrent();
+      fetchUsers();
+    }, 1000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamId]);
 
   const fetchCurrentRating = async () => {
     if (!currentSong) return;
@@ -264,12 +276,17 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
     try {
       const historyData = await api.teamsApi.getQueueHistory(teamId);
       setQueue(historyData.songs);
-      setCurrentIndex(historyData.currentIndex);
-
-      const current = historyData.songs.find(
+      if (historyData.currentIndex !== currentIndex || currentIndex === 0) {
+        setCurrentIndex(historyData.currentIndex);
+        
+        const current = historyData.songs.find(
         (s) => s.index === historyData.currentIndex
-      );
-      setCurrentSong(current || null);
+        );
+
+        setCurrentSong(current || null);
+      }
+
+      
     } catch (error) {
       console.error("Error fetching queue history:", error);
       setQueue([]);

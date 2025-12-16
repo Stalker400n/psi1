@@ -29,7 +29,7 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [currentRating, setCurrentRating] = useState<number>(0);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [isPlaying, setIsPlaying] = useState<boolean>(true);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [playerReady, setPlayerReady] = useState<boolean>(false);
   const [lastState, setLastState] = useState<PlaybackState | null>(null);
   const [currentTime, setCurrentTime] = useState<number>(0);
@@ -83,18 +83,14 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
     hubConnection.current
       .start()
       .then(() => {
-        console.log("✅ SignalR connected. Connection ID:", hubConnection.current?.connectionId);
-        console.log("Connection State:", hubConnection.current?.state);
         return hubConnection.current?.invoke("JoinTeam", teamId.toString());
       })
       .then(() => {
-        console.log("✅ JoinTeam invoked successfully");
+        console.log("JoinTeam invoked successfully");
       })
-      .catch((err) => console.error("❌ SignalR connection error: ", err));
+      .catch((err) => console.error("SignalR connection error: ", err));
 
     hubConnection.current.on("PlaybackState", (state: any) => {
-      const timestamp = new Date().toISOString();
-      console.log(`[${timestamp}] 🎯 Received PlaybackState (RAW):`, JSON.stringify(state, null, 2));
       
       // Handle both camelCase (from SignalR conversion) and PascalCase
       const normalizedState: PlaybackState = {
@@ -104,33 +100,25 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
         ElapsedSeconds: state.elapsedSeconds ?? state.ElapsedSeconds ?? 0
       };
       
-      console.log("✅ Normalized state:", JSON.stringify(normalizedState, null, 2));
-      
       // Always update the state
       setLastState(normalizedState);
       setIsPlaying(normalizedState.IsPlaying);
-      console.log("State set in React - isPlaying now:", normalizedState.IsPlaying);
       
       // If player is ready, apply the state immediately
       if (!iframeRef.current || !playerReadyRef.current) {
-        console.log("⏸️ Player not ready yet, state saved for later");
         return;
       }
 
       const expected = computeExpected(normalizedState);
 
       if (normalizedState.IsPlaying) {
-        console.log("▶️ Sending playVideo command to YouTube");
         post("playVideo");
         
         const actual = getCurrentTime();
-        console.log("Current time:", actual, "Expected:", expected, "Diff:", Math.abs(actual - expected));
         if (Math.abs(actual - expected) > 2) {
-          console.log("⏩ Seeking to", expected);
           post("seekTo", [expected, true]);
         }
       } else {
-        console.log("⏸️ Sending pauseVideo command to YouTube");
         post("pauseVideo");
       }
     });
@@ -141,14 +129,10 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
         return;
       }
       
-      console.log("📩 Message from YouTube:", event.data);
-      
       try {
         const data = JSON.parse(event.data);
-        console.log("Parsed YouTube data:", data);
         
         if (data.event === "onReady") {
-          console.log("🎬 YouTube player ready!");
           setPlayerReady(true);
           playerReadyRef.current = true;
         } else if (data.info && data.info.currentTime !== undefined) {
@@ -176,13 +160,10 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
   // Effect to apply lastState when player becomes ready
   useEffect(() => {
     if (!playerReady || !lastState) return;
-
-    console.log("🎮 Player is now ready, applying last known state:", lastState);
     
     const expected = computeExpected(lastState);
 
     if (lastState.IsPlaying) {
-      console.log("▶️ Starting playback at position:", expected);
       post("playVideo");
       
       // Seek to the correct position
@@ -190,7 +171,6 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
         post("seekTo", [expected, true]); // true = allow seeking ahead
       }
     } else {
-      console.log("⏸️ Pausing at position:", expected);
       post("pauseVideo");
       
       // Seek to the paused position
@@ -354,12 +334,12 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
     }
 
     if (!hubConnection.current) {
-      console.error("❌ Hub connection is null!");
+      console.error("Hub connection is null!");
       return;
     }
 
     if (hubConnection.current.state !== signalR.HubConnectionState.Connected) {
-      console.error("❌ Connection not in Connected state:", hubConnection.current.state);
+      console.error("Connection not in Connected state:", hubConnection.current.state);
       showToast("Connection error. Please refresh.", "error");
       return;
     }
@@ -389,12 +369,12 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
 
 
     if (!hubConnection.current) {
-      console.error("❌ Hub connection is null!");
+      console.error("Hub connection is null!");
       return;
     }
 
     if (hubConnection.current.state !== signalR.HubConnectionState.Connected) {
-      console.error("❌ Connection not in Connected state:", hubConnection.current.state);
+      console.error("Connection not in Connected state:", hubConnection.current.state);
       showToast("Connection error. Please refresh.", "error");
       return;
     }
@@ -421,21 +401,13 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
       return;
     }
 
-    console.log("=== TOGGLE PLAY/PAUSE DEBUG ===");
-    console.log("Hub connection exists:", !!hubConnection.current);
-    console.log("Connection state:", hubConnection.current?.state);
-    console.log("Connection ID:", hubConnection.current?.connectionId);
-    console.log("Team ID:", teamId.toString());
-    console.log("Is playing:", isPlaying);
-    console.log("Last state:", lastState);
-
     if (!hubConnection.current) {
-      console.error("❌ Hub connection is null!");
+      console.error("Hub connection is null!");
       return;
     }
 
     if (hubConnection.current.state !== signalR.HubConnectionState.Connected) {
-      console.error("❌ Connection not in Connected state:", hubConnection.current.state);
+      console.error("Connection not in Connected state:", hubConnection.current.state);
       showToast("Connection error. Please refresh.", "error");
       return;
     }
@@ -443,13 +415,10 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
     const newPlayingState = !isPlaying;
     const methodName = newPlayingState ? "Play" : "Pause";
 
-    console.log(`🎬 Invoking ${methodName} for team ${teamId}...`);
-
     try {
       const result = await hubConnection.current.invoke(methodName, teamId.toString());
-      console.log(`✅ ${methodName} invoke returned:`, result);
     } catch (error) {
-      console.error(`❌ ${methodName} failed:`, error);
+      console.error(`${methodName} failed:`, error);
       console.error("Error type:", error?.constructor?.name);
       console.error("Error message:", error?.message);
       showToast("Warning: Playback not synced with other users", "warning");

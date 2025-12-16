@@ -43,12 +43,7 @@ public class TeamHub : Hub
 
     public async Task Play(string teamId)
 {
-    Console.WriteLine($"========== PLAY CALLED ==========");
-    Console.WriteLine($"Team ID: {teamId}");
-    Console.WriteLine($"Connection: {Context.ConnectionId}");
-    
     var team = await _teamsRepository.GetByIdAsync(int.Parse(teamId));
-    Console.WriteLine($"Team current state - IsPlaying: {team.IsPlaying}");
     
     if(team.IsPlaying)
         return; 
@@ -57,8 +52,7 @@ public class TeamHub : Hub
     team.StartedAtUtc = DateTime.UtcNow;
     
     await _teamsRepository.UpdateAsync(int.Parse(teamId), team);
-    Console.WriteLine($"Team updated - IsPlaying: {team.IsPlaying}, StartedAt: {team.StartedAtUtc}");
-    
+
     var broadcastState = new {
         team.CurrentSongIndex,
         team.IsPlaying,
@@ -66,24 +60,17 @@ public class TeamHub : Hub
         team.ElapsedSeconds
     };
     
-    Console.WriteLine($"Broadcasting: {System.Text.Json.JsonSerializer.Serialize(broadcastState)}");
-    
+
     await Clients.Group(teamId)
         .SendAsync("PlaybackState", broadcastState);
         
-    Console.WriteLine($"========== PLAY COMPLETED ==========");
 }
 
 
 public async Task Pause(string teamId)
 {
-    Console.WriteLine($"========== PAUSE CALLED ==========");
-    Console.WriteLine($"Team ID: {teamId}");
-    Console.WriteLine($"Connection: {Context.ConnectionId}");
-    
     var team = await _teamsRepository.GetByIdAsync(int.Parse(teamId));
-    Console.WriteLine($"Team current state - IsPlaying: {team.IsPlaying}, StartedAt: {team.StartedAtUtc}");
-    
+
     if(!team.IsPlaying || team.StartedAtUtc == null)
         return;
     
@@ -95,8 +82,7 @@ public async Task Pause(string teamId)
     team.IsPlaying = false;
     
     await _teamsRepository.UpdateAsync(int.Parse(teamId), team);
-    Console.WriteLine($"Team updated - IsPlaying: {team.IsPlaying}, ElapsedSeconds: {team.ElapsedSeconds}");
-    
+
     var broadcastState = new {
         team.CurrentSongIndex,
         team.IsPlaying,
@@ -104,12 +90,10 @@ public async Task Pause(string teamId)
         team.ElapsedSeconds
     };
     
-    Console.WriteLine($"Broadcasting: {System.Text.Json.JsonSerializer.Serialize(broadcastState)}");
-    
+
     await Clients.Group(teamId)
         .SendAsync("PlaybackState", broadcastState);
         
-    Console.WriteLine($"========== PAUSE COMPLETED ==========");
 }
 
 public async Task Next(string teamId)

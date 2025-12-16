@@ -75,6 +75,7 @@ public class TeamHub : Hub
     Console.WriteLine($"========== PLAY COMPLETED ==========");
 }
 
+
 public async Task Pause(string teamId)
 {
     Console.WriteLine($"========== PAUSE CALLED ==========");
@@ -111,5 +112,26 @@ public async Task Pause(string teamId)
         .SendAsync("PlaybackState", broadcastState);
         
     Console.WriteLine($"========== PAUSE COMPLETED ==========");
+}
+
+public async Task Next(string teamId)
+{
+    var team = await _teamsRepository.GetByIdAsync(int.Parse(teamId));
+
+    team.ElapsedSeconds = 0;
+    team.IsPlaying = false;
+    team.StartedAtUtc = DateTime.UtcNow;
+
+    await _teamsRepository.UpdateAsync(int.Parse(teamId), team);
+
+    var broadcastState = new {
+        team.CurrentSongIndex,
+        team.IsPlaying,
+        team.StartedAtUtc,
+        team.ElapsedSeconds
+    };
+
+    await Clients.Group(teamId)
+        .SendAsync("PlaybackState", broadcastState);
 }
 }

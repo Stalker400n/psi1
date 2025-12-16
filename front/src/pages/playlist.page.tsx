@@ -95,8 +95,6 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
     hubConnection.current.on("PlaybackState", (state: any) => {
       const timestamp = new Date().toISOString();
       console.log(`[${timestamp}] 🎯 Received PlaybackState (RAW):`, JSON.stringify(state, null, 2));
-      console.log("State keys:", Object.keys(state));
-      console.log("State values:", Object.values(state));
       
       // Handle both camelCase (from SignalR conversion) and PascalCase
       const normalizedState: PlaybackState = {
@@ -107,16 +105,15 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
       };
       
       console.log("✅ Normalized state:", JSON.stringify(normalizedState, null, 2));
-      console.log("IsPlaying value:", normalizedState.IsPlaying, "type:", typeof normalizedState.IsPlaying);
       
+      // Always update the state
       setLastState(normalizedState);
       setIsPlaying(normalizedState.IsPlaying);
       console.log("State set in React - isPlaying now:", normalizedState.IsPlaying);
       
-      const player = iframeRef.current;
-
-      if (!player || !playerReadyRef.current) {
-        console.log("⏸️ Player not ready yet, skipping playback control");
+      // If player is ready, apply the state immediately
+      if (!iframeRef.current || !playerReadyRef.current) {
+        console.log("⏸️ Player not ready yet, state saved for later");
         return;
       }
 
@@ -130,7 +127,7 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
         console.log("Current time:", actual, "Expected:", expected, "Diff:", Math.abs(actual - expected));
         if (Math.abs(actual - expected) > 2) {
           console.log("⏩ Seeking to", expected);
-          post("seekTo", [expected]);
+          post("seekTo", [expected, true]);
         }
       } else {
         console.log("⏸️ Sending pauseVideo command to YouTube");
@@ -176,7 +173,32 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
     };
   }, [teamId]);
 
-  // Periodic sync check
+  // Effect to apply lastState when player becomes ready
+  useEffect(() => {
+    if (!playerReady || !lastState) return;
+
+    console.log("🎮 Player is now ready, applying last known state:", lastState);
+    
+    const expected = computeExpected(lastState);
+
+    if (lastState.IsPlaying) {
+      console.log("▶️ Starting playback at position:", expected);
+      post("playVideo");
+      
+      // Seek to the correct position
+      if (expected > 0) {
+        post("seekTo", [expected, true]); // true = allow seeking ahead
+      }
+    } else {
+      console.log("⏸️ Pausing at position:", expected);
+      post("pauseVideo");
+      
+      // Seek to the paused position
+      if (expected > 0) {
+        post("seekTo", [expected, true]);
+      }
+    }
+  }, [playerReady]); // Only run when playerReady changes to true
   useEffect(() => {
     if (!playerReady || !lastState) return;
 
@@ -314,9 +336,21 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
       return;
     }
 
+    if (!hubConnection.current) {
+      console.error("❌ Hub connection is null!");
+      return;
+    }
+
+    if (hubConnection.current.state !== signalR.HubConnectionState.Connected) {
+      console.error("❌ Connection not in Connected state:", hubConnection.current.state);
+      showToast("Connection error. Please refresh.", "error");
+      return;
+    }
+
     try {
       await api.songsApi.next(teamId);
       fetchQueueAndCurrent();
+      await hubConnection.current.invoke("Next", teamId.toString());
     } catch (error) {
       console.error("Error skipping to next song:", error);
       showToast("No more songs in queue", "info");
@@ -336,9 +370,24 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
       return;
     }
 
+
+    if (!hubConnection.current) {
+      console.error("❌ Hub connection is null!");
+      return;
+    }
+
+    if (hubConnection.current.state !== signalR.HubConnectionState.Connected) {
+      console.error("❌ Connection not in Connected state:", hubConnection.current.state);
+      showToast("Connection error. Please refresh.", "error");
+      return;
+    }
+
+
+
     try {
       await api.songsApi.previous(teamId);
       fetchQueueAndCurrent();
+      await hubConnection.current.invoke("Next", teamId.toString());
     } catch (error) {
       console.error("Error going to previous song:", error);
       showToast("Already at first song", "info");
@@ -413,27 +462,34 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
                   height="100%"
                   src={`https://www.youtube.com/embed/${extractYoutubeId(
                     currentSong.link
-                  )}?enablejsapi=1&controls=0&modestbranding=1&rel=0&origin=${
-                    window.location.origin
-                  }`}
+                  )}?enablejsapi=1&controls=0&modestbranding=1`}
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
-                  className="rounded"
+                  className="rounded pointer-events-none"
                   onLoad={() => {
-                    console.log("🎥 iFrame loaded, requesting YouTube API ready state");
-                    // Give YouTube a moment to initialize, then check if player is ready
+                    console.log("🎥 iFrame loaded, initializing YouTube API");
                     setTimeout(() => {
                       if (iframeRef.current) {
+                        // Tell YouTube we're listening for events
                         iframeRef.current.contentWindow?.postMessage(
-                          '{"event":"listening"}',
+                          '{"event":"listening","id":1,"channel":"widget"}',
                           "*"
                         );
+                        console.log("📡 Sent listening event to YouTube");
+                        
+                        // Mark player as ready after a short delay to allow YouTube to initialize
+                        setTimeout(() => {
+                          console.log("🎬 Marking player as ready");
+                          setPlayerReady(true);
+                          playerReadyRef.current = true;
+                        }, 500);
                       }
                     }, 100);
                   }}
                 />
-                <div className="absolute inset-0 rounded pointer-events-none" />
+                {/* Overlay to prevent user interaction with iframe */}
+                <div className="absolute inset-0 rounded bg-transparent cursor-default" style={{ pointerEvents: 'all' }} />
               </div>
 
               <div className="mb-4">

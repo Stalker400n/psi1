@@ -179,6 +179,7 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
       }
     }
   }, [playerReady]); // Only run when playerReady changes to true
+  
   useEffect(() => {
     if (!playerReady || !lastState) return;
 
@@ -416,7 +417,7 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
     const methodName = newPlayingState ? "Play" : "Pause";
 
     try {
-      const result = await hubConnection.current.invoke(methodName, teamId.toString());
+      await hubConnection.current.invoke(methodName, teamId.toString());
     } catch (error) {
       console.error(`${methodName} failed:`, error);
       console.error("Error type:", error?.constructor?.name);
@@ -448,7 +449,7 @@ export function PlaylistPage({ teamId, userId, userName }: PlaylistPageProps) {
                   height="100%"
                   src={`https://www.youtube.com/embed/${extractYoutubeId(
                     currentSong.link
-                  )}?enablejsapi=1&controls=0&modestbranding=1`}
+                  )}?enablejsapi=1&controls=0&modestbranding=1&autoplay=0`}
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
